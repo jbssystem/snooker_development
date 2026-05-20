@@ -305,6 +305,80 @@
       "title": "Table layout"
     }
   },
+  "matches": {
+    "title": "Matches",
+    "subtitle": "Manual match, frame and key-stat history.",
+    "authRequired": "Sign in to keep the match log.",
+    "loginCta": "Sign in",
+    "empty": "No matches yet.",
+    "loading": "Loading matches…",
+    "required": "Required",
+    "saving": "Saving…",
+    "profileRequired": {
+      "title": "Player profile required",
+      "description": "Create a profile first so matches can be saved to the player history.",
+      "cta": "Open profile"
+    },
+    "form": {
+      "title": "New match",
+      "submit": "Save match"
+    },
+    "fields": {
+      "matchDate": "Date",
+      "opponentName": "Opponent",
+      "tournament": "Tournament",
+      "round": "Round",
+      "format": "Format",
+      "country": "Country",
+      "city": "City",
+      "club": "Club",
+      "framesWon": "Frames +",
+      "framesLost": "Frames -",
+      "highBreak": "High break",
+      "breaks50": "50+",
+      "breaks70": "70+",
+      "breaks100": "100+",
+      "safetySuccess": "Safety %",
+      "longPotSuccess": "Long pot %",
+      "unforcedErrors": "Unforced errors",
+      "tacticalErrors": "Tactical errors",
+      "sourceUrl": "Source",
+      "videoUrl": "Video",
+      "notes": "Notes"
+    },
+    "stats": {
+      "result": "Result"
+    },
+    "result": {
+      "player_win": "Win",
+      "opponent_win": "Loss",
+      "draw": "Draw",
+      "unknown": "Not set"
+    },
+    "winner": {
+      "player": "Player",
+      "opponent": "Opponent",
+      "unknown": "Not set"
+    },
+    "frames": {
+      "title": "Frames",
+      "add": "Add frame",
+      "submit": "Add",
+      "empty": "No frames have been added yet.",
+      "number": "No.",
+      "score": "Score",
+      "winner": "Winner",
+      "playerScore": "Player points",
+      "opponentScore": "Opponent points",
+      "duration": "Min."
+    },
+    "opponent": {
+      "title": "Opponent history",
+      "matches": "Matches",
+      "record": "W-L-D",
+      "frames": "Frames"
+    }
+  },
   "tableRenderer": {
     "editor": {
       "title": "Table layout",

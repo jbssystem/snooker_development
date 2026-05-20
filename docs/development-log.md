@@ -18,6 +18,28 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-008 — Manual match log
+
+**Delivered:**
+- Prisma migration `20260520120400_add_match_log` adds `Match`,
+  `MatchFrame`, `MatchResult`, `MatchSource` and `FrameWinner`.
+- `packages/shared/src/schemas/match.ts` exports DTOs for manual match
+  creation, match updates and adding frames.
+- NestJS `MatchesModule` exposes guarded current-player endpoints for listing,
+  reading, creating and updating matches, plus adding frames.
+- Frame creation protects current-player ownership and recalculates match
+  frame score/result from saved frame winners.
+- Web `/matches` now shows match history, selected match details, key stats,
+  frame table, add-frame form, opponent history and a manual match creation
+  panel.
+- i18n keys added in all three locales (`ru`, `en`, `uk`) under `matches.*`.
+- Docs updated: `docs/api-spec.md`, `docs/database-model.md`,
+  `docs/ui-guidelines.md`, `docs/development-log.md`.
+
+**Open items:**
+- Shot-by-shot mode remains a later analytics feature. The PH-1-008 schema
+  keeps match/frame ownership boundaries ready for future `Shot` rows.
+
 ### PH-1-007 — Basic dashboard
 
 **Delivered:**
@@ -248,8 +270,8 @@ Format:
 5. ✅ PH-1-005 — Training session flow.
 6. ✅ PH-1-006 — SnookerTableCanvas (react-konva).
 7. ✅ PH-1-007 — Basic dashboard.
-8. ⏳ PH-1-008 — Manual match log.
-9. PH-1-009 — Calendar factors.
+8. ✅ PH-1-008 — Manual match log.
+9. ⏳ PH-1-009 — Calendar factors.
 10. PH-1-010 — Weekly AI summary (Anthropic).
 11. PH-1-011 — Docker production deploy.
 

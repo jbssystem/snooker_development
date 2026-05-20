@@ -22,12 +22,16 @@ Implemented in initial migration:
 - `DrillExecution` — a drill template instance inside a session, with counters,
     optional result JSON, error tags and table layout snapshot JSON.
 - `DrillAttempt` — numbered attempt log under one drill execution.
+- `Match` — player-owned manual match log entry with opponent, location,
+    score, break counts, key percentages, links and notes.
+- `MatchFrame` — numbered frame row under one match with score, winner, high
+    break, optional duration and notes.
 
 Planned (next migrations, in this order):
 
 1. `PlayerCoachRelation`, `Academy`, `Club`
 2. `TrainingBlock`
-3. `Tournament`, `Match`, `Frame`, `Shot`
+3. `Tournament`, `Shot`
 4. `CalendarEvent`, `LifestyleFactor`, `SupplementEvent`
 5. `AIReport`, `AIInsight`
 6. `ExternalDataSource`, `ExternalImportJob`, `ExternalImportedRecord`
@@ -110,6 +114,35 @@ Each new entity ships with:
     transaction and increments execution counters with the same write.
 - `result` is a PostgreSQL enum mapped from lowercase API values: `success`,
     `partial`, `miss`, `skipped`.
+
+### Match
+
+- `id`, `playerProfileId`, `createdByUserId`, `matchDate`, optional
+    `tournament`, optional `country`, optional `city`, optional `club`,
+    `opponentName`, optional `opponentExternalId`, optional `round`, optional
+    `format`, `framesWon`, `framesLost`, optional `highBreak`, `breaks50`,
+    `breaks70`, `breaks100`, optional `decidingFrameResult`, optional
+    `safetySuccess`, optional `longPotSuccess`, optional `unforcedErrors`,
+    optional `tacticalErrors`, `result`, `source`, optional `sourceUrl`,
+    optional `videoUrl`, optional `notes`, `createdAt`, `updatedAt`.
+- `result` is a PostgreSQL enum mapped from lowercase API values:
+    `player_win`, `opponent_win`, `draw`, `unknown`.
+- `source` is a PostgreSQL enum mapped from lowercase API values: `manual`,
+    `external`. PH-1-008 writes manual matches only; external import keeps the
+    same model surface for later phases.
+- Deleting a `PlayerProfile` cascades to its matches. Deleting the creating
+    `User` also cascades through the `createdBy` relation.
+
+### MatchFrame
+
+- `id`, `matchId`, `frameNumber`, optional `playerScore`, optional
+    `opponentScore`, `winner`, optional `highBreak`, optional
+    `frameDurationSec`, optional `notes`, `createdAt`.
+- `(matchId, frameNumber)` is unique. Adding a frame through the API
+    recalculates `Match.framesWon`, `Match.framesLost` and `Match.result` from
+    all saved frame winners.
+- `winner` is a PostgreSQL enum mapped from lowercase API values: `player`,
+    `opponent`, `unknown`.
 
 ## Sensitive data
 

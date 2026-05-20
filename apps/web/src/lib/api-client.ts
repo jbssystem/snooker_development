@@ -5,6 +5,7 @@ import type {
   CreateEquipmentProfileInput,
   CreateDrillTemplateInput,
   CreateDrillAttemptInput,
+  CreateMatchInput,
   CreateTrainingSessionInput,
   DrillAttempt,
   DrillExecution,
@@ -13,6 +14,9 @@ import type {
   FinishDrillExecutionInput,
   FinishTrainingSessionInput,
   LoginInput,
+  AddMatchFrameInput,
+  Match,
+  MatchFrame,
   PlayerDashboard,
   PlayerProfile,
   RegisterInput,
@@ -20,6 +24,7 @@ import type {
   Tokens,
   UpdateDrillTemplateInput,
   UpdateEquipmentProfileInput,
+  UpdateMatchInput,
   UpdateTrainingSessionInput,
   UpsertPlayerProfileInput,
 } from '@snooker/shared';
@@ -182,5 +187,27 @@ export const api = {
   dashboard: {
     getPlayerDashboard: (token: string) =>
       request<PlayerDashboard>('/players/me/dashboard', { token }),
+  },
+  matches: {
+    list: (token: string) => request<Match[]>('/matches', { token }),
+    get: (token: string, id: string) => request<Match>(`/matches/${id}`, { token }),
+    create: (token: string, input: CreateMatchInput) =>
+      request<Match>('/matches', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    update: (token: string, id: string, input: UpdateMatchInput) =>
+      request<Match>(`/matches/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    addFrame: (token: string, id: string, input: AddMatchFrameInput) =>
+      request<MatchFrame>(`/matches/${id}/frames`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
   },
 };

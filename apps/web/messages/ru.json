@@ -305,6 +305,80 @@
       "title": "Схема стола"
     }
   },
+  "matches": {
+    "title": "Матчи",
+    "subtitle": "Ручной журнал матчей, фреймов и ключевой статистики.",
+    "authRequired": "Войдите, чтобы вести журнал матчей.",
+    "loginCta": "Войти",
+    "empty": "Матчей пока нет.",
+    "loading": "Загрузка матчей…",
+    "required": "Обязательное поле",
+    "saving": "Сохранение…",
+    "profileRequired": {
+      "title": "Нужен профиль игрока",
+      "description": "Сначала создайте профиль, чтобы сохранять матчи в историю игрока.",
+      "cta": "Открыть профиль"
+    },
+    "form": {
+      "title": "Новый матч",
+      "submit": "Сохранить матч"
+    },
+    "fields": {
+      "matchDate": "Дата",
+      "opponentName": "Соперник",
+      "tournament": "Турнир",
+      "round": "Раунд",
+      "format": "Формат",
+      "country": "Страна",
+      "city": "Город",
+      "club": "Клуб",
+      "framesWon": "Фреймы +",
+      "framesLost": "Фреймы -",
+      "highBreak": "High break",
+      "breaks50": "50+",
+      "breaks70": "70+",
+      "breaks100": "100+",
+      "safetySuccess": "Safety %",
+      "longPotSuccess": "Long pot %",
+      "unforcedErrors": "Невын. ошибки",
+      "tacticalErrors": "Тактич. ошибки",
+      "sourceUrl": "Источник",
+      "videoUrl": "Видео",
+      "notes": "Заметки"
+    },
+    "stats": {
+      "result": "Результат"
+    },
+    "result": {
+      "player_win": "Победа",
+      "opponent_win": "Поражение",
+      "draw": "Ничья",
+      "unknown": "Не указан"
+    },
+    "winner": {
+      "player": "Игрок",
+      "opponent": "Соперник",
+      "unknown": "Не указан"
+    },
+    "frames": {
+      "title": "Фреймы",
+      "add": "Добавить фрейм",
+      "submit": "Добавить",
+      "empty": "Фреймы ещё не добавлены.",
+      "number": "№",
+      "score": "Счёт",
+      "winner": "Победитель",
+      "playerScore": "Очки игрока",
+      "opponentScore": "Очки соперника",
+      "duration": "Мин."
+    },
+    "opponent": {
+      "title": "История соперника",
+      "matches": "Матчи",
+      "record": "П-Пр-Н",
+      "frames": "Фреймы"
+    }
+  },
   "tableRenderer": {
     "editor": {
       "title": "Схема стола",

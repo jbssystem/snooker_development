@@ -9,6 +9,7 @@ import { PlayersModule } from './modules/players/players.module';
 import { DrillsModule } from './modules/drills/drills.module';
 import { TrainingModule } from './modules/training/training.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { MatchesModule } from './modules/matches/matches.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     TrainingModule,
     DrillsModule,
     DashboardModule,
+    MatchesModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

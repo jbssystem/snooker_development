@@ -73,6 +73,24 @@ enum DrillAttemptResult {
   SKIPPED @map("skipped")
 }
 
+enum MatchResult {
+  PLAYER_WIN   @map("player_win")
+  OPPONENT_WIN @map("opponent_win")
+  DRAW         @map("draw")
+  UNKNOWN      @map("unknown")
+}
+
+enum MatchSource {
+  MANUAL   @map("manual")
+  EXTERNAL @map("external")
+}
+
+enum FrameWinner {
+  PLAYER   @map("player")
+  OPPONENT @map("opponent")
+  UNKNOWN  @map("unknown")
+}
+
 model User {
   id           String     @id @default(cuid())
   email        String     @unique
@@ -89,6 +107,7 @@ model User {
   coachProfile            CoachProfile?
   drillTemplates          DrillTemplate[]   @relation("CreatedDrillTemplates")
   createdTrainingSessions TrainingSession[] @relation("CreatedTrainingSessions")
+  createdMatches          Match[]           @relation("CreatedMatches")
 }
 
 model RefreshToken {
@@ -138,6 +157,7 @@ model PlayerProfile {
   equipment        EquipmentProfile[]
   trainingSessions TrainingSession[]
   drillExecutions  DrillExecution[]
+  matches          Match[]
 }
 
 model EquipmentProfile {
@@ -284,6 +304,68 @@ model DrillAttempt {
   @@index([createdAt])
 }
 
-// NOTE: Training sessions, drills, matches, frames, shots, calendar,
-// lifestyle, equipment, AI reports and external imports will be added
-// in subsequent migrations. Schema sketches live in docs/database-model.md.
+model Match {
+  id                  String       @id @default(cuid())
+  playerProfileId     String
+  createdByUserId     String
+  matchDate           DateTime     @default(now())
+  tournament          String?
+  country             String?
+  city                String?
+  club                String?
+  opponentName        String
+  opponentExternalId  String?
+  round               String?
+  format              String?
+  framesWon           Int          @default(0)
+  framesLost          Int          @default(0)
+  highBreak           Int?
+  breaks50            Int          @default(0)
+  breaks70            Int          @default(0)
+  breaks100           Int          @default(0)
+  decidingFrameResult FrameWinner?
+  safetySuccess       Float?
+  longPotSuccess      Float?
+  unforcedErrors      Int?
+  tacticalErrors      Int?
+  result              MatchResult  @default(UNKNOWN)
+  source              MatchSource  @default(MANUAL)
+  sourceUrl           String?
+  videoUrl            String?
+  notes               String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  createdBy     User          @relation("CreatedMatches", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  frames        MatchFrame[]
+
+  @@index([playerProfileId])
+  @@index([createdByUserId])
+  @@index([matchDate])
+  @@index([opponentName])
+  @@index([result])
+}
+
+model MatchFrame {
+  id               String      @id @default(cuid())
+  matchId          String
+  frameNumber      Int
+  playerScore      Int?
+  opponentScore    Int?
+  winner           FrameWinner @default(UNKNOWN)
+  highBreak        Int?
+  frameDurationSec Int?
+  notes            String?
+  createdAt        DateTime    @default(now())
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, frameNumber])
+  @@index([matchId])
+  @@index([winner])
+}
+
+// NOTE: Shot-by-shot, calendar, lifestyle, AI reports and external imports
+// will be added in subsequent migrations. Schema sketches live in
+// docs/database-model.md.

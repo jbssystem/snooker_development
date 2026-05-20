@@ -305,6 +305,80 @@
       "title": "Схема столу"
     }
   },
+  "matches": {
+    "title": "Матчі",
+    "subtitle": "Ручний журнал матчів, фреймів і ключової статистики.",
+    "authRequired": "Увійдіть, щоб вести журнал матчів.",
+    "loginCta": "Увійти",
+    "empty": "Матчів поки немає.",
+    "loading": "Завантаження матчів…",
+    "required": "Обов'язкове поле",
+    "saving": "Збереження…",
+    "profileRequired": {
+      "title": "Потрібен профіль гравця",
+      "description": "Спочатку створіть профіль, щоб зберігати матчі в історію гравця.",
+      "cta": "Відкрити профіль"
+    },
+    "form": {
+      "title": "Новий матч",
+      "submit": "Зберегти матч"
+    },
+    "fields": {
+      "matchDate": "Дата",
+      "opponentName": "Суперник",
+      "tournament": "Турнір",
+      "round": "Раунд",
+      "format": "Формат",
+      "country": "Країна",
+      "city": "Місто",
+      "club": "Клуб",
+      "framesWon": "Фрейми +",
+      "framesLost": "Фрейми -",
+      "highBreak": "High break",
+      "breaks50": "50+",
+      "breaks70": "70+",
+      "breaks100": "100+",
+      "safetySuccess": "Safety %",
+      "longPotSuccess": "Long pot %",
+      "unforcedErrors": "Невим. помилки",
+      "tacticalErrors": "Тактич. помилки",
+      "sourceUrl": "Джерело",
+      "videoUrl": "Відео",
+      "notes": "Нотатки"
+    },
+    "stats": {
+      "result": "Результат"
+    },
+    "result": {
+      "player_win": "Перемога",
+      "opponent_win": "Поразка",
+      "draw": "Нічия",
+      "unknown": "Не вказано"
+    },
+    "winner": {
+      "player": "Гравець",
+      "opponent": "Суперник",
+      "unknown": "Не вказано"
+    },
+    "frames": {
+      "title": "Фрейми",
+      "add": "Додати фрейм",
+      "submit": "Додати",
+      "empty": "Фрейми ще не додані.",
+      "number": "№",
+      "score": "Рахунок",
+      "winner": "Переможець",
+      "playerScore": "Очки гравця",
+      "opponentScore": "Очки суперника",
+      "duration": "Хв."
+    },
+    "opponent": {
+      "title": "Історія суперника",
+      "matches": "Матчі",
+      "record": "П-Пор-Н",
+      "frames": "Фрейми"
+    }
+  },
   "tableRenderer": {
     "editor": {
       "title": "Схема столу",

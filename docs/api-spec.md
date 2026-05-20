@@ -50,11 +50,17 @@ whenever an endpoint is added, changed or removed.
 | POST | `/training-sessions/:id/drills` | Bearer | `AddDrillExecutionSchema` | Adds a visible drill template to an open current-player session and snapshots its table layout. |
 | POST | `/drill-executions/:id/attempts` | Bearer | `CreateDrillAttemptSchema` | Appends the next numbered attempt to an open execution and increments counters. |
 | PATCH | `/drill-executions/:id/finish` | Bearer | `FinishDrillExecutionSchema` | Sets `endedAt` and optional result summary fields. Repeated calls return the finished execution. |
+| GET | `/matches` | Bearer | – | Lists the current player's latest 50 matches with frames. Returns an empty list if the player profile does not exist yet. |
+| GET | `/matches/:id` | Bearer | – | Returns one current-player match with frames. |
+| POST | `/matches` | Bearer | `CreateMatchSchema` | Creates a manual current-player match with opponent, score, location, break and key-stat fields. |
+| PATCH | `/matches/:id` | Bearer | `UpdateMatchSchema` | Updates manual match metadata, score and key stats for a current-player match. |
+| POST | `/matches/:id/frames` | Bearer | `AddMatchFrameSchema` | Adds one frame to a current-player match and recalculates frame score/result from saved frames. |
 
 Schemas live in `packages/shared/src/schemas/auth.ts` and
 `packages/shared/src/schemas/player.ts` and
 `packages/shared/src/schemas/dashboard.ts` and
 `packages/shared/src/schemas/drill.ts` and
+`packages/shared/src/schemas/match.ts` and
 `packages/shared/src/schemas/training.ts`.
 Error codes returned by auth endpoints are defined in
 `packages/shared/src/errors/codes.ts` under `ErrorCodes.Auth.*` and must be

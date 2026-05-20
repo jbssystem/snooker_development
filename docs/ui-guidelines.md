@@ -150,6 +150,21 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   training session. The API returns empty aggregates when a profile does not
   exist yet, so the page can stay stable immediately after registration.
 
+## Match Log UI
+
+- `/matches` lives in the `(app)` route group and is rendered by
+  `src/components/matches/MatchLogClient.tsx`.
+- The layout mirrors the training screen rhythm: match history on the left,
+  selected match detail and frames in the center, and manual match creation on
+  the right.
+- Match creation captures opponent, date, tournament context, venue, frame
+  score, breaks, safety/long-pot percentages, error counts, links and notes.
+- The selected match detail shows score/result, key stat tiles, a frame table,
+  an add-frame form, and an opponent-history summary derived from the loaded
+  match list.
+- Adding a frame invalidates `matches` and `player-dashboard` query keys so
+  match history and downstream analytics refresh together.
+
 ## Providers
 
 `src/providers/QueryProvider.tsx` wraps locale routes under
