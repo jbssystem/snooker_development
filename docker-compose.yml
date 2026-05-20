@@ -16,6 +16,7 @@ services:
     env_file: [.env]
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
     ports:
       - "127.0.0.1:4000:4000"
     depends_on: [postgres, redis]
@@ -28,6 +29,7 @@ services:
     env_file: [.env]
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
     depends_on: [postgres, redis]
     restart: unless-stopped
 
@@ -47,6 +49,8 @@ services:
     image: redis:7-alpine
     volumes:
       - redis_data:/data
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     restart: unless-stopped
 
   minio:

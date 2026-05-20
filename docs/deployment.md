@@ -29,8 +29,9 @@ The web app is reachable at `http://localhost` (via nginx) or
 ## Environment variables
 
 See `.env.example`. Anything secret must be set per environment and never
-committed. `API_JWT_SECRET` and `API_JWT_REFRESH_SECRET` MUST be rotated
-before any non-local deployment.
+committed. `API_JWT_SECRET` MUST be rotated before any non-local deployment.
+`CORS_ORIGINS` is a comma-separated allow-list; production disables CORS if
+the allow-list is missing instead of accepting every origin.
 
 ## Services
 
@@ -40,9 +41,13 @@ before any non-local deployment.
 | api | 4000 | stateless |
 | worker | – | stateless |
 | postgres | 5433 | `postgres_data` volume |
-| redis | – (internal) | `redis_data` volume |
+| redis | 6379 | `redis_data` volume |
 | minio | 9000, 9001 | `minio_data` volume |
 | nginx | 80 | config-only |
+
+Inside Docker, `api` and `worker` override `DATABASE_URL` and `REDIS_URL` to
+the internal service names (`postgres:5432`, `redis:6379`). Host-side local
+development uses `localhost:5433` and `localhost:6379`.
 
 ## Migrations
 

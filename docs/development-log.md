@@ -18,6 +18,33 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Review hardening after PH-1-003
+
+**Delivered:**
+- Verified `.env` is ignored and has never been committed to git history.
+- Renamed equipment migration to `20260520120100_add_equipment_profiles` so
+  Prisma applies it after `20260520120000_init` on fresh databases; local
+  `_prisma_migrations` metadata was updated without resetting data.
+- Replaced JWT fallback secret with required `API_JWT_SECRET` startup config.
+- Restricted CORS to `CORS_ORIGINS` (local default only outside production;
+  production disables CORS if no allow-list is configured).
+- Added global API rate limiting plus tighter throttles on auth endpoints.
+- Scoped Zod validation pipes to request bodies, avoiding accidental parsing
+  of `@Req`, `@Ip` or route params.
+- Login now rejects non-`ACTIVE` users with the generic invalid-credentials
+  error code.
+- Redis host port is exposed for local dev and Docker containers override
+  `REDIS_URL` back to the internal service address.
+
+**Open items:**
+- Refresh tokens are still kept in the PH-1 client-side Zustand store. This is
+  tracked as a PH-2 hardening item: move refresh tokens to httpOnly cookies
+  and add SSR-aware route protection.
+- `pnpm audit --audit-level moderate` currently reports transitive dependency
+  advisories (including Nest/Next/next-intl dependency trees). Most fixes imply
+  coordinated major-version upgrades or overrides, so they are tracked as a
+  dedicated dependency-hardening task instead of being mixed into PH-1-004.
+
 ### PH-1-003 — Player profile CRUD + equipment profile
 
 **Delivered:**

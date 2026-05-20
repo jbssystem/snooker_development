@@ -38,6 +38,9 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.InvalidCredentials } });
     }
+    if (user.status !== 'ACTIVE') {
+      throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.InvalidCredentials } });
+    }
     const valid = await argon2.verify(user.passwordHash, input.password);
     if (!valid) {
       throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.InvalidCredentials } });

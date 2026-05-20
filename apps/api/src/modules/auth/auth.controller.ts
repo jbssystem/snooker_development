@@ -8,9 +8,9 @@ import {
   Post,
   Req,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import {
   LoginSchema,
@@ -38,9 +38,9 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  @UsePipes(new ZodValidationPipe(RegisterSchema))
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   register(
-    @Body() body: RegisterInput,
+    @Body(new ZodValidationPipe(RegisterSchema)) body: RegisterInput,
     @Req() req: Request,
     @Ip() ip: string,
   ): Promise<AuthSession> {
@@ -49,9 +49,9 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ZodValidationPipe(LoginSchema))
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   login(
-    @Body() body: LoginInput,
+    @Body(new ZodValidationPipe(LoginSchema)) body: LoginInput,
     @Req() req: Request,
     @Ip() ip: string,
   ): Promise<AuthSession> {
@@ -60,9 +60,9 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ZodValidationPipe(RefreshSchema))
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   refresh(
-    @Body() body: RefreshInput,
+    @Body(new ZodValidationPipe(RefreshSchema)) body: RefreshInput,
     @Req() req: Request,
     @Ip() ip: string,
   ): Promise<Tokens> {
@@ -71,8 +71,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UsePipes(new ZodValidationPipe(RefreshSchema))
-  async logout(@Body() body: RefreshInput): Promise<void> {
+  async logout(@Body(new ZodValidationPipe(RefreshSchema)) body: RefreshInput): Promise<void> {
     await this.tokens.revoke(body.refreshToken);
   }
 

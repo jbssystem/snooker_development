@@ -10,7 +10,6 @@ import {
   Post,
   Put,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -41,10 +40,9 @@ export class PlayersController {
   }
 
   @Put('profile')
-  @UsePipes(new ZodValidationPipe(UpsertPlayerProfileSchema))
   upsertProfile(
     @CurrentUserId() userId: string,
-    @Body() body: UpsertPlayerProfileInput,
+    @Body(new ZodValidationPipe(UpsertPlayerProfileSchema)) body: UpsertPlayerProfileInput,
   ): Promise<PlayerProfile> {
     return this.players.upsertProfile(userId, body);
   }
@@ -55,20 +53,18 @@ export class PlayersController {
   }
 
   @Post('equipment-profiles')
-  @UsePipes(new ZodValidationPipe(CreateEquipmentProfileSchema))
   createEquipment(
     @CurrentUserId() userId: string,
-    @Body() body: CreateEquipmentProfileInput,
+    @Body(new ZodValidationPipe(CreateEquipmentProfileSchema)) body: CreateEquipmentProfileInput,
   ): Promise<EquipmentProfile> {
     return this.players.createEquipment(userId, body);
   }
 
   @Patch('equipment-profiles/:id')
-  @UsePipes(new ZodValidationPipe(UpdateEquipmentProfileSchema))
   updateEquipment(
     @CurrentUserId() userId: string,
     @Param('id') id: string,
-    @Body() body: UpdateEquipmentProfileInput,
+    @Body(new ZodValidationPipe(UpdateEquipmentProfileSchema)) body: UpdateEquipmentProfileInput,
   ): Promise<EquipmentProfile> {
     return this.players.updateEquipment(userId, id, body);
   }

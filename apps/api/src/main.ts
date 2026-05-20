@@ -1,10 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { HttpErrorFilter } from './common/filters/http-error.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  app.enableCors({ origin: corsOrigins(configService), credentials: true });
   app.useGlobalFilters(new HttpErrorFilter());
 
   const config = new DocumentBuilder()
@@ -23,3 +26,16 @@ async function bootstrap() {
 }
 
 void bootstrap();
+
+function corsOrigins(configService: ConfigService): string[] | false {
+  const configured = configService.get<string>('CORS_ORIGINS');
+  if (configured) {
+    return configured
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+  }
+  return configService.get<string>('NODE_ENV') === 'production'
+    ? false
+    : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+}

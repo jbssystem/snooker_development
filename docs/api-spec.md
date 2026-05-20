@@ -12,6 +12,10 @@ whenever an endpoint is added, changed or removed.
 - Filtering: documented per resource. Time ranges as ISO 8601.
 - Errors: `{ error: { code, message?, details? } }`. `code` is stable.
 - DTOs validated with Zod schemas exported from `@snooker/shared`.
+- Body validation is attached directly to `@Body(new ZodValidationPipe(...))`,
+  not method-wide, so route params and request metadata are not parsed as DTOs.
+- Rate limiting is global (`120/min`) with tighter auth endpoint throttles:
+  register `5/min`, login `10/min`, refresh `20/min`.
 - All write endpoints idempotency-keyed via `Idempotency-Key` header
   when an action could double-submit (drill attempts, match shots).
 
