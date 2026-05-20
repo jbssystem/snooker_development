@@ -62,7 +62,46 @@
     }
   },
   "dashboard": {
-    "placeholder": "Coming soon: player overview, weekly progress, recent sessions, AI insights."
+    "title": "Dashboard",
+    "subtitle": "Training volume, attempt success and recent sessions.",
+    "authRequired": "Sign in to see your training dashboard.",
+    "loginCta": "Sign in",
+    "loading": "Loading dashboard…",
+    "error": "Could not load the dashboard. Check the API and try again.",
+    "period": "Last {days} days",
+    "units": {
+      "minutes": "min"
+    },
+    "empty": {
+      "title": "No data yet",
+      "description": "Create a profile and start the first training session to populate these charts.",
+      "profileCta": "Open profile",
+      "trainingCta": "Start training"
+    },
+    "stats": {
+      "sessions": "Sessions",
+      "trainingMinutes": "Minutes",
+      "attempts": "Attempts",
+      "successRate": "Success rate"
+    },
+    "charts": {
+      "volume": "Training volume",
+      "successTrend": "Success trend"
+    },
+    "tooltip": {
+      "trainingMinutes": "Minutes",
+      "successRate": "Success rate"
+    },
+    "drills": {
+      "title": "Drill progress",
+      "empty": "No drills have been executed yet.",
+      "meta": "{executions} executions · {attempts} attempts"
+    },
+    "recent": {
+      "title": "Recent sessions",
+      "empty": "No sessions yet.",
+      "meta": "{drills} drills · {attempts} attempts"
+    }
   },
   "auth": {
     "login": {

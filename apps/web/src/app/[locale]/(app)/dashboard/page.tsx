@@ -1,13 +1,5 @@
-import { getTranslations } from 'next-intl/server';
+import { DashboardClient } from '@/components/dashboard/DashboardClient';
 
-export default async function DashboardPage() {
-  const t = await getTranslations('nav');
-  const tDash = await getTranslations('dashboard');
-
-  return (
-    <main>
-      <h1 className="text-3xl font-semibold text-text-primary">{t('dashboard')}</h1>
-      <p className="mt-4 text-text-secondary">{tDash('placeholder')}</p>
-    </main>
-  );
+export default function DashboardPage() {
+  return <DashboardClient />;
 }

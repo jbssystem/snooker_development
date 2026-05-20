@@ -1,5 +1,6 @@
 export * from './schemas/player';
 export * from './schemas/auth';
+export * from './schemas/dashboard';
 export * from './schemas/drill';
 export * from './schemas/training';
 export * from './constants/locales';

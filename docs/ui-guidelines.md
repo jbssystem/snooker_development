@@ -136,6 +136,20 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   `TableLayoutPreview`, so the coach sees the exact scheme that was copied
   from the template when the execution was added.
 
+## Dashboard UI
+
+- `/dashboard` lives in the `(app)` route group and is rendered by
+  `src/components/dashboard/DashboardClient.tsx`.
+- The page uses client-side auth from `useAuthStore` and TanStack Query key
+  `player-dashboard`, calling `GET /players/me/dashboard`.
+- The first dashboard slice is operational rather than decorative: KPI tiles
+  for sessions, minutes, attempts and success rate; Recharts panels for
+  weekly training volume and attempt success trend; drill progress rows; and
+  recent sessions.
+- Empty state keeps two practical exits visible: profile setup and starting a
+  training session. The API returns empty aggregates when a profile does not
+  exist yet, so the page can stay stable immediately after registration.
+
 ## Providers
 
 `src/providers/QueryProvider.tsx` wraps locale routes under

@@ -13,6 +13,7 @@ import type {
   FinishDrillExecutionInput,
   FinishTrainingSessionInput,
   LoginInput,
+  PlayerDashboard,
   PlayerProfile,
   RegisterInput,
   TrainingSession,
@@ -177,5 +178,9 @@ export const api = {
         token,
         body: JSON.stringify(input),
       }),
+  },
+  dashboard: {
+    getPlayerDashboard: (token: string) =>
+      request<PlayerDashboard>('/players/me/dashboard', { token }),
   },
 };

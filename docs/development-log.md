@@ -18,6 +18,33 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-007 — Basic dashboard
+
+**Delivered:**
+- `packages/shared/src/schemas/dashboard.ts` exports the dashboard period,
+  totals, weekly point, drill progress, recent session and full
+  `PlayerDashboard` DTOs.
+- NestJS `DashboardModule` exposes guarded `GET /players/me/dashboard` for
+  the current user, deriving a 28-day overview from existing training
+  sessions and drill executions without a new database migration.
+- Dashboard aggregates include sessions, finished/open sessions, training
+  minutes, drill executions, attempts, successes, success rate, four weekly
+  buckets, top drill progress and five recent sessions.
+- Users without a player profile receive empty dashboard aggregates, keeping
+  the page useful immediately after registration.
+- Web `/dashboard` now renders KPI tiles, Recharts training-volume and
+  success-trend charts, drill progress rows, recent sessions and empty/auth
+  states through `DashboardClient`.
+- i18n keys added in all three locales (`ru`, `en`, `uk`) under
+  `dashboard.*`.
+- Docs updated: `docs/api-spec.md`, `docs/ui-guidelines.md`,
+  `docs/development-log.md`.
+
+**Open items:**
+- Dashboard is based on drill attempt success and elapsed finished-session
+  time. Match performance, break-building stats and long-term season views
+  remain planned analytics follow-ups.
+
 ### PH-1-006 — SnookerTableCanvas
 
 **Delivered:**
@@ -220,8 +247,8 @@ Format:
 4. ✅ PH-1-004 — Drill library (categories, templates, metrics schema, table layout).
 5. ✅ PH-1-005 — Training session flow.
 6. ✅ PH-1-006 — SnookerTableCanvas (react-konva).
-7. ⏳ PH-1-007 — Basic dashboard.
-8. PH-1-008 — Manual match log.
+7. ✅ PH-1-007 — Basic dashboard.
+8. ⏳ PH-1-008 — Manual match log.
 9. PH-1-009 — Calendar factors.
 10. PH-1-010 — Weekly AI summary (Anthropic).
 11. PH-1-011 — Docker production deploy.
