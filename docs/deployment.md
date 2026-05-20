@@ -32,6 +32,9 @@ See `.env.example`. Anything secret must be set per environment and never
 committed. `API_JWT_SECRET` MUST be rotated before any non-local deployment.
 `CORS_ORIGINS` is a comma-separated allow-list; production disables CORS if
 the allow-list is missing instead of accepting every origin.
+The API sets baseline security headers itself (`nosniff`, `DENY`, CSP,
+`no-referrer`, permissions policy, and HSTS in production). Keep equivalent
+nginx headers aligned rather than loosening them at the proxy.
 
 ## Services
 
@@ -48,6 +51,8 @@ the allow-list is missing instead of accepting every origin.
 Inside Docker, `api` and `worker` override `DATABASE_URL` and `REDIS_URL` to
 the internal service names (`postgres:5432`, `redis:6379`). Host-side local
 development uses `localhost:5433` and `localhost:6379`.
+AI report generation needs Redis only when `/ai/reports/generate` is called;
+the normal API process can start without opening the AI queue connection.
 
 ## Migrations
 

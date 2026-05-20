@@ -16,11 +16,20 @@ const OptionalTextSchema = z
   .optional()
   .transform((value) => (value === '' ? undefined : value));
 
+const OptionalHttpUrlSchema = z
+  .string()
+  .trim()
+  .max(2000)
+  .optional()
+  .transform((value) => (value === '' ? undefined : value))
+  .refine((value) => value === undefined || isHttpUrl(value));
+
 const OptionalDateStringSchema = z
   .string()
   .trim()
   .optional()
-  .transform((value) => (value === '' ? undefined : value));
+  .transform((value) => (value === '' ? undefined : value))
+  .refine((value) => value === undefined || isValidDateInput(value));
 
 const OptionalBoundedIntSchema = (min: number, max: number) =>
   z.preprocess(
@@ -104,8 +113,8 @@ export const CreateMatchSchema = z.object({
   unforcedErrors: OptionalBoundedIntSchema(0, 999),
   tacticalErrors: OptionalBoundedIntSchema(0, 999),
   result: MatchResultSchema.optional(),
-  sourceUrl: OptionalTextSchema,
-  videoUrl: OptionalTextSchema,
+  sourceUrl: OptionalHttpUrlSchema,
+  videoUrl: OptionalHttpUrlSchema,
   notes: OptionalTextSchema,
 });
 export type CreateMatchInput = z.infer<typeof CreateMatchSchema>;
@@ -132,8 +141,8 @@ export const UpdateMatchSchema = z.object({
   unforcedErrors: OptionalBoundedIntSchema(0, 999),
   tacticalErrors: OptionalBoundedIntSchema(0, 999),
   result: MatchResultSchema.optional(),
-  sourceUrl: OptionalTextSchema,
-  videoUrl: OptionalTextSchema,
+  sourceUrl: OptionalHttpUrlSchema,
+  videoUrl: OptionalHttpUrlSchema,
   notes: OptionalTextSchema,
 });
 export type UpdateMatchInput = z.infer<typeof UpdateMatchSchema>;
@@ -148,3 +157,16 @@ export const AddMatchFrameSchema = z.object({
   notes: OptionalTextSchema,
 });
 export type AddMatchFrameInput = z.infer<typeof AddMatchFrameSchema>;
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function isValidDateInput(value: string): boolean {
+  return !Number.isNaN(new Date(value).getTime());
+}

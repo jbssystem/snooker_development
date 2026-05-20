@@ -19,6 +19,38 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Post PH-1-010 audit hardening
+
+**Delivered:**
+
+- Refresh tokens moved out of web `localStorage` into an httpOnly
+  `snooker_refresh` cookie scoped to `/auth`; auth responses now expose only
+  access-token fields to browser JavaScript.
+- Web API client retries one authenticated request after a 401 by calling
+  `/auth/refresh` with credentials, then updates the access token in the
+  Zustand auth store.
+- Auth forms use `method="post"` so credentials cannot leak into the URL if a
+  user submits before React hydration finishes.
+- API now emits baseline security headers (`nosniff`, `DENY`, CSP,
+  `no-referrer`, permissions policy, HSTS in production).
+- Shared input schemas now validate date strings, cap table-layout arrays and
+  calendar metadata size, and require manual match links to be HTTP(S) URLs.
+- Route `:id` params use a CUID validation pipe before service logic; malformed
+  ids return `validation.failed` instead of falling through to Prisma.
+- AI report generation is throttled and its BullMQ queue is created lazily, so
+  normal API startup no longer requires a live Redis connection.
+- Training attempt and match-frame auto-numbering now use serializable
+  transaction retry to avoid race-condition 500s on rapid duplicate clicks.
+- Header navigation remains visible as a horizontal scroll rail on mobile.
+
+**Validation:**
+
+- Browser smoke on fresh API/web servers covered registration, dashboard,
+  profile, drills, training, matches, calendar and AI pages at desktop and
+  mobile widths; no horizontal overflow or page-level API errors were found.
+- HTTP smoke verified security headers, invalid-CUID `400`, httpOnly refresh
+  cookie rotation, and absence of refresh tokens in JSON auth responses.
+
 ### PH-1-010 — Weekly AI summary
 
 **Delivered:**

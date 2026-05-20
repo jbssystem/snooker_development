@@ -284,6 +284,9 @@
       "level": "Уровень",
       "seasonGoal": "Цель сезона"
     },
+    "placeholders": {
+      "country": "GB"
+    },
     "dominantHand": {
       "empty": "Не указано",
       "LEFT": "Левая",

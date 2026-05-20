@@ -18,6 +18,7 @@ import {
   type UpdateSupplementEventInput,
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { CuidValidationPipe } from '../../common/pipes/cuid-validation.pipe';
 import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CalendarService } from './calendar.service';
@@ -37,7 +38,7 @@ export class CalendarController {
   @Get('calendar-events/:id')
   getCalendarEvent(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
   ): Promise<CalendarEvent> {
     return this.calendar.getCalendarEvent(userId, id);
   }
@@ -53,7 +54,7 @@ export class CalendarController {
   @Patch('calendar-events/:id')
   updateCalendarEvent(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateCalendarEventSchema)) body: UpdateCalendarEventInput,
   ): Promise<CalendarEvent> {
     return this.calendar.updateCalendarEvent(userId, id, body);
@@ -67,7 +68,7 @@ export class CalendarController {
   @Get('lifestyle-factors/:id')
   getLifestyleFactor(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
   ): Promise<LifestyleFactor> {
     return this.calendar.getLifestyleFactor(userId, id);
   }
@@ -83,7 +84,7 @@ export class CalendarController {
   @Patch('lifestyle-factors/:id')
   updateLifestyleFactor(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateLifestyleFactorSchema)) body: UpdateLifestyleFactorInput,
   ): Promise<LifestyleFactor> {
     return this.calendar.updateLifestyleFactor(userId, id, body);
@@ -97,7 +98,7 @@ export class CalendarController {
   @Get('supplement-events/:id')
   getSupplementEvent(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
   ): Promise<SupplementEvent> {
     return this.calendar.getSupplementEvent(userId, id);
   }
@@ -113,7 +114,7 @@ export class CalendarController {
   @Patch('supplement-events/:id')
   updateSupplementEvent(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateSupplementEventSchema)) body: UpdateSupplementEventInput,
   ): Promise<SupplementEvent> {
     return this.calendar.updateSupplementEvent(userId, id, body);

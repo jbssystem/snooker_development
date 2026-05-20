@@ -8,6 +8,8 @@ import { PrismaService } from '../prisma/prisma.module';
 const ACCESS_TTL_SECONDS = 15 * 60; // 15 min
 const REFRESH_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
+export type IssuedTokens = Tokens & { refreshToken: string };
+
 @Injectable()
 export class TokensService {
   constructor(
@@ -16,7 +18,7 @@ export class TokensService {
     private readonly config: ConfigService,
   ) {}
 
-  async issuePair(userId: string, meta: { userAgent?: string; ip?: string }): Promise<Tokens> {
+  async issuePair(userId: string, meta: { userAgent?: string; ip?: string }): Promise<IssuedTokens> {
     const accessToken = await this.jwt.signAsync(
       { sub: userId },
       { expiresIn: ACCESS_TTL_SECONDS },
@@ -42,7 +44,7 @@ export class TokensService {
     };
   }
 
-  async rotate(refreshToken: string, meta: { userAgent?: string; ip?: string }): Promise<Tokens> {
+  async rotate(refreshToken: string, meta: { userAgent?: string; ip?: string }): Promise<IssuedTokens> {
     const tokenHash = this.hash(refreshToken);
     const stored = await this.prisma.refreshToken.findUnique({ where: { tokenHash } });
     if (!stored || stored.revokedAt) {
@@ -51,10 +53,20 @@ export class TokensService {
     if (stored.expiresAt.getTime() < Date.now()) {
       throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.RefreshTokenExpired } });
     }
-    await this.prisma.refreshToken.update({
-      where: { id: stored.id },
+    const user = await this.prisma.user.findUnique({
+      where: { id: stored.userId },
+      select: { status: true },
+    });
+    if (!user || user.status !== 'ACTIVE') {
+      throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.RefreshTokenInvalid } });
+    }
+    const revoked = await this.prisma.refreshToken.updateMany({
+      where: { id: stored.id, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+    if (revoked.count !== 1) {
+      throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.RefreshTokenInvalid } });
+    }
     return this.issuePair(stored.userId, meta);
   }
 
@@ -77,4 +89,11 @@ export class TokensService {
   private hash(token: string): string {
     return createHash('sha256').update(token).digest('hex');
   }
+}
+
+export function publicTokens(tokens: IssuedTokens): Tokens {
+  return {
+    accessToken: tokens.accessToken,
+    accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+  };
 }

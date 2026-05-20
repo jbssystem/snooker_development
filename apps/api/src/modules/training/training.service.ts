@@ -180,7 +180,7 @@ export class TrainingService {
     const execution = await this.findExecutionOrThrow(userId, executionId);
     assertOpen(execution.endedAt);
 
-    const attempt = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const attempt = await withSerializableRetry(this.prisma, async (tx) => {
       const lastAttempt = await tx.drillAttempt.findFirst({
         where: { drillExecutionId: execution.id },
         orderBy: { attemptNumber: 'desc' },
@@ -341,6 +341,39 @@ function assertOpen(endedAt: Date | null): void {
   if (endedAt) {
     throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
   }
+}
+
+async function withSerializableRetry<T>(
+  prisma: PrismaService,
+  action: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await prisma.$transaction(action, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      });
+    } catch (error) {
+      if (!isRetryableTransactionConflict(error) || attempt === 2) {
+        if (isUniqueConflict(error)) {
+          throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
+        }
+        throw error;
+      }
+    }
+  }
+  throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
+}
+
+function isRetryableTransactionConflict(error: unknown): boolean {
+  return isPrismaCode(error, 'P2034') || isUniqueConflict(error);
+}
+
+function isUniqueConflict(error: unknown): boolean {
+  return isPrismaCode(error, 'P2002');
+}
+
+function isPrismaCode(error: unknown, code: string): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && (error as { code?: unknown }).code === code;
 }
 
 function mapTrainingSession(session: SessionWithExecutions): TrainingSession {

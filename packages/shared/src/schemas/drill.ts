@@ -88,7 +88,7 @@ const TargetZoneSchema = z.discriminatedUnion('type', [
   z.object({
     id: z.string().trim().min(1),
     type: z.literal('polygon'),
-    points: z.array(PointSchema).min(3),
+    points: z.array(PointSchema).min(3).max(16),
     label: z.string().optional(),
   }),
 ]);
@@ -108,10 +108,10 @@ const TableAnnotationSchema = z.object({
 export const TableLayoutSchema = z.object({
   id: z.string().trim().min(1),
   tableSize: z.enum(['full-size', 'club', 'custom']),
-  balls: z.array(BallPositionSchema),
-  targetZones: z.array(TargetZoneSchema),
-  shotPaths: z.array(ShotPathSchema),
-  annotations: z.array(TableAnnotationSchema),
+  balls: z.array(BallPositionSchema).max(32),
+  targetZones: z.array(TargetZoneSchema).max(24),
+  shotPaths: z.array(ShotPathSchema).max(24),
+  annotations: z.array(TableAnnotationSchema).max(24),
 });
 export type TableLayout = z.infer<typeof TableLayoutSchema>;
 

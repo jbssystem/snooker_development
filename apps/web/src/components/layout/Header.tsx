@@ -20,8 +20,8 @@ export async function Header() {
   const tCommon = await getTranslations('common');
   return (
     <header className="sticky top-0 z-10 border-b border-border-subtle bg-background-secondary/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-6 px-6 py-3">
-        <Link href="/dashboard" className="flex items-center gap-3">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 md:gap-6 md:px-6">
+        <Link href="/dashboard" className="flex shrink-0 items-center gap-3">
           <Image
             src="/icon-192.png"
             alt={tCommon('appName')}
@@ -34,18 +34,18 @@ export async function Header() {
             {tCommon('appName')}
           </span>
         </Link>
-        <nav className="hidden flex-1 items-center gap-1 md:flex">
+        <nav className="order-3 -mx-4 flex w-[calc(100%+2rem)] gap-1 overflow-x-auto px-4 pb-1 md:order-none md:mx-0 md:w-auto md:flex-1 md:overflow-visible md:px-0 md:pb-0">
           {NAV_KEYS.map(({ key, href }) => (
             <Link
               key={key}
               href={href as never}
-              className="rounded-md px-3 py-1.5 text-sm text-text-secondary transition hover:bg-background-elevated hover:text-text-primary"
+              className="shrink-0 rounded-md px-3 py-1.5 text-sm text-text-secondary transition hover:bg-background-elevated hover:text-text-primary"
             >
               {t(key)}
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-3">
           <LocaleSwitcher />
           <UserMenu />
         </div>

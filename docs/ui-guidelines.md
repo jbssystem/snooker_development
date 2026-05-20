@@ -59,6 +59,8 @@ Delivered so far (under `apps/web/src/components/layout/`):
 
 - `Header` — server component; logo + primary navigation + `LocaleSwitcher`
   - `UserMenu`. Sticky, `bg-background-secondary/80` with backdrop blur.
+  On mobile, primary navigation remains visible as a horizontal scroll rail
+  instead of disappearing behind a menu that does not exist yet.
 - `LocaleSwitcher` — client component; native `<select>` of `ru` / `en` / `uk`,
   preserves current pathname via `next-intl/navigation` (`localePrefix: 'always'`).
 - `UserMenu` — client component; reads the persisted Zustand auth store,
@@ -88,12 +90,14 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   component reused by `/login` and `/register` via a `mode` prop. It uses
   React Hook Form + the `api` client and stores the returned session in the
   Zustand `useAuthStore`.
+- Auth forms set `method="post"` so credentials are not serialized into the
+  URL if a user submits before React hydration completes.
 - All API error codes are mapped to translation keys under `errors.api.*`
   in the locale files. A missing translation falls back to the raw code so
   the UI never crashes on a new error.
-- For MVP, tokens are persisted to `localStorage` under the key
-  `snooker.auth`. Phase 2 will move refresh tokens into httpOnly cookies
-  and add SSR-aware session reads.
+- For MVP, only the short-lived access token and user summary are persisted to
+  `localStorage` under `snooker.auth`. Refresh tokens live in the API-managed
+  httpOnly `snooker_refresh` cookie. Phase 2 will add SSR-aware session reads.
 
 ## Profile UI
 

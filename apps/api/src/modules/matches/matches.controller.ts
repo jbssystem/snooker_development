@@ -11,6 +11,7 @@ import {
   type UpdateMatchInput,
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { CuidValidationPipe } from '../../common/pipes/cuid-validation.pipe';
 import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MatchesService } from './matches.service';
@@ -28,7 +29,7 @@ export class MatchesController {
   }
 
   @Get(':id')
-  get(@CurrentUserId() userId: string, @Param('id') id: string): Promise<Match> {
+  get(@CurrentUserId() userId: string, @Param('id', CuidValidationPipe) id: string): Promise<Match> {
     return this.matches.get(userId, id);
   }
 
@@ -43,7 +44,7 @@ export class MatchesController {
   @Patch(':id')
   update(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateMatchSchema)) body: UpdateMatchInput,
   ): Promise<Match> {
     return this.matches.update(userId, id, body);
@@ -52,7 +53,7 @@ export class MatchesController {
   @Post(':id/frames')
   addFrame(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(AddMatchFrameSchema)) body: AddMatchFrameInput,
   ): Promise<MatchFrame> {
     return this.matches.addFrame(userId, id, body);

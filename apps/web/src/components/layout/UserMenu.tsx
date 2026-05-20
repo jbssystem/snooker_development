@@ -8,17 +8,14 @@ import { api } from '@/lib/api-client';
 export function UserMenu() {
   const t = useTranslations('auth');
   const user = useAuthStore((s) => s.user);
-  const tokens = useAuthStore((s) => s.tokens);
   const clear = useAuthStore((s) => s.clear);
   const router = useRouter();
 
   const onLogout = async () => {
-    if (tokens?.refreshToken) {
-      try {
-        await api.auth.logout(tokens.refreshToken);
-      } catch {
-        /* ignore — local clear is enough */
-      }
+    try {
+      await api.auth.logout();
+    } catch {
+      /* ignore — local clear is enough */
     }
     clear();
     router.replace('/login');

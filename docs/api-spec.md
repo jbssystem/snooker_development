@@ -7,15 +7,23 @@ whenever an endpoint is added, changed or removed.
 ## Conventions
 
 - REST + JSON. URLs are kebab-case plural nouns (`/training-sessions`).
-- Auth: `Authorization: Bearer <jwt>`; refresh tokens via `/auth/refresh`.
+- Auth: `Authorization: Bearer <access-token>`; refresh tokens are stored in
+  an httpOnly `snooker_refresh` cookie scoped to `/auth` and rotated via
+  `/auth/refresh`.
 - Pagination: `?limit=<n>&cursor=<id>`; responses include `nextCursor`.
 - Filtering: documented per resource. Time ranges as ISO 8601.
 - Errors: `{ error: { code, message?, details? } }`. `code` is stable.
 - DTOs validated with Zod schemas exported from `@snooker/shared`.
 - Body validation is attached directly to `@Body(new ZodValidationPipe(...))`,
   not method-wide, so route params and request metadata are not parsed as DTOs.
+- Route `:id` params are validated as CUIDs before service logic; malformed ids
+  return `validation.failed` with HTTP 400.
 - Rate limiting is global (`120/min`) with tighter auth endpoint throttles:
-  register `5/min`, login `10/min`, refresh `20/min`.
+  register `5/min`, login `10/min`, refresh `20/min`. AI weekly report
+  generation is additionally limited to `3/min`.
+- API responses include baseline security headers: `X-Content-Type-Options`,
+  `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, CSP, and HSTS in
+  production.
 - Write endpoints that can double-submit (drill attempts, match shots) should
   be idempotency-keyed via `Idempotency-Key`; a shared middleware remains a
   PH-2 hardening item.
@@ -25,10 +33,10 @@ whenever an endpoint is added, changed or removed.
 | Method | Path                                 | Auth   | DTO                            | Notes                                                                                                                                                                                                           |
 | ------ | ------------------------------------ | ------ | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GET    | `/health`                            | –      | –                              | Liveness probe                                                                                                                                                                                                  |
-| POST   | `/auth/register`                     | –      | `RegisterSchema`               | Returns `AuthSession`. First user gets `PLAYER` role.                                                                                                                                                           |
-| POST   | `/auth/login`                        | –      | `LoginSchema`                  | Returns `AuthSession`.                                                                                                                                                                                          |
-| POST   | `/auth/refresh`                      | –      | `RefreshSchema`                | Returns `Tokens`. Rotates the refresh token (old one revoked).                                                                                                                                                  |
-| POST   | `/auth/logout`                       | –      | `RefreshSchema`                | 204. Revokes the refresh token.                                                                                                                                                                                 |
+| POST   | `/auth/register`                     | –      | `RegisterSchema`               | Returns `AuthSession` with access-token fields and sets httpOnly refresh cookie. First user gets `PLAYER` role.                                                                                                 |
+| POST   | `/auth/login`                        | –      | `LoginSchema`                  | Returns `AuthSession` with access-token fields and sets httpOnly refresh cookie.                                                                                                                                 |
+| POST   | `/auth/refresh`                      | Cookie | `RefreshSchema`                | Returns `Tokens` with access-token fields. Rotates the refresh cookie; body `refreshToken` remains accepted for compatibility.                                                                                  |
+| POST   | `/auth/logout`                       | Cookie | `RefreshSchema`                | 204. Revokes the refresh cookie token when present and clears the cookie. Body `refreshToken` remains accepted for compatibility.                                                                               |
 | GET    | `/auth/me`                           | Bearer | –                              | Returns `AuthMe`.                                                                                                                                                                                               |
 | GET    | `/players/me/profile`                | Bearer | –                              | Returns current user's `PlayerProfile` or `null`.                                                                                                                                                               |
 | PUT    | `/players/me/profile`                | Bearer | `UpsertPlayerProfileSchema`    | Creates or updates current user's player profile.                                                                                                                                                               |
@@ -48,13 +56,13 @@ whenever an endpoint is added, changed or removed.
 | PATCH  | `/training-sessions/:id`             | Bearer | `UpdateTrainingSessionSchema`  | Updates current-player session metadata and optional end time.                                                                                                                                                  |
 | POST   | `/training-sessions/:id/finish`      | Bearer | `FinishTrainingSessionSchema`  | Sets `endedAt` and optional post-session fatigue/notes.                                                                                                                                                         |
 | POST   | `/training-sessions/:id/drills`      | Bearer | `AddDrillExecutionSchema`      | Adds a visible drill template to an open current-player session and snapshots its table layout.                                                                                                                 |
-| POST   | `/drill-executions/:id/attempts`     | Bearer | `CreateDrillAttemptSchema`     | Appends the next numbered attempt to an open execution and increments counters.                                                                                                                                 |
+| POST   | `/drill-executions/:id/attempts`     | Bearer | `CreateDrillAttemptSchema`     | Appends the next numbered attempt to an open execution and increments counters in a serializable transaction with retry.                                                                                        |
 | PATCH  | `/drill-executions/:id/finish`       | Bearer | `FinishDrillExecutionSchema`   | Sets `endedAt` and optional result summary fields. Repeated calls return the finished execution.                                                                                                                |
 | GET    | `/matches`                           | Bearer | –                              | Lists the current player's latest 50 matches with frames. Returns an empty list if the player profile does not exist yet.                                                                                       |
 | GET    | `/matches/:id`                       | Bearer | –                              | Returns one current-player match with frames.                                                                                                                                                                   |
 | POST   | `/matches`                           | Bearer | `CreateMatchSchema`            | Creates a manual current-player match with opponent, score, location, break and key-stat fields.                                                                                                                |
 | PATCH  | `/matches/:id`                       | Bearer | `UpdateMatchSchema`            | Updates manual match metadata, score and key stats for a current-player match.                                                                                                                                  |
-| POST   | `/matches/:id/frames`                | Bearer | `AddMatchFrameSchema`          | Adds one frame to a current-player match and recalculates frame score/result from saved frames.                                                                                                                 |
+| POST   | `/matches/:id/frames`                | Bearer | `AddMatchFrameSchema`          | Adds one frame in a serializable transaction with retry and recalculates frame score/result from saved frames.                                                                                                  |
 | GET    | `/calendar-events`                   | Bearer | –                              | Lists the current player's latest 100 calendar events. Returns an empty list if the player profile does not exist yet.                                                                                          |
 | GET    | `/calendar-events/:id`               | Bearer | –                              | Returns one current-player calendar event.                                                                                                                                                                      |
 | POST   | `/calendar-events`                   | Bearer | `CreateCalendarEventSchema`    | Creates a manual current-player calendar event for training, match, travel, rest, equipment, coach or custom factors.                                                                                           |

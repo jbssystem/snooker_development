@@ -19,6 +19,7 @@ import {
   type UpdateDrillTemplateInput,
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { CuidValidationPipe } from '../../common/pipes/cuid-validation.pipe';
 import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DrillsService } from './drills.service';
@@ -36,7 +37,7 @@ export class DrillsController {
   }
 
   @Get(':id')
-  get(@CurrentUserId() userId: string, @Param('id') id: string): Promise<DrillTemplate> {
+  get(@CurrentUserId() userId: string, @Param('id', CuidValidationPipe) id: string): Promise<DrillTemplate> {
     return this.drills.get(userId, id);
   }
 
@@ -51,7 +52,7 @@ export class DrillsController {
   @Patch(':id')
   update(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateDrillTemplateSchema)) body: UpdateDrillTemplateInput,
   ): Promise<DrillTemplate> {
     return this.drills.update(userId, id, body);
@@ -59,7 +60,7 @@ export class DrillsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@CurrentUserId() userId: string, @Param('id') id: string): Promise<void> {
+  async delete(@CurrentUserId() userId: string, @Param('id', CuidValidationPipe) id: string): Promise<void> {
     await this.drills.delete(userId, id);
   }
 }

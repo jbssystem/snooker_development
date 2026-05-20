@@ -284,6 +284,9 @@
       "level": "Level",
       "seasonGoal": "Season goal"
     },
+    "placeholders": {
+      "country": "GB"
+    },
     "dominantHand": {
       "empty": "Not set",
       "LEFT": "Left",

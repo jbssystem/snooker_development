@@ -165,7 +165,7 @@ export function ProfileClient() {
             <input className={inputClass} type="date" {...profileForm.register('dateOfBirth')} />
           </Field>
           <Field label={t('fields.country')}>
-            <input className={inputClass} maxLength={2} placeholder="GB" {...profileForm.register('country')} />
+            <input className={inputClass} maxLength={2} placeholder={t('placeholders.country')} {...profileForm.register('country')} />
           </Field>
           <Field label={t('fields.dominantHand')}>
             <select className={inputClass} {...profileForm.register('dominantHand')}>

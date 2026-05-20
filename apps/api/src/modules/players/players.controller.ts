@@ -23,6 +23,7 @@ import {
   type UpdateEquipmentProfileInput,
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { CuidValidationPipe } from '../../common/pipes/cuid-validation.pipe';
 import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PlayersService } from './players.service';
@@ -63,7 +64,7 @@ export class PlayersController {
   @Patch('equipment-profiles/:id')
   updateEquipment(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateEquipmentProfileSchema)) body: UpdateEquipmentProfileInput,
   ): Promise<EquipmentProfile> {
     return this.players.updateEquipment(userId, id, body);
@@ -73,7 +74,7 @@ export class PlayersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteEquipment(
     @CurrentUserId() userId: string,
-    @Param('id') id: string,
+    @Param('id', CuidValidationPipe) id: string,
   ): Promise<void> {
     await this.players.deleteEquipment(userId, id);
   }

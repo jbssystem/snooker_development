@@ -28,7 +28,7 @@ package, dependency, service or boundary.
 | App | Stack | Responsibility |
 | --- | --- | --- |
 | `apps/web` | Next.js 15, App Router, next-intl, Tailwind, react-konva | All UI (PWA-capable). Server components for data fetching; client components for interactivity (table editor, drill execution). |
-| `apps/api` | NestJS 10, Prisma, Zod | Sole gateway to the database. Auth, REST endpoints, OpenAPI at `/docs`, queues fan-out. |
+| `apps/api` | NestJS 11, Prisma, Zod | Sole gateway to the database. Auth, REST endpoints, OpenAPI at `/docs`, queues fan-out. |
 | `apps/worker` | BullMQ + ioredis | Background jobs: AI summary generation, external data imports, analytics rollups, file post-processing. |
 
 ## Packages
@@ -54,6 +54,11 @@ canvas libraries, Prisma, or NestJS. Renderers are thin adapters living in
    back via Prisma.
 4. Web re-fetches via TanStack Query (or revalidates RSC).
 
+Auth state is split deliberately: the browser stores only the current user
+summary and short-lived access token in Zustand/localStorage. The refresh token
+is an API-managed httpOnly cookie scoped to `/auth`; the web API client refreshes
+the access token once on authenticated 401 responses.
+
 ## Renderer strategy
 
 - **MVP:** react-konva 2D canvas inside `apps/web`. Pure functions take a
@@ -71,7 +76,8 @@ canvas components.
 - `react-konva` / `konva` — MVP table renderer.
 - `prisma` — DB ORM.
 - `bullmq` — job queues over Redis.
-- `nestjs-zod` — wire Zod schemas to NestJS pipes.
+- In-house Zod pipe — validates shared Zod schemas at NestJS body boundaries
+  without making `@snooker/shared` framework-specific.
 - `recharts` — analytics charts (swappable for ECharts later).
 
 Add a new dependency only with a one-line rationale in this section.

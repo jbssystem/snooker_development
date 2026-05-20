@@ -13,7 +13,8 @@ const OptionalDateStringSchema = z
   .string()
   .trim()
   .optional()
-  .transform((value) => (value === '' ? undefined : value));
+  .transform((value) => (value === '' ? undefined : value))
+  .refine((value) => value === undefined || isValidDateInput(value));
 
 const OptionalNumberSchema = (max: number) =>
   z.preprocess(
@@ -88,3 +89,7 @@ export type CreateEquipmentProfileInput = z.infer<typeof CreateEquipmentProfileS
 
 export const UpdateEquipmentProfileSchema = CreateEquipmentProfileSchema.partial();
 export type UpdateEquipmentProfileInput = z.infer<typeof UpdateEquipmentProfileSchema>;
+
+function isValidDateInput(value: string): boolean {
+  return !Number.isNaN(new Date(value).getTime());
+}

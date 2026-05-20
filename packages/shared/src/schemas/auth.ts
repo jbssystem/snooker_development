@@ -20,14 +20,13 @@ export const LoginSchema = z.object({
 export type LoginInput = z.infer<typeof LoginSchema>;
 
 export const RefreshSchema = z.object({
-  refreshToken: z.string().min(20),
+  refreshToken: z.string().min(20).optional(),
 });
 export type RefreshInput = z.infer<typeof RefreshSchema>;
 
 export const TokensSchema = z.object({
   accessToken: z.string(),
-  refreshToken: z.string(),
-  accessTokenExpiresAt: z.string(), // ISO 8601
+  accessTokenExpiresAt: z.string(),
 });
 export type Tokens = z.infer<typeof TokensSchema>;
 

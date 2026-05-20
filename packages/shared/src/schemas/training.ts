@@ -18,7 +18,8 @@ const OptionalDateStringSchema = z
   .string()
   .trim()
   .optional()
-  .transform((value) => (value === '' ? undefined : value));
+  .transform((value) => (value === '' ? undefined : value))
+  .refine((value) => value === undefined || isValidDateInput(value));
 
 const OptionalScoreSchema = z.preprocess(
   (value) => (value === '' || value === undefined || value === null ? undefined : value),
@@ -155,3 +156,7 @@ export const FinishTrainingSessionSchema = z.object({
   notes: OptionalTextSchema,
 });
 export type FinishTrainingSessionInput = z.infer<typeof FinishTrainingSessionSchema>;
+
+function isValidDateInput(value: string): boolean {
+  return !Number.isNaN(new Date(value).getTime());
+}

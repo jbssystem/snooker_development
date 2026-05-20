@@ -34,6 +34,12 @@ providers not yet implemented, it writes a deterministic local markdown
 summary that preserves the same safety constraints and clearly states limited
 confidence.
 
+`POST /ai/reports/generate` is throttled to 3 requests/minute. The API creates
+the BullMQ queue lazily on generation requests, so ordinary API startup and
+non-AI endpoints do not require a live Redis connection. Worker prompt loading
+tries workspace-root and compiled paths before falling back to a minimal
+safety-preserving template.
+
 ## Prompts
 
 | File | Purpose | Inputs | Output format |

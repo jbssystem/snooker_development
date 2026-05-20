@@ -31,11 +31,12 @@ async function bootstrap(): Promise<void> {
       if (job.name !== GENERATE_WEEKLY_AI_REPORT_JOB) return;
       await generateWeeklySummary(job.data.reportId);
     },
-    { connection: redisConnection(process.env.REDIS_URL) },
+    { connection: redisConnection(process.env.REDIS_URL), concurrency: 2, lockDuration: 120_000 },
   );
 
   worker.on('completed', (job) => console.log(`[worker] completed ${job.name}:${job.id}`));
   worker.on('failed', (job, error) => console.error(`[worker] failed ${job?.name}:${job?.id}`, error));
+  worker.on('error', (error) => console.error('[worker] queue error', error));
 
   process.on('SIGTERM', () => void shutdown(worker));
   process.on('SIGINT', () => void shutdown(worker));
@@ -74,8 +75,7 @@ async function generateWeeklySummary(reportId: string): Promise<void> {
 }
 
 async function weeklyPrompt(locale: string, periodStart: Date, periodEnd: Date, sourceData: SourceData): Promise<string> {
-  const templatePath = path.resolve(process.cwd(), '../../packages/ai-prompts/prompts/weekly-summary.md');
-  const template = await readFile(templatePath, 'utf8');
+  const template = await readPromptTemplate();
   return template
     .replaceAll('{{locale}}', locale || 'ru')
     .replaceAll('{{periodStart}}', sourceData.period?.from ?? periodStart.toISOString())
@@ -90,14 +90,21 @@ async function generateMarkdown(
   locale: string,
 ): Promise<string> {
   if (provider === 'anthropic' && process.env.AI_API_KEY) {
-    return callAnthropic(model, prompt, sourceData);
+    try {
+      return await callAnthropic(model, prompt, sourceData);
+    } catch {
+      return localWeeklySummary(sourceData, sourceData.period, provider, toLocale(locale));
+    }
   }
   return localWeeklySummary(sourceData, sourceData.period, provider, toLocale(locale));
 }
 
 async function callAnthropic(model: string, prompt: string, sourceData: SourceData): Promise<string> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90_000);
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
+    signal: controller.signal,
     headers: {
       'content-type': 'application/json',
       'x-api-key': process.env.AI_API_KEY ?? '',
@@ -115,7 +122,7 @@ async function callAnthropic(model: string, prompt: string, sourceData: SourceDa
         },
       ],
     }),
-  });
+  }).finally(() => clearTimeout(timeout));
 
   if (!response.ok) {
     throw new Error(`Anthropic request failed: ${response.status}`);
@@ -124,6 +131,27 @@ async function callAnthropic(model: string, prompt: string, sourceData: SourceDa
   const text = body.content?.find((item) => item.type === 'text')?.text;
   if (!text) throw new Error('Anthropic response did not contain text');
   return text;
+}
+
+async function readPromptTemplate(): Promise<string> {
+  const candidates = [
+    path.resolve(process.cwd(), 'packages/ai-prompts/prompts/weekly-summary.md'),
+    path.resolve(process.cwd(), '../../packages/ai-prompts/prompts/weekly-summary.md'),
+    path.resolve(__dirname, '../../../packages/ai-prompts/prompts/weekly-summary.md'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      return await readFile(candidate, 'utf8');
+    } catch {
+      continue;
+    }
+  }
+  return [
+    'Write a weekly snooker development summary in {{locale}}.',
+    'Period: {{periodStart}} to {{periodEnd}}.',
+    'Use markdown sections: Highlights, Numbers, What improved, What stayed flat or regressed, Suggested focus next week, Confidence & data caveats.',
+    'Never make medical claims or supplement advice. Phrase correlations as observations only.',
+  ].join('\n');
 }
 
 function localWeeklySummary(

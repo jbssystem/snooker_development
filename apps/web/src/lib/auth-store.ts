@@ -4,11 +4,6 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthMe, Tokens } from '@snooker/shared';
 
-/**
- * Auth session is persisted in localStorage for MVP.
- * Phase 2 will move refresh tokens to httpOnly cookies and add SSR-aware
- * session reading. Until then, all auth-gated UI is client-rendered.
- */
 type AuthState = {
   user: AuthMe | null;
   tokens: Tokens | null;
@@ -29,6 +24,20 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'snooker.auth',
       storage: createJSONStorage(() => localStorage),
+      version: 2,
+      partialize: (state) => ({ user: state.user, tokens: state.tokens }),
+      migrate: (persisted) => {
+        const state = persisted as Partial<AuthState>;
+        return {
+          user: state.user ?? null,
+          tokens: state.tokens
+            ? {
+                accessToken: state.tokens.accessToken,
+                accessTokenExpiresAt: state.tokens.accessTokenExpiresAt,
+              }
+            : null,
+        };
+      },
     },
   ),
 );

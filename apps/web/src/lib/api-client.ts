@@ -39,6 +39,7 @@ import type {
   UpdateTrainingSessionInput,
   UpsertPlayerProfileInput,
 } from '@snooker/shared';
+import { useAuthStore } from '@/lib/auth-store';
 
 const BASE_URL =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) || 'http://localhost:4000';
@@ -57,9 +58,29 @@ export class ApiError extends Error {
 type FetchOptions = RequestInit & { token?: string | null };
 
 async function request<T>(path: string, opts: FetchOptions = {}): Promise<T> {
+  return requestWithRefresh(path, opts, true);
+}
+
+async function requestWithRefresh<T>(path: string, opts: FetchOptions, retryOnUnauthorized: boolean): Promise<T> {
+  try {
+    return await send<T>(path, opts);
+  } catch (error) {
+    if (retryOnUnauthorized && opts.token && error instanceof ApiError && error.status === 401) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        return requestWithRefresh<T>(path, { ...opts, token: refreshed.accessToken }, false);
+      }
+      useAuthStore.getState().clear();
+    }
+    throw error;
+  }
+}
+
+async function send<T>(path: string, opts: FetchOptions = {}): Promise<T> {
   const { token, headers, ...rest } = opts;
   const res = await fetch(`${BASE_URL}${path}`, {
     ...rest,
+    credentials: rest.credentials ?? 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -82,21 +103,34 @@ async function request<T>(path: string, opts: FetchOptions = {}): Promise<T> {
   return (await res.json()) as T;
 }
 
+async function refreshAccessToken(): Promise<Tokens | null> {
+  try {
+    const tokens = await send<Tokens>('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+    useAuthStore.getState().setTokens(tokens);
+    return tokens;
+  } catch {
+    return null;
+  }
+}
+
 export const api = {
   auth: {
     register: (input: RegisterInput) =>
       request<AuthSession>('/auth/register', { method: 'POST', body: JSON.stringify(input) }),
     login: (input: LoginInput) =>
       request<AuthSession>('/auth/login', { method: 'POST', body: JSON.stringify(input) }),
-    refresh: (refreshToken: string) =>
+    refresh: () =>
       request<Tokens>('/auth/refresh', {
         method: 'POST',
-        body: JSON.stringify({ refreshToken }),
+        body: JSON.stringify({}),
       }),
-    logout: (refreshToken: string) =>
+    logout: () =>
       request<void>('/auth/logout', {
         method: 'POST',
-        body: JSON.stringify({ refreshToken }),
+        body: JSON.stringify({}),
       }),
     me: (token: string) => request<AuthMe>('/auth/me', { token }),
   },

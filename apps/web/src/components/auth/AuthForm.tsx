@@ -47,7 +47,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   });
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+    <form method="post" onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
       {mode === 'register' && (
         <Field
           label={t('fields.displayName')}

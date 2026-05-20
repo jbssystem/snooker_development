@@ -2,7 +2,9 @@ import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/co
 import * as argon2 from 'argon2';
 import { ErrorCodes, type AuthMe, type AuthSession, type LoginInput, type RegisterInput } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
-import { TokensService } from './tokens.service';
+import { publicTokens, TokensService } from './tokens.service';
+
+export type AuthSessionIssue = { session: AuthSession; refreshToken: string };
 
 @Injectable()
 export class AuthService {
@@ -11,7 +13,7 @@ export class AuthService {
     private readonly tokens: TokensService,
   ) {}
 
-  async register(input: RegisterInput, meta: { userAgent?: string; ip?: string }): Promise<AuthSession> {
+  async register(input: RegisterInput, meta: { userAgent?: string; ip?: string }): Promise<AuthSessionIssue> {
     const existing = await this.prisma.user.findUnique({ where: { email: input.email } });
     if (existing) {
       throw new ConflictException({ error: { code: ErrorCodes.Auth.EmailAlreadyUsed } });
@@ -27,10 +29,10 @@ export class AuthService {
       include: { roles: true },
     });
     const tokens = await this.tokens.issuePair(user.id, meta);
-    return { user: this.toMe(user), tokens };
+    return { session: { user: this.toMe(user), tokens: publicTokens(tokens) }, refreshToken: tokens.refreshToken };
   }
 
-  async login(input: LoginInput, meta: { userAgent?: string; ip?: string }): Promise<AuthSession> {
+  async login(input: LoginInput, meta: { userAgent?: string; ip?: string }): Promise<AuthSessionIssue> {
     const user = await this.prisma.user.findUnique({
       where: { email: input.email },
       include: { roles: true },
@@ -50,14 +52,17 @@ export class AuthService {
       data: { lastLoginAt: new Date() },
     });
     const tokens = await this.tokens.issuePair(user.id, meta);
-    return { user: this.toMe(user), tokens };
+    return { session: { user: this.toMe(user), tokens: publicTokens(tokens) }, refreshToken: tokens.refreshToken };
   }
 
   async me(userId: string): Promise<AuthMe> {
-    const user = await this.prisma.user.findUniqueOrThrow({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { roles: true },
     });
+    if (!user || user.status !== 'ACTIVE') {
+      throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.Unauthorized } });
+    }
     return this.toMe(user);
   }
 

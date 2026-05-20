@@ -47,7 +47,8 @@ const OptionalDateStringSchema = z
   .string()
   .trim()
   .optional()
-  .transform((value) => (value === '' ? undefined : value));
+  .transform((value) => (value === '' ? undefined : value))
+  .refine((value) => value === undefined || !Number.isNaN(new Date(value).getTime()));
 
 export const GenerateWeeklyAiReportSchema = z.object({
   periodStart: OptionalDateStringSchema,

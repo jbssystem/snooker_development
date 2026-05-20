@@ -29,12 +29,13 @@ const OptionalTextSchema = (max = 1000) =>
     .optional()
     .transform((value) => (value === '' ? undefined : value));
 
-const DateInputSchema = z.string().trim().min(1);
+const DateInputSchema = z.string().trim().min(1).refine(isValidDateInput);
 const OptionalDateInputSchema = z
   .string()
   .trim()
   .optional()
-  .transform((value) => (value === '' ? undefined : value));
+  .transform((value) => (value === '' ? undefined : value))
+  .refine((value) => value === undefined || isValidDateInput(value));
 
 const OptionalScoreSchema = z.preprocess(
   (value) => (value === '' || value === undefined || value === null ? undefined : value),
@@ -46,6 +47,11 @@ const OptionalHoursSchema = z.preprocess(
   z.coerce.number().min(0).max(24).optional(),
 );
 
+const MetadataSchema = z
+  .record(z.string(), z.unknown())
+  .refine((value) => jsonSize(value) <= 4096)
+  .optional();
+
 export const CalendarEventSchema = z.object({
   id: z.string().cuid(),
   playerProfileId: z.string().cuid(),
@@ -56,7 +62,7 @@ export const CalendarEventSchema = z.object({
   startAt: z.string().datetime(),
   endAt: z.string().datetime().optional(),
   source: CalendarEventSourceSchema,
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  metadata: MetadataSchema,
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
@@ -68,7 +74,7 @@ export const CreateCalendarEventSchema = z.object({
   description: OptionalTextSchema(),
   startAt: DateInputSchema,
   endAt: OptionalDateInputSchema,
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  metadata: MetadataSchema,
 });
 export type CreateCalendarEventInput = z.infer<typeof CreateCalendarEventSchema>;
 
@@ -141,3 +147,15 @@ export type CreateSupplementEventInput = z.infer<typeof CreateSupplementEventSch
 
 export const UpdateSupplementEventSchema = CreateSupplementEventSchema.partial();
 export type UpdateSupplementEventInput = z.infer<typeof UpdateSupplementEventSchema>;
+
+function jsonSize(value: unknown): number {
+  try {
+    return JSON.stringify(value).length;
+  } catch {
+    return Number.POSITIVE_INFINITY;
+  }
+}
+
+function isValidDateInput(value: string): boolean {
+  return !Number.isNaN(new Date(value).getTime());
+}

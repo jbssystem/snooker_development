@@ -30,22 +30,19 @@ type WeeklySourceData = {
 
 const PROMPT_VERSION = 'weekly-summary@1';
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_REPORT_PERIOD_DAYS = 31;
 
 @Injectable()
 export class AiService implements OnModuleDestroy {
-  private readonly queue: Queue<GenerateWeeklyAiReportJob>;
+  private queue: Queue<GenerateWeeklyAiReportJob> | undefined;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
-  ) {
-    this.queue = new Queue<GenerateWeeklyAiReportJob>(AI_REPORT_QUEUE, {
-      connection: redisConnection(this.config.get<string>('REDIS_URL')),
-    });
-  }
+  ) {}
 
   async onModuleDestroy(): Promise<void> {
-    await this.queue.close();
+    await this.queue?.close();
   }
 
   async listReports(userId: string): Promise<AiReport[]> {
@@ -91,7 +88,7 @@ export class AiService implements OnModuleDestroy {
     });
 
     try {
-      await this.queue.add(
+      await this.getQueue().add(
         GENERATE_WEEKLY_AI_REPORT_JOB,
         { reportId: report.id },
         {
@@ -265,6 +262,13 @@ export class AiService implements OnModuleDestroy {
       })),
     };
   }
+
+  private getQueue(): Queue<GenerateWeeklyAiReportJob> {
+    this.queue ??= new Queue<GenerateWeeklyAiReportJob>(AI_REPORT_QUEUE, {
+      connection: redisConnection(this.config.get<string>('REDIS_URL')),
+    });
+    return this.queue;
+  }
 }
 
 function toAiReport(report: AiReportEntity): AiReport {
@@ -295,6 +299,9 @@ function resolvePeriod(input: GenerateWeeklyAiReportInput): { from: Date; to: Da
   const to = input.periodEnd ? parseDate(input.periodEnd) : new Date();
   const from = input.periodStart ? parseDate(input.periodStart) : startOfDay(addDays(to, -6));
   if (from > to) {
+    throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
+  }
+  if (to.getTime() - from.getTime() > MAX_REPORT_PERIOD_DAYS * DAY_MS) {
     throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
   }
   return { from, to };
