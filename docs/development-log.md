@@ -18,6 +18,38 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-006 — SnookerTableCanvas
+
+**Delivered:**
+- Added `apps/web/src/components/table-renderer/` with `SnookerTableCanvas`,
+  `DrillLayoutEditor`, `TableLayoutPreview` and layout factory helpers.
+- `SnookerTableCanvas` renders the table surface, cushions, pockets, baulk
+  line/D, all ball colors, target zones, shot paths and annotations using
+  `react-konva` with millimetre-based responsive scaling.
+- The web app renderer runtime was aligned to React 19 + `react-konva` 19;
+  `@snooker/ui` now accepts React 18 or 19 as a peer to avoid duplicate React
+  copies in the web bundle.
+- `edit` mode supports drag-and-drop ball movement and exposes renderer events
+  without owning drill or training business state.
+- `DrillLayoutEditor` adds template editing controls for standard reset,
+  balls, target zones, shot lines, JSON import and PNG export.
+- `/drills` now saves a visual `defaultTableLayout` for new drill templates
+  and shows previews in template cards.
+- `/training` now shows the copied `tableLayoutSnapshot` in the active drill
+  execution detail.
+- `packages/snooker-domain` table optional types now match the Zod-inferred
+  shared layout DTOs under `exactOptionalPropertyTypes`.
+- i18n keys added in all three locales (`ru`, `en`, `uk`) under
+  `tableRenderer.*` and `training.tableLayout.*`.
+- Docs updated: `docs/table-renderer-spec.md`, `docs/ui-guidelines.md`,
+  `docs/development-log.md`.
+
+**Open items:**
+- Direct target-zone resizing and freehand path drawing remain future editor
+  polish after real drill layouts are tested.
+- Physics, replay, ghost-ball and projected cue-ball overlays remain planned
+  for later renderer phases.
+
 ### PH-1-005 — Training session flow
 
 **Delivered:**
@@ -45,7 +77,7 @@ Format:
 - Attempt write idempotency is not generic yet; shared `Idempotency-Key`
   handling remains a PH-2 hardening item.
 - The table layout snapshot is copied from the template/default payload.
-  Interactive table editing starts in PH-1-006.
+  PH-1-006 added the first visual editor and preview surface.
 
 ### PH-1-004 — Drill library
 
@@ -71,8 +103,8 @@ Format:
   `docs/ui-guidelines.md`, `docs/development-log.md`.
 
 **Open items:**
-- Table layout editing is a placeholder empty full-size layout until
-  PH-1-006 introduces `SnookerTableCanvas`.
+- Richer direct layout editing gestures continue in renderer follow-ups after
+  PH-1-006 introduced `SnookerTableCanvas`.
 
 ### Review hardening after PH-1-003
 
@@ -187,8 +219,8 @@ Format:
 3. ✅ PH-1-003 — Player profile CRUD + equipment profile.
 4. ✅ PH-1-004 — Drill library (categories, templates, metrics schema, table layout).
 5. ✅ PH-1-005 — Training session flow.
-6. ⏳ PH-1-006 — SnookerTableCanvas (react-konva).
-7. PH-1-007 — Basic dashboard.
+6. ✅ PH-1-006 — SnookerTableCanvas (react-konva).
+7. ⏳ PH-1-007 — Basic dashboard.
 8. PH-1-008 — Manual match log.
 9. PH-1-009 — Calendar factors.
 10. PH-1-010 — Weekly AI summary (Anthropic).

@@ -6,7 +6,15 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
-  transpilePackages: ['@snooker/shared', '@snooker/snooker-domain', '@snooker/ui'],
+  transpilePackages: ['@snooker/shared', '@snooker/snooker-domain', '@snooker/ui', 'konva', 'react-konva'],
+  webpack: (config) => {
+    config.resolve = config.resolve ?? {};
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      canvas: false,
+    };
+    return config;
+  },
 };
 
 export default withNextIntl(nextConfig);

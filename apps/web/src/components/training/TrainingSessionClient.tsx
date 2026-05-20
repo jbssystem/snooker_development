@@ -15,6 +15,7 @@ import type {
 import { Link } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { TableLayoutPreview } from '@/components/table-renderer';
 
 type SessionFormValues = {
   title: string;
@@ -426,6 +427,13 @@ function ActiveSessionPanel({
                   {t(`attemptResults.${result}`)}
                 </button>
               ))}
+            </div>
+          )}
+
+          {activeExecution.tableLayoutSnapshot && (
+            <div className="mt-5">
+              <h4 className="mb-3 text-sm font-medium text-text-secondary">{t('tableLayout.title')}</h4>
+              <TableLayoutPreview layout={activeExecution.tableLayoutSnapshot} />
             </div>
           )}
 

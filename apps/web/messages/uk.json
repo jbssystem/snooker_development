@@ -261,6 +261,35 @@
       "result": "Результат",
       "time": "Час",
       "empty": "Спроб поки немає."
+    },
+    "tableLayout": {
+      "title": "Схема столу"
+    }
+  },
+  "tableRenderer": {
+    "editor": {
+      "title": "Схема столу",
+      "resetStandard": "Стандарт",
+      "ballColor": "Куля",
+      "addBall": "Додати кулю",
+      "removeSelected": "Видалити",
+      "addZone": "Зона",
+      "addPath": "Лінія",
+      "exportImage": "PNG",
+      "copyJson": "JSON",
+      "json": "JSON layout",
+      "loadJson": "Завантажити JSON",
+      "jsonError": "Некоректний JSON"
+    },
+    "balls": {
+      "white": "Біла",
+      "red": "Червона",
+      "yellow": "Жовта",
+      "green": "Зелена",
+      "brown": "Коричнева",
+      "blue": "Синя",
+      "pink": "Рожева",
+      "black": "Чорна"
     }
   },
   "errors": {

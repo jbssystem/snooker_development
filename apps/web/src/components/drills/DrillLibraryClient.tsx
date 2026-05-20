@@ -10,11 +10,18 @@ import type {
   DrillDifficulty,
   DrillMetricType,
   DrillTemplate,
+  TableLayout,
   UserDrillVisibility,
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import {
+  DrillLayoutEditor,
+  TableLayoutPreview,
+  createEmptyTableLayout,
+  createStandardTableLayout,
+} from '@/components/table-renderer';
 
 type FormValues = {
   name: string;
@@ -74,6 +81,7 @@ export function DrillLibraryClient() {
     { key: 'attempts', label: t('defaultMetrics.attempts'), type: 'number', unit: '', required: true },
     { key: 'successes', label: t('defaultMetrics.successes'), type: 'number', unit: '', required: true },
   ]);
+  const [layout, setLayout] = useState<TableLayout>(() => createStandardTableLayout());
   const form = useForm<FormValues>({ defaultValues });
 
   const templatesQuery = useQuery({
@@ -91,6 +99,7 @@ export function DrillLibraryClient() {
         { key: 'attempts', label: t('defaultMetrics.attempts'), type: 'number', unit: '', required: true },
         { key: 'successes', label: t('defaultMetrics.successes'), type: 'number', unit: '', required: true },
       ]);
+      setLayout(createStandardTableLayout());
       queryClient.invalidateQueries({ queryKey: ['drill-templates'] });
     },
     onError: (e) => setServerError(errorMessage(e, tErr)),
@@ -169,7 +178,7 @@ export function DrillLibraryClient() {
                     required: metric.required,
                   })),
               },
-              defaultTableLayout: emptyTableLayout(),
+              defaultTableLayout: layout,
             }),
           )}
         >
@@ -277,6 +286,8 @@ export function DrillLibraryClient() {
             ))}
           </section>
 
+          <DrillLayoutEditor value={layout} onChange={setLayout} />
+
           {serverError && (
             <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
               {serverError}
@@ -321,6 +332,9 @@ function TemplateCard({
         )}
       </div>
       <p className="mt-3 text-sm text-text-secondary">{template.description}</p>
+      <div className="mt-4">
+        <TableLayoutPreview layout={template.defaultTableLayout ?? EMPTY_PREVIEW_LAYOUT} />
+      </div>
       <dl className="mt-4 grid gap-3 text-sm">
         <Meta label={t('fields.goal')} value={template.goal} />
         <Meta label={t('fields.successCriteria')} value={template.successCriteria} />
@@ -384,16 +398,7 @@ function parseTags(value: string): string[] {
     .slice(0, 12);
 }
 
-function emptyTableLayout() {
-  return {
-    id: `layout-${Date.now()}`,
-    tableSize: 'full-size' as const,
-    balls: [],
-    targetZones: [],
-    shotPaths: [],
-    annotations: [],
-  };
-}
+const EMPTY_PREVIEW_LAYOUT = createEmptyTableLayout('empty-preview');
 
 function errorMessage(e: unknown, t: (key: string) => string): string {
   if (e instanceof ApiError) {

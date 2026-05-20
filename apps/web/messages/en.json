@@ -261,6 +261,35 @@
       "result": "Result",
       "time": "Time",
       "empty": "No attempts yet."
+    },
+    "tableLayout": {
+      "title": "Table layout"
+    }
+  },
+  "tableRenderer": {
+    "editor": {
+      "title": "Table layout",
+      "resetStandard": "Standard",
+      "ballColor": "Ball",
+      "addBall": "Add ball",
+      "removeSelected": "Remove",
+      "addZone": "Zone",
+      "addPath": "Line",
+      "exportImage": "PNG",
+      "copyJson": "JSON",
+      "json": "JSON layout",
+      "loadJson": "Load JSON",
+      "jsonError": "Invalid JSON"
+    },
+    "balls": {
+      "white": "White",
+      "red": "Red",
+      "yellow": "Yellow",
+      "green": "Green",
+      "brown": "Brown",
+      "blue": "Blue",
+      "pink": "Pink",
+      "black": "Black"
     }
   },
   "errors": {

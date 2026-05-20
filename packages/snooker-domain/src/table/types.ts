@@ -27,7 +27,7 @@ export interface BallPosition {
 }
 
 export type TargetZone =
-  | { id: string; type: 'circle'; x: number; y: number; radius: number; label?: string }
+  | { id: string; type: 'circle'; x: number; y: number; radius: number; label?: string | undefined }
   | {
       id: string;
       type: 'rectangle';
@@ -35,16 +35,16 @@ export type TargetZone =
       y: number;
       width: number;
       height: number;
-      label?: string;
+      label?: string | undefined;
     }
-  | { id: string; type: 'polygon'; points: Point[]; label?: string };
+  | { id: string; type: 'polygon'; points: Point[]; label?: string | undefined };
 
 export interface ShotPath {
   id: string;
   from: Point;
   to: Point;
-  cushions?: Point[];
-  label?: string;
+  cushions?: Point[] | undefined;
+  label?: string | undefined;
 }
 
 export interface TableAnnotation {

@@ -261,6 +261,35 @@
       "result": "Результат",
       "time": "Время",
       "empty": "Попыток пока нет."
+    },
+    "tableLayout": {
+      "title": "Схема стола"
+    }
+  },
+  "tableRenderer": {
+    "editor": {
+      "title": "Схема стола",
+      "resetStandard": "Стандарт",
+      "ballColor": "Шар",
+      "addBall": "Добавить шар",
+      "removeSelected": "Удалить",
+      "addZone": "Зона",
+      "addPath": "Линия",
+      "exportImage": "PNG",
+      "copyJson": "JSON",
+      "json": "JSON layout",
+      "loadJson": "Загрузить JSON",
+      "jsonError": "Некорректный JSON"
+    },
+    "balls": {
+      "white": "Белый",
+      "red": "Красный",
+      "yellow": "Жёлтый",
+      "green": "Зелёный",
+      "brown": "Коричневый",
+      "blue": "Синий",
+      "pink": "Розовый",
+      "black": "Чёрный"
     }
   },
   "errors": {

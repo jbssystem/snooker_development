@@ -116,8 +116,9 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - The side panel creates a new user-owned template with category, difficulty,
   visibility, text fields and a compact metric-row editor. Metrics are stored
   as `DrillMetricsSchema` (`version: 1`).
-- The initial default table layout is an empty full-size layout; PH-1-006 will
-  replace this with the visual `SnookerTableCanvas` editor.
+- The same form now embeds `DrillLayoutEditor`, which stores a visual
+  `defaultTableLayout` with balls, target zones and shot paths. Drill cards
+  show a compact `TableLayoutPreview`.
 
 ## Training UI
 
@@ -131,8 +132,9 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - A visible drill template can be added to the active session. The execution
   panel records single-tap outcomes: success, partial, miss or skipped; each
   tap appends a numbered attempt and updates counters.
-- PH-1-006 will replace the current table layout snapshot plumbing with the
-  interactive `SnookerTableCanvas` picker/editor.
+- Drill execution detail shows the saved `tableLayoutSnapshot` through
+  `TableLayoutPreview`, so the coach sees the exact scheme that was copied
+  from the template when the execution was added.
 
 ## Providers
 
@@ -149,10 +151,16 @@ to a per-request TanStack Query client (`staleTime: 30s`, `retry: 1`).
 
 ## Table renderer UX (MVP)
 
-- Static layout viewer first, drag-and-drop editor next.
+- Renderer components live under `apps/web/src/components/table-renderer/`.
+- `SnookerTableCanvas` is renderer-only: it receives `TableLayout`, emits
+  events and does not own drill/training business state.
+- `view` mode is used by drill cards and training execution snapshots.
+- `edit` mode is used by `DrillLayoutEditor` in the drill-template form.
 - Touch-friendly: ball hit area ≥ visual radius + 12px.
-- Snap-to-spot for the 6 named spots.
-- "Export as image" via Konva `toDataURL`.
+- Standard layout reset places colors on their spots and reds in a triangle.
+- Export as image uses Konva `toDataURL` from the editor wrapper.
+- Layout JSON import validates through `TableLayoutSchema` before replacing
+  editor state.
 
 ## Drill execution screen targets (per TZ §4.5, §18.3)
 
