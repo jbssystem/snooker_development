@@ -62,15 +62,15 @@ Format:
   error code.
 - Redis host port is exposed for local dev and Docker containers override
   `REDIS_URL` back to the internal service address.
+- Dependency hardening completed: NestJS packages upgraded to 11.x,
+  `next-intl` upgraded to 4.x, `postcss` pinned through a `pnpm` override for
+  Next's transitive dependency, and `pnpm audit --audit-level moderate` now
+  reports no known vulnerabilities.
 
 **Open items:**
 - Refresh tokens are still kept in the PH-1 client-side Zustand store. This is
   tracked as a PH-2 hardening item: move refresh tokens to httpOnly cookies
   and add SSR-aware route protection.
-- `pnpm audit --audit-level moderate` currently reports transitive dependency
-  advisories (including Nest/Next/next-intl dependency trees). Most fixes imply
-  coordinated major-version upgrades or overrides, so they are tracked as a
-  dedicated dependency-hardening task instead of being mixed into PH-1-004.
 
 ### PH-1-003 — Player profile CRUD + equipment profile
 
