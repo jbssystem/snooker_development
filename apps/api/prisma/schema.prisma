@@ -58,34 +58,50 @@ enum DrillVisibility {
   SYSTEM  @map("system")
 }
 
+enum TrainingSessionType {
+  SOLO       @map("solo")
+  COACHED    @map("coached")
+  MATCH_PREP @map("match_prep")
+  REVIEW     @map("review")
+  OTHER      @map("other")
+}
+
+enum DrillAttemptResult {
+  SUCCESS @map("success")
+  PARTIAL @map("partial")
+  MISS    @map("miss")
+  SKIPPED @map("skipped")
+}
+
 model User {
-  id           String      @id @default(cuid())
-  email        String      @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
   passwordHash String
   displayName  String
-  status       UserStatus  @default(ACTIVE)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
   lastLoginAt  DateTime?
 
-  roles         Role[]
-  refreshTokens RefreshToken[]
-  playerProfile PlayerProfile?
-  coachProfile  CoachProfile?
-  drillTemplates DrillTemplate[] @relation("CreatedDrillTemplates")
+  roles                   Role[]
+  refreshTokens           RefreshToken[]
+  playerProfile           PlayerProfile?
+  coachProfile            CoachProfile?
+  drillTemplates          DrillTemplate[]   @relation("CreatedDrillTemplates")
+  createdTrainingSessions TrainingSession[] @relation("CreatedTrainingSessions")
 }
 
 model RefreshToken {
-  id          String   @id @default(cuid())
-  userId      String
-  tokenHash   String   @unique
-  userAgent   String?
-  ipAddress   String?
-  expiresAt   DateTime
-  revokedAt   DateTime?
-  createdAt   DateTime @default(now())
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -99,31 +115,33 @@ model Role {
   scopeId   String?
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([roleType])
 }
 
 model PlayerProfile {
-  id             String        @id @default(cuid())
-  userId         String        @unique
-  firstName      String
-  lastName       String
-  dateOfBirth    DateTime?
-  country        String?
-  dominantHand   DominantHand?
-  level          String?
-  seasonGoal     String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  userId       String        @unique
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime?
+  country      String?
+  dominantHand DominantHand?
+  level        String?
+  seasonGoal   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  equipment      EquipmentProfile[]
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  equipment        EquipmentProfile[]
+  trainingSessions TrainingSession[]
+  drillExecutions  DrillExecution[]
 }
 
 model EquipmentProfile {
-  id              String        @id @default(cuid())
+  id              String    @id @default(cuid())
   playerProfileId String
   cueName         String?
   cueWeight       Float?
@@ -133,12 +151,12 @@ model EquipmentProfile {
   extension       String?
   chalk           String?
   notes           String?
-  activeFrom      DateTime      @default(now())
+  activeFrom      DateTime  @default(now())
   activeTo        DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
 
   @@index([playerProfileId])
   @@index([activeFrom])
@@ -155,11 +173,11 @@ model CoachProfile {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DrillTemplate {
-  id                     String           @id @default(cuid())
+  id                     String          @id @default(cuid())
   name                   String
   category               DrillCategory
   difficulty             DrillDifficulty
@@ -169,18 +187,100 @@ model DrillTemplate {
   successCriteria        String
   metricsSchemaJson      Json
   defaultTableLayoutJson Json?
-  tags                   String[]         @default([])
-  visibility             DrillVisibility  @default(PRIVATE)
+  tags                   String[]        @default([])
+  visibility             DrillVisibility @default(PRIVATE)
   createdByUserId        String
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
 
-  createdBy              User             @relation("CreatedDrillTemplates", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  createdBy  User             @relation("CreatedDrillTemplates", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  executions DrillExecution[]
 
   @@index([createdByUserId])
   @@index([category])
   @@index([difficulty])
   @@index([visibility])
+  @@index([createdAt])
+}
+
+model TrainingSession {
+  id              String              @id @default(cuid())
+  playerProfileId String
+  createdByUserId String
+  startedAt       DateTime            @default(now())
+  endedAt         DateTime?
+  sessionType     TrainingSessionType @default(SOLO)
+  title           String
+  goal            String?
+  intensity       Int?
+  fatigueBefore   Int?
+  fatigueAfter    Int?
+  focusLevel      Int?
+  mood            String?
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  playerProfile   PlayerProfile    @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  createdBy       User             @relation("CreatedTrainingSessions", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  drillExecutions DrillExecution[]
+
+  @@index([playerProfileId])
+  @@index([createdByUserId])
+  @@index([startedAt])
+  @@index([endedAt])
+}
+
+model DrillExecution {
+  id                      String    @id @default(cuid())
+  trainingSessionId       String
+  drillTemplateId         String
+  playerProfileId         String
+  startedAt               DateTime  @default(now())
+  endedAt                 DateTime?
+  attempts                Int       @default(0)
+  successes               Int       @default(0)
+  score                   Float?
+  maxRun                  Int?
+  averageScore            Float?
+  resultJson              Json?
+  errorTags               String[]  @default([])
+  coachNotes              String?
+  playerNotes             String?
+  tableLayoutSnapshotJson Json?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  trainingSession TrainingSession @relation(fields: [trainingSessionId], references: [id], onDelete: Cascade)
+  drillTemplate   DrillTemplate   @relation(fields: [drillTemplateId], references: [id], onDelete: Restrict)
+  playerProfile   PlayerProfile   @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  attemptsLog     DrillAttempt[]
+
+  @@index([trainingSessionId])
+  @@index([drillTemplateId])
+  @@index([playerProfileId])
+  @@index([startedAt])
+  @@index([endedAt])
+}
+
+model DrillAttempt {
+  id               String             @id @default(cuid())
+  drillExecutionId String
+  attemptNumber    Int
+  result           DrillAttemptResult
+  score            Float?
+  potSuccess       Boolean?
+  positionSuccess  Boolean?
+  missType         String?
+  errorTags        String[]           @default([])
+  shotTimeMs       Int?
+  notes            String?
+  createdAt        DateTime           @default(now())
+
+  drillExecution DrillExecution @relation(fields: [drillExecutionId], references: [id], onDelete: Cascade)
+
+  @@unique([drillExecutionId, attemptNumber])
+  @@index([drillExecutionId])
   @@index([createdAt])
 }
 

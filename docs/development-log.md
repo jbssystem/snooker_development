@@ -18,6 +18,35 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-005 — Training session flow
+
+**Delivered:**
+- Prisma migration `20260520120300_add_training_flow` adds
+  `TrainingSession`, `DrillExecution`, `DrillAttempt`, session type enums and
+  attempt result enums.
+- `packages/shared/src/schemas/training.ts` exports DTOs for creating,
+  updating and finishing sessions, adding drill executions, recording attempts
+  and finishing executions.
+- NestJS `TrainingModule` exposes guarded session and drill-execution endpoints
+  with current-player ownership checks and visible-drill-template checks.
+- Attempt creation appends the next attempt number in a transaction and updates
+  execution attempt/success counters with the same write.
+- Finished sessions reject new drill executions; finished drill executions
+  reject new attempts. Repeated finish calls return the already-finished
+  resource instead of shifting its end time.
+- Web `/training` page lists recent sessions, starts a session, adds visible
+  drill templates, records compact attempt outcomes and finishes drills or
+  sessions.
+- i18n keys added in all three locales (`ru`, `en`, `uk`) under `training.*`.
+- Docs updated: `docs/api-spec.md`, `docs/database-model.md`,
+  `docs/ui-guidelines.md`, `docs/development-log.md`.
+
+**Open items:**
+- Attempt write idempotency is not generic yet; shared `Idempotency-Key`
+  handling remains a PH-2 hardening item.
+- The table layout snapshot is copied from the template/default payload.
+  Interactive table editing starts in PH-1-006.
+
 ### PH-1-004 — Drill library
 
 **Delivered:**
@@ -76,7 +105,7 @@ Format:
 
 **Delivered:**
 - Prisma `EquipmentProfile` model and migration
-  `20260520103808_add_equipment_profiles`.
+  `20260520120100_add_equipment_profiles`.
 - `packages/shared/src/schemas/player.ts` now exports schemas/types for
   player profile upsert plus equipment create/update/read DTOs.
 - NestJS `PlayersModule` under `apps/api/src/modules/players/` with guarded
@@ -157,8 +186,8 @@ Format:
 2. ✅ PH-1-002 — Web app shell + login/register UI + LocaleSwitcher.
 3. ✅ PH-1-003 — Player profile CRUD + equipment profile.
 4. ✅ PH-1-004 — Drill library (categories, templates, metrics schema, table layout).
-5. ⏳ PH-1-005 — Training session flow.
-6. PH-1-006 — SnookerTableCanvas (react-konva).
+5. ✅ PH-1-005 — Training session flow.
+6. ⏳ PH-1-006 — SnookerTableCanvas (react-konva).
 7. PH-1-007 — Basic dashboard.
 8. PH-1-008 — Manual match log.
 9. PH-1-009 — Calendar factors.

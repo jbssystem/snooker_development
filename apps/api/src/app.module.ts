@@ -7,6 +7,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PlayersModule } from './modules/players/players.module';
 import { DrillsModule } from './modules/drills/drills.module';
+import { TrainingModule } from './modules/training/training.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { DrillsModule } from './modules/drills/drills.module';
     PrismaModule,
     AuthModule,
     PlayersModule,
+    TrainingModule,
     DrillsModule,
   ],
   controllers: [HealthController],

@@ -200,6 +200,69 @@
       "text": "Текст"
     }
   },
+  "training": {
+    "title": "Тренировки",
+    "subtitle": "Сессии, упражнения и попытки за тренировочный день.",
+    "authRequired": "Войдите, чтобы вести тренировки.",
+    "loginCta": "Войти",
+    "empty": "Тренировок пока нет.",
+    "loading": "Загрузка тренировок…",
+    "required": "Обязательное поле",
+    "saving": "Сохранение…",
+    "status": {
+      "active": "Активна",
+      "finished": "Завершена"
+    },
+    "form": {
+      "title": "Новая сессия",
+      "submit": "Начать сессию"
+    },
+    "fields": {
+      "title": "Название",
+      "sessionType": "Тип",
+      "goal": "Цель",
+      "intensity": "Инт.",
+      "fatigueBefore": "Устал. до",
+      "fatigueAfter": "Устал. после",
+      "focusLevel": "Фокус",
+      "mood": "Настрой"
+    },
+    "sessionTypes": {
+      "solo": "Самостоятельно",
+      "coached": "С тренером",
+      "match_prep": "Подготовка к матчу",
+      "review": "Разбор",
+      "other": "Другое"
+    },
+    "drillPicker": {
+      "title": "Упражнение",
+      "empty": "Выберите шаблон",
+      "add": "Добавить"
+    },
+    "actions": {
+      "finishSession": "Завершить сессию",
+      "finishDrill": "Завершить упражнение"
+    },
+    "execution": {
+      "empty": "Упражнения ещё не добавлены.",
+      "unnamed": "Упражнение",
+      "open": "Открыто",
+      "attempts": "попыток",
+      "successes": "успехов"
+    },
+    "attemptResults": {
+      "success": "Успех",
+      "partial": "Частично",
+      "miss": "Промах",
+      "skipped": "Пропуск"
+    },
+    "attempts": {
+      "number": "#",
+      "result": "Результат",
+      "time": "Время",
+      "empty": "Попыток пока нет."
+    }
+  },
   "errors": {
     "notFound": "Страница не найдена",
     "generic": "Что-то пошло не так",

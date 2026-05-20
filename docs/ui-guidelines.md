@@ -119,6 +119,21 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - The initial default table layout is an empty full-size layout; PH-1-006 will
   replace this with the visual `SnookerTableCanvas` editor.
 
+## Training UI
+
+- `/training` lives in the `(app)` route group and is rendered by
+  `src/components/training/TrainingSessionClient.tsx`.
+- The left rail selects recent sessions, the center panel operates the active
+  session, and the right panel starts a new session. This keeps the tablet
+  workflow stable while a coach records attempts.
+- Starting a session captures title, type, goal, intensity, pre-session
+  fatigue, focus and mood. Finishing captures post-session fatigue.
+- A visible drill template can be added to the active session. The execution
+  panel records single-tap outcomes: success, partial, miss or skipped; each
+  tap appends a numbered attempt and updates counters.
+- PH-1-006 will replace the current table layout snapshot plumbing with the
+  interactive `SnookerTableCanvas` picker/editor.
+
 ## Providers
 
 `src/providers/QueryProvider.tsx` wraps locale routes under
@@ -144,3 +159,7 @@ to a per-request TanStack Query client (`staleTime: 30s`, `retry: 1`).
 Quick-action grid with: `+attempt`, `success`, `miss thick`, `miss thin`,
 `lost position`, `safety good`, `safety bad`, `note`, `finish set`,
 `finish drill`. Buttons stay reachable on a tablet in landscape.
+
+PH-1-005 ships the first compact outcome grid (`success`, `partial`, `miss`,
+`skipped`). Detailed miss taxonomy and note shortcuts remain planned for the
+expanded drill execution screen.

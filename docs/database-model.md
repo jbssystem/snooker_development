@@ -17,17 +17,21 @@ Implemented in initial migration:
 - `CoachProfile`
 - `DrillTemplate` — reusable library item with category, difficulty, metrics
     schema JSON, optional default table layout JSON, tags and visibility.
+- `TrainingSession` — player-owned practice session with type, goal, fatigue,
+    intensity, focus and notes.
+- `DrillExecution` — a drill template instance inside a session, with counters,
+    optional result JSON, error tags and table layout snapshot JSON.
+- `DrillAttempt` — numbered attempt log under one drill execution.
 
 Planned (next migrations, in this order):
 
 1. `PlayerCoachRelation`, `Academy`, `Club`
-2. `DrillExecution`, `DrillAttempt`
-3. `TrainingSession`, `TrainingBlock`
-4. `Tournament`, `Match`, `Frame`, `Shot`
-5. `CalendarEvent`, `LifestyleFactor`, `SupplementEvent`
-6. `AIReport`, `AIInsight`
-7. `ExternalDataSource`, `ExternalImportJob`, `ExternalImportedRecord`
-8. `Attachment`, `CoachNote`, `PlayerNote`
+2. `TrainingBlock`
+3. `Tournament`, `Match`, `Frame`, `Shot`
+4. `CalendarEvent`, `LifestyleFactor`, `SupplementEvent`
+5. `AIReport`, `AIInsight`
+6. `ExternalDataSource`, `ExternalImportJob`, `ExternalImportedRecord`
+7. `Attachment`, `CoachNote`, `PlayerNote`
 
 Each new entity ships with:
 - Prisma model + migration
@@ -73,6 +77,39 @@ Each new entity ships with:
     shape used by `packages/snooker-domain`.
 - User create/update DTOs allow `private` and `shared`; `system` is reserved
     for seeded templates and cannot be created through the user API.
+
+### TrainingSession
+
+- `id`, `playerProfileId`, `createdByUserId`, `startedAt`, optional `endedAt`,
+    `sessionType`, `title`, optional `goal`, optional `intensity`, optional
+    `fatigueBefore`, optional `fatigueAfter`, optional `focusLevel`, optional
+    `mood`, optional `notes`, `createdAt`, `updatedAt`.
+- `sessionType` is a PostgreSQL enum mapped from lowercase API values:
+    `solo`, `coached`, `match_prep`, `review`, `other`.
+- Deleting a `PlayerProfile` cascades to its training sessions. Deleting the
+    creating `User` also cascades through the `createdBy` relation.
+
+### DrillExecution
+
+- `id`, `trainingSessionId`, `drillTemplateId`, `playerProfileId`, `startedAt`,
+    optional `endedAt`, `attempts`, `successes`, optional `score`, optional
+    `maxRun`, optional `averageScore`, optional `resultJson`, `errorTags`,
+    optional `coachNotes`, optional `playerNotes`, optional
+    `tableLayoutSnapshotJson`, `createdAt`, `updatedAt`.
+- Each execution belongs to one session and one player profile. The API only
+    creates executions for sessions owned by the current user's profile.
+- `drillTemplateId` uses `ON DELETE RESTRICT` so historical executions are not
+    left pointing at a missing template.
+
+### DrillAttempt
+
+- `id`, `drillExecutionId`, `attemptNumber`, `result`, optional `score`,
+    optional `potSuccess`, optional `positionSuccess`, optional `missType`,
+    `errorTags`, optional `shotTimeMs`, optional `notes`, `createdAt`.
+- `(drillExecutionId, attemptNumber)` is unique. The API appends attempts in a
+    transaction and increments execution counters with the same write.
+- `result` is a PostgreSQL enum mapped from lowercase API values: `success`,
+    `partial`, `miss`, `skipped`.
 
 ## Sensitive data
 

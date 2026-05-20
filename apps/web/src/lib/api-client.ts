@@ -1,16 +1,25 @@
 import type {
   AuthMe,
   AuthSession,
+  AddDrillExecutionInput,
   CreateEquipmentProfileInput,
   CreateDrillTemplateInput,
+  CreateDrillAttemptInput,
+  CreateTrainingSessionInput,
+  DrillAttempt,
+  DrillExecution,
   DrillTemplate,
   EquipmentProfile,
+  FinishDrillExecutionInput,
+  FinishTrainingSessionInput,
   LoginInput,
   PlayerProfile,
   RegisterInput,
+  TrainingSession,
   Tokens,
   UpdateDrillTemplateInput,
   UpdateEquipmentProfileInput,
+  UpdateTrainingSessionInput,
   UpsertPlayerProfileInput,
 } from '@snooker/shared';
 
@@ -125,6 +134,48 @@ export const api = {
       request<void>(`/drill-templates/${id}`, {
         method: 'DELETE',
         token,
+      }),
+  },
+  training: {
+    listSessions: (token: string) =>
+      request<TrainingSession[]>('/training-sessions', { token }),
+    getSession: (token: string, id: string) =>
+      request<TrainingSession>(`/training-sessions/${id}`, { token }),
+    createSession: (token: string, input: CreateTrainingSessionInput) =>
+      request<TrainingSession>('/training-sessions', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    updateSession: (token: string, id: string, input: UpdateTrainingSessionInput) =>
+      request<TrainingSession>(`/training-sessions/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    finishSession: (token: string, id: string, input: FinishTrainingSessionInput) =>
+      request<TrainingSession>(`/training-sessions/${id}/finish`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    addDrill: (token: string, sessionId: string, input: AddDrillExecutionInput) =>
+      request<DrillExecution>(`/training-sessions/${sessionId}/drills`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    addAttempt: (token: string, executionId: string, input: CreateDrillAttemptInput) =>
+      request<DrillAttempt>(`/drill-executions/${executionId}/attempts`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    finishDrill: (token: string, executionId: string, input: FinishDrillExecutionInput) =>
+      request<DrillExecution>(`/drill-executions/${executionId}/finish`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
       }),
   },
 };

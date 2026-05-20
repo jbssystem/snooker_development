@@ -16,8 +16,9 @@ whenever an endpoint is added, changed or removed.
   not method-wide, so route params and request metadata are not parsed as DTOs.
 - Rate limiting is global (`120/min`) with tighter auth endpoint throttles:
   register `5/min`, login `10/min`, refresh `20/min`.
-- All write endpoints idempotency-keyed via `Idempotency-Key` header
-  when an action could double-submit (drill attempts, match shots).
+- Write endpoints that can double-submit (drill attempts, match shots) should
+  be idempotency-keyed via `Idempotency-Key`; a shared middleware remains a
+  PH-2 hardening item.
 
 ## Implemented
 
@@ -40,10 +41,19 @@ whenever an endpoint is added, changed or removed.
 | POST | `/drill-templates` | Bearer | `CreateDrillTemplateSchema` | Creates a user-owned template. User DTO allows `private` or `shared` visibility only. |
 | PATCH | `/drill-templates/:id` | Bearer | `UpdateDrillTemplateSchema` | Updates a template owned by the current user. System templates are immutable via this API. |
 | DELETE | `/drill-templates/:id` | Bearer | – | 204. Deletes a template owned by the current user. |
+| GET | `/training-sessions` | Bearer | – | Lists the current player's latest 50 training sessions with drill executions and attempts. |
+| GET | `/training-sessions/:id` | Bearer | – | Returns one current-player training session. |
+| POST | `/training-sessions` | Bearer | `CreateTrainingSessionSchema` | Creates a session for the current user's player profile. |
+| PATCH | `/training-sessions/:id` | Bearer | `UpdateTrainingSessionSchema` | Updates current-player session metadata and optional end time. |
+| POST | `/training-sessions/:id/finish` | Bearer | `FinishTrainingSessionSchema` | Sets `endedAt` and optional post-session fatigue/notes. |
+| POST | `/training-sessions/:id/drills` | Bearer | `AddDrillExecutionSchema` | Adds a visible drill template to an open current-player session and snapshots its table layout. |
+| POST | `/drill-executions/:id/attempts` | Bearer | `CreateDrillAttemptSchema` | Appends the next numbered attempt to an open execution and increments counters. |
+| PATCH | `/drill-executions/:id/finish` | Bearer | `FinishDrillExecutionSchema` | Sets `endedAt` and optional result summary fields. Repeated calls return the finished execution. |
 
 Schemas live in `packages/shared/src/schemas/auth.ts` and
 `packages/shared/src/schemas/player.ts` and
-`packages/shared/src/schemas/drill.ts`.
+`packages/shared/src/schemas/drill.ts` and
+`packages/shared/src/schemas/training.ts`.
 Error codes returned by auth endpoints are defined in
 `packages/shared/src/errors/codes.ts` under `ErrorCodes.Auth.*` and must be
 translated by the web under `errors.api.<code>`.

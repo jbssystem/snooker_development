@@ -200,6 +200,69 @@
       "text": "Text"
     }
   },
+  "training": {
+    "title": "Training",
+    "subtitle": "Sessions, drills and attempts for the training day.",
+    "authRequired": "Sign in to log training sessions.",
+    "loginCta": "Sign in",
+    "empty": "No training sessions yet.",
+    "loading": "Loading training…",
+    "required": "Required",
+    "saving": "Saving…",
+    "status": {
+      "active": "Active",
+      "finished": "Finished"
+    },
+    "form": {
+      "title": "New session",
+      "submit": "Start session"
+    },
+    "fields": {
+      "title": "Title",
+      "sessionType": "Type",
+      "goal": "Goal",
+      "intensity": "Int.",
+      "fatigueBefore": "Fatigue before",
+      "fatigueAfter": "Fatigue after",
+      "focusLevel": "Focus",
+      "mood": "Mood"
+    },
+    "sessionTypes": {
+      "solo": "Solo",
+      "coached": "Coached",
+      "match_prep": "Match prep",
+      "review": "Review",
+      "other": "Other"
+    },
+    "drillPicker": {
+      "title": "Drill",
+      "empty": "Select template",
+      "add": "Add"
+    },
+    "actions": {
+      "finishSession": "Finish session",
+      "finishDrill": "Finish drill"
+    },
+    "execution": {
+      "empty": "No drills have been added yet.",
+      "unnamed": "Drill",
+      "open": "Open",
+      "attempts": "attempts",
+      "successes": "successes"
+    },
+    "attemptResults": {
+      "success": "Success",
+      "partial": "Partial",
+      "miss": "Miss",
+      "skipped": "Skipped"
+    },
+    "attempts": {
+      "number": "#",
+      "result": "Result",
+      "time": "Time",
+      "empty": "No attempts yet."
+    }
+  },
   "errors": {
     "notFound": "Page not found",
     "generic": "Something went wrong",

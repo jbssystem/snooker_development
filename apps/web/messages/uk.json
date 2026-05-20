@@ -200,6 +200,69 @@
       "text": "Текст"
     }
   },
+  "training": {
+    "title": "Тренування",
+    "subtitle": "Сесії, вправи та спроби за тренувальний день.",
+    "authRequired": "Увійдіть, щоб вести тренування.",
+    "loginCta": "Увійти",
+    "empty": "Тренувань поки немає.",
+    "loading": "Завантаження тренувань…",
+    "required": "Обов'язкове поле",
+    "saving": "Збереження…",
+    "status": {
+      "active": "Активна",
+      "finished": "Завершена"
+    },
+    "form": {
+      "title": "Нова сесія",
+      "submit": "Почати сесію"
+    },
+    "fields": {
+      "title": "Назва",
+      "sessionType": "Тип",
+      "goal": "Ціль",
+      "intensity": "Інт.",
+      "fatigueBefore": "Втома до",
+      "fatigueAfter": "Втома після",
+      "focusLevel": "Фокус",
+      "mood": "Настрій"
+    },
+    "sessionTypes": {
+      "solo": "Самостійно",
+      "coached": "З тренером",
+      "match_prep": "Підготовка до матчу",
+      "review": "Розбір",
+      "other": "Інше"
+    },
+    "drillPicker": {
+      "title": "Вправа",
+      "empty": "Оберіть шаблон",
+      "add": "Додати"
+    },
+    "actions": {
+      "finishSession": "Завершити сесію",
+      "finishDrill": "Завершити вправу"
+    },
+    "execution": {
+      "empty": "Вправи ще не додано.",
+      "unnamed": "Вправа",
+      "open": "Відкрита",
+      "attempts": "спроб",
+      "successes": "успіхів"
+    },
+    "attemptResults": {
+      "success": "Успіх",
+      "partial": "Частково",
+      "miss": "Промах",
+      "skipped": "Пропуск"
+    },
+    "attempts": {
+      "number": "#",
+      "result": "Результат",
+      "time": "Час",
+      "empty": "Спроб поки немає."
+    }
+  },
   "errors": {
     "notFound": "Сторінку не знайдено",
     "generic": "Щось пішло не так",
