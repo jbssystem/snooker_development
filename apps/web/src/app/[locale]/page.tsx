@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -15,16 +15,14 @@ export default async function HomePage({ params }: Props) {
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-12 px-6 py-16">
       <header className="flex flex-col gap-6">
-        <div className="flex items-center gap-4">
-          <Image
-            src="/logo.png"
-            alt={tCommon('appName')}
-            width={420}
-            height={120}
-            priority
-            className="h-16 w-auto"
-          />
-        </div>
+        <Image
+          src="/logo.png"
+          alt={tCommon('appName')}
+          width={420}
+          height={120}
+          priority
+          className="h-16 w-auto"
+        />
         <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
           {tCommon('appName')}
         </p>
@@ -32,16 +30,22 @@ export default async function HomePage({ params }: Props) {
           {t('title')}
         </h1>
         <p className="max-w-2xl text-lg text-text-secondary">{t('subtitle')}</p>
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-wrap gap-3 pt-2">
           <Link
-            href={`/${locale}/dashboard`}
+            href="/register"
             className="rounded-md bg-brand-primary px-5 py-2.5 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent"
           >
-            {t('cta.openDashboard')}
+            {t('cta.register')}
+          </Link>
+          <Link
+            href="/login"
+            className="rounded-md border border-border-subtle px-5 py-2.5 font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+          >
+            {t('cta.login')}
           </Link>
           <a
             href="#sections"
-            className="rounded-md border border-border-subtle px-5 py-2.5 font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+            className="rounded-md border border-transparent px-5 py-2.5 font-medium text-text-disabled transition hover:text-text-secondary"
           >
             {t('cta.learnMore')}
           </a>

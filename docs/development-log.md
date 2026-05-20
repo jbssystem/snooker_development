@@ -18,6 +18,39 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-002 — Web app shell + auth UI
+
+**Delivered:**
+- Route groups: `apps/web/src/app/[locale]/(app)/` for authenticated
+  surfaces and `(auth)/` for the login/register funnel.
+- `Header`, `LocaleSwitcher`, `UserMenu` components under
+  `src/components/layout/`. Header carries logo, primary navigation
+  (dashboard / training / drills / matches / calendar / analytics),
+  language switcher and user menu.
+- `AuthForm` (login + register) with React Hook Form + brand-styled inputs;
+  posts to the API via the new `lib/api-client.ts` typed fetch wrapper and
+  stores the session in `lib/auth-store.ts` (Zustand + persist to
+  `localStorage` under `snooker.auth`).
+- `providers/QueryProvider.tsx` wires TanStack Query into the root locale
+  layout (`staleTime: 30s`, `retry: 1`).
+- `next-intl/navigation` helpers exposed via `src/i18n/navigation.ts`
+  (locale-aware `Link`, `useRouter`, `usePathname`).
+- Landing page (`[locale]/page.tsx`) now offers Login and Register CTAs.
+- Old `[locale]/dashboard/page.tsx` removed; dashboard now lives under
+  `[locale]/(app)/dashboard/page.tsx` (same URL, wrapped in the shell).
+- i18n keys added in all three locales (`ru`, `en`, `uk`):
+  `auth.*`, `dashboard.placeholder`, `home.cta.{login,register}`,
+  `errors.api.{auth,validation,generic}.*`.
+- `docs/ui-guidelines.md` updated with the new layout primitives and
+  auth-UI conventions.
+
+**Open items:**
+- Auth UI is fully client-rendered for MVP; no route protection at the
+  middleware/server level yet. PH-2 will move refresh tokens into
+  httpOnly cookies and add SSR-aware redirects.
+- `pnpm install` must be re-run locally to pick up the new auth deps from
+  PH-1-001 (`@nestjs/jwt`, `argon2`).
+
 ### PH-1-001 — Auth foundation (backend)
 
 **Delivered:**
@@ -44,8 +77,8 @@ Format:
 ### Phase 1 plan (epics)
 
 1. ✅ PH-1-001 — Auth foundation (backend).
-2. ⏳ PH-1-002 — Web app shell + login/register UI + LocaleSwitcher.
-3. PH-1-003 — Player profile CRUD + equipment profile.
+2. ✅ PH-1-002 — Web app shell + login/register UI + LocaleSwitcher.
+3. ⏳ PH-1-003 — Player profile CRUD + equipment profile.
 4. PH-1-004 — Drill library (categories, templates, metrics schema, table layout).
 5. PH-1-005 — Training session flow.
 6. PH-1-006 — SnookerTableCanvas (react-konva).

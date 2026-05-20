@@ -37,7 +37,9 @@
     "subtitle": "Training, drills, matches and progress — built for the long run.",
     "cta": {
       "openDashboard": "Open dashboard",
-      "learnMore": "Learn more"
+      "learnMore": "Learn more",
+      "login": "Sign in",
+      "register": "Create account"
     },
     "sections": {
       "training": {
@@ -58,8 +60,51 @@
       }
     }
   },
+  "dashboard": {
+    "placeholder": "Coming soon: player overview, weekly progress, recent sessions, AI insights."
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Sign in to your player or coach account.",
+      "cta": "Sign in",
+      "noAccount": "Don't have an account yet?"
+    },
+    "register": {
+      "title": "Create account",
+      "subtitle": "Create a player account. All data belongs to the player.",
+      "cta": "Create account",
+      "hasAccount": "Already have an account?"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "displayName": "Name"
+    },
+    "submitting": "Submitting…",
+    "logout": "Sign out",
+    "errors": {
+      "required": "Required"
+    }
+  },
   "errors": {
     "notFound": "Page not found",
-    "generic": "Something went wrong"
+    "generic": "Something went wrong",
+    "api": {
+      "auth": {
+        "emailAlreadyUsed": "This email is already in use",
+        "invalidCredentials": "Invalid email or password",
+        "refreshTokenInvalid": "Session is invalid. Please sign in again.",
+        "refreshTokenExpired": "Session expired. Please sign in again.",
+        "unauthorized": "Sign in required"
+      },
+      "validation": {
+        "failed": "Please check the form values"
+      },
+      "generic": {
+        "notFound": "Not found",
+        "internal": "Internal error. Please try again later."
+      }
+    }
   }
 }

@@ -55,14 +55,48 @@ Full spec: [docs/brand.md](brand.md). Quick reference:
 
 ## Layout primitives
 
-To be added under `packages/ui/src/components` as we go:
+Delivered so far (under `apps/web/src/components/layout/`):
+
+- `Header` — server component; logo + primary navigation + `LocaleSwitcher`
+  + `UserMenu`. Sticky, `bg-background-secondary/80` with backdrop blur.
+- `LocaleSwitcher` — client component; native `<select>` of `ru` / `en` / `uk`,
+  preserves current pathname via `next-intl/navigation` (`localePrefix: 'always'`).
+- `UserMenu` — client component; reads the persisted Zustand auth store,
+  shows the display name and a sign-out button when authenticated, otherwise
+  routes to `/login`.
+- `(app)/layout.tsx` route group — wraps authenticated pages with `Header`
+  and a centered max-w-7xl container.
+- `(auth)/layout.tsx` route group — minimal centered card layout used by
+  `login` and `register` pages.
+
+Still to add under `packages/ui/src/components` as the design crystallises:
 
 - `Surface` — card container.
 - `PageHeader` — title + actions + breadcrumbs.
 - `Stat` — metric tile.
 - `EmptyState` — call to action when no data.
-- `LocaleSwitcher` — language toggle (ru/en/uk).
 - `OfflineBadge` — sync status.
+
+## Auth UI
+
+- Auth pages live in the `(auth)` route group; no header / nav is rendered,
+  to keep the funnel focused.
+- `AuthForm` (`src/components/auth/AuthForm.tsx`) is a single client
+  component reused by `/login` and `/register` via a `mode` prop. It uses
+  React Hook Form + the `api` client and stores the returned session in the
+  Zustand `useAuthStore`.
+- All API error codes are mapped to translation keys under `errors.api.*`
+  in the locale files. A missing translation falls back to the raw code so
+  the UI never crashes on a new error.
+- For MVP, tokens are persisted to `localStorage` under the key
+  `snooker.auth`. Phase 2 will move refresh tokens into httpOnly cookies
+  and add SSR-aware session reads.
+
+## Providers
+
+`src/providers/QueryProvider.tsx` wraps the app under
+`NextIntlClientProvider` in `[locale]/layout.tsx` and gives every page access
+to a per-request TanStack Query client (`staleTime: 30s`, `retry: 1`).
 
 ## Accessibility
 

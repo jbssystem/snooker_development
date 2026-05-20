@@ -37,7 +37,9 @@
     "subtitle": "Тренировки, упражнения, матчи и прогресс — на годы вперёд.",
     "cta": {
       "openDashboard": "Открыть обзор",
-      "learnMore": "Подробнее"
+      "learnMore": "Подробнее",
+      "login": "Войти",
+      "register": "Создать аккаунт"
     },
     "sections": {
       "training": {
@@ -58,8 +60,51 @@
       }
     }
   },
+  "dashboard": {
+    "placeholder": "Скоро: обзор игрока, прогресс за неделю, последние сессии, AI-инсайты."
+  },
+  "auth": {
+    "login": {
+      "title": "Вход",
+      "subtitle": "Войдите в свой аккаунт игрока или тренера.",
+      "cta": "Войти",
+      "noAccount": "Ещё нет аккаунта?"
+    },
+    "register": {
+      "title": "Регистрация",
+      "subtitle": "Создайте аккаунт игрока. Все данные принадлежат игроку.",
+      "cta": "Создать аккаунт",
+      "hasAccount": "Уже есть аккаунт?"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Пароль",
+      "displayName": "Имя"
+    },
+    "submitting": "Отправка…",
+    "logout": "Выйти",
+    "errors": {
+      "required": "Обязательное поле"
+    }
+  },
   "errors": {
     "notFound": "Страница не найдена",
-    "generic": "Что-то пошло не так"
+    "generic": "Что-то пошло не так",
+    "api": {
+      "auth": {
+        "emailAlreadyUsed": "Этот email уже занят",
+        "invalidCredentials": "Неверный email или пароль",
+        "refreshTokenInvalid": "Сессия недействительна. Войдите снова.",
+        "refreshTokenExpired": "Сессия истекла. Войдите снова.",
+        "unauthorized": "Требуется вход"
+      },
+      "validation": {
+        "failed": "Проверьте введённые данные"
+      },
+      "generic": {
+        "notFound": "Не найдено",
+        "internal": "Внутренняя ошибка. Попробуйте позже."
+      }
+    }
   }
 }
