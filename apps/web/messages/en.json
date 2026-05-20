@@ -194,6 +194,55 @@
       "custom_factor": "Custom factor"
     }
   },
+  "ai": {
+    "title": "AI Coach",
+    "subtitle": "Weekly reports from training, matches and calendar factors.",
+    "authRequired": "Sign in to create and read AI reports.",
+    "loginCta": "Sign in",
+    "loading": "Loading reports…",
+    "empty": "No reports yet. Generate the first weekly summary.",
+    "required": "Required field",
+    "saving": "Queueing…",
+    "generate": {
+      "title": "Generate report",
+      "periodStart": "Period start",
+      "periodEnd": "Period end",
+      "submit": "Create weekly summary"
+    },
+    "profileRequired": {
+      "title": "Player profile required",
+      "description": "AI reports are built from the player profile and linked data.",
+      "cta": "Open profile"
+    },
+    "report": {
+      "untitled": "Weekly summary",
+      "provider": "Provider",
+      "promptVersion": "Prompt version",
+      "sourceHash": "Source hash",
+      "dataSources": "Data sources",
+      "content": "Content"
+    },
+    "sources": {
+      "trainingSessions": "Training sessions",
+      "drillExecutions": "Drills",
+      "matches": "Matches",
+      "calendarEvents": "Events",
+      "lifestyleFactors": "Wellness",
+      "supplementEvents": "Supplement periods",
+      "previousReports": "Previous reports"
+    },
+    "status": {
+      "queued": "Queued",
+      "running": "Running",
+      "completed": "Ready",
+      "failed": "Failed"
+    },
+    "statusText": {
+      "queued": "The report is queued. This page will refresh the status automatically.",
+      "running": "The worker is generating the report now.",
+      "failed": "Report generation failed."
+    }
+  },
   "auth": {
     "login": {
       "title": "Sign in",

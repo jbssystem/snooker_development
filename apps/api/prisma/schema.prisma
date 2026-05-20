@@ -113,6 +113,17 @@ enum CalendarEventSource {
   EXTERNAL @map("external")
 }
 
+enum AiReportType {
+  WEEKLY_SUMMARY @map("weekly_summary")
+}
+
+enum AiReportStatus {
+  QUEUED    @map("queued")
+  RUNNING   @map("running")
+  COMPLETED @map("completed")
+  FAILED    @map("failed")
+}
+
 model User {
   id           String     @id @default(cuid())
   email        String     @unique
@@ -132,6 +143,7 @@ model User {
   createdMatches          Match[]           @relation("CreatedMatches")
   createdCalendarEvents   CalendarEvent[]   @relation("CreatedCalendarEvents")
   createdSupplementEvents SupplementEvent[] @relation("CreatedSupplementEvents")
+  requestedAiReports      AiReport[]        @relation("RequestedAiReports")
 }
 
 model RefreshToken {
@@ -185,6 +197,7 @@ model PlayerProfile {
   calendarEvents   CalendarEvent[]
   lifestyleFactors LifestyleFactor[]
   supplementEvents SupplementEvent[]
+  aiReports        AiReport[]
 }
 
 model EquipmentProfile {
@@ -465,5 +478,39 @@ model SupplementEvent {
   @@index([endDate])
 }
 
-// NOTE: Shot-by-shot, AI reports and external imports will be added in
+model AiReport {
+  id                String         @id @default(cuid())
+  playerProfileId   String
+  requestedByUserId String
+  reportType        AiReportType   @default(WEEKLY_SUMMARY)
+  status            AiReportStatus @default(QUEUED)
+  periodStart       DateTime
+  periodEnd         DateTime
+  locale            String         @default("ru")
+  title             String?
+  contentMarkdown   String?
+  sourceDataHash    String
+  sourceDataJson    Json
+  dataSourcesJson   Json
+  promptVersion     String
+  provider          String
+  model             String
+  errorMessage      String?
+  completedAt       DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  requestedBy   User          @relation("RequestedAiReports", fields: [requestedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([playerProfileId])
+  @@index([requestedByUserId])
+  @@index([reportType])
+  @@index([status])
+  @@index([periodStart])
+  @@index([periodEnd])
+  @@index([createdAt])
+}
+
+// NOTE: Shot-by-shot, AI insights and external imports will be added in
 // subsequent migrations. Schema sketches live in docs/database-model.md.

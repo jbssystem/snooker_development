@@ -19,6 +19,35 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-010 — Weekly AI summary
+
+**Delivered:**
+
+- Prisma migration `20260520120600_add_ai_reports` adds `AIReport`,
+  `AIReportType` and `AIReportStatus` for saved generated reports.
+- `packages/shared/src/schemas/ai.ts` exports DTOs for AI reports and weekly
+  report generation requests; `packages/shared/src/queues/ai.ts` exports the
+  BullMQ queue/job contract used by API and worker.
+- NestJS `AiModule` exposes guarded current-player endpoints for listing,
+  reading and generating weekly AI reports.
+- Report generation snapshots the source data, stores a stable source hash,
+  data-source counts, prompt version, provider and model before enqueueing
+  the worker job.
+- Worker consumes `ai-report-generation`, reads the weekly-summary prompt and
+  calls Anthropic when `AI_PROVIDER=anthropic` and `AI_API_KEY` is present;
+  otherwise it writes a safe local markdown fallback.
+- Web `/ai` shows report history, status polling, saved report metadata,
+  data-source counts and a period form for creating a weekly summary.
+- i18n keys added in all three locales (`ru`, `en`, `uk`) under `ai.*`.
+- Docs updated: `docs/api-spec.md`, `docs/database-model.md`,
+  `docs/ai-spec.md`, `docs/ui-guidelines.md`, `docs/development-log.md`.
+
+**Open items:**
+
+- Anthropic output quality still depends on a real `AI_API_KEY` in the target
+  environment. Without a key the local fallback is intentionally conservative.
+- `AIInsight` and coach handover reports remain later AI features.
+
 ### PH-1-009 — Calendar factors
 
 **Delivered:**
@@ -315,7 +344,7 @@ Format:
 7. ✅ PH-1-007 — Basic dashboard.
 8. ✅ PH-1-008 — Manual match log.
 9. ✅ PH-1-009 — Calendar factors.
-10. PH-1-010 — Weekly AI summary (Anthropic).
+10. ✅ PH-1-010 — Weekly AI summary (Anthropic).
 11. PH-1-011 — Docker production deploy.
 
 ---
@@ -358,8 +387,9 @@ consistent skeleton.
 
 **Open items:**
 
-- User to set `AI_API_KEY` in `.env` before PH-1-010 AI summary work if it is
-  not already present in the local environment.
+- User to set `AI_API_KEY` in `.env` when Anthropic summaries are required;
+  the PH-1-010 implementation falls back to a safe local markdown summary when
+  no provider key is available.
 
 ---
 

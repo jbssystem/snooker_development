@@ -2,6 +2,7 @@ import type {
   AuthMe,
   AuthSession,
   AddDrillExecutionInput,
+  AiReport,
   CreateEquipmentProfileInput,
   CreateDrillTemplateInput,
   CreateDrillAttemptInput,
@@ -13,6 +14,7 @@ import type {
   EquipmentProfile,
   FinishDrillExecutionInput,
   FinishTrainingSessionInput,
+  GenerateWeeklyAiReportInput,
   LoginInput,
   AddMatchFrameInput,
   CalendarEvent,
@@ -254,6 +256,16 @@ export const api = {
     updateSupplementEvent: (token: string, id: string, input: UpdateSupplementEventInput) =>
       request<SupplementEvent>(`/supplement-events/${id}`, {
         method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+  },
+  ai: {
+    listReports: (token: string) => request<AiReport[]>('/ai/reports', { token }),
+    getReport: (token: string, id: string) => request<AiReport>(`/ai/reports/${id}`, { token }),
+    generateWeeklyReport: (token: string, input: GenerateWeeklyAiReportInput) =>
+      request<AiReport>('/ai/reports/generate', {
+        method: 'POST',
         token,
         body: JSON.stringify(input),
       }),

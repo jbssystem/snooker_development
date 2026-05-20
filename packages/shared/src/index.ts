@@ -5,5 +5,7 @@ export * from './schemas/drill';
 export * from './schemas/match';
 export * from './schemas/training';
 export * from './schemas/calendar';
+export * from './schemas/ai';
 export * from './constants/locales';
 export * from './errors/codes';
+export * from './queues/ai';

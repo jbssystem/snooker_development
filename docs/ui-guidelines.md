@@ -178,6 +178,21 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - Wellness and supplement copy stays descriptive only. The UI records factors
   for later correlation, but does not make medical or causal claims.
 
+## AI Reports UI
+
+- `/ai` lives in the `(app)` route group and is rendered by
+  `src/components/ai/AiReportsClient.tsx`.
+- The layout uses a report history rail, a central report detail pane and a
+  side form for generating a weekly summary. This keeps generated content
+  scannable without hiding source metadata.
+- The page uses client-side auth/profile checks from `useAuthStore` and TanStack
+  Query key `ai-reports`; queued/running reports poll every five seconds until
+  the worker completes or fails them.
+- Each report shows period, status, provider/model, prompt version, source hash
+  prefix and data-source counts before the markdown content.
+- Wellness/supplement language remains neutral. The UI does not present AI
+  content as medical advice and does not add supplement recommendations.
+
 ## Providers
 
 `src/providers/QueryProvider.tsx` wraps locale routes under

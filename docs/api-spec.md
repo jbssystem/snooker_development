@@ -67,6 +67,9 @@ whenever an endpoint is added, changed or removed.
 | GET    | `/supplement-events/:id`             | Bearer | –                              | Returns one current-player supplement period.                                                                                                                                                                   |
 | POST   | `/supplement-events`                 | Bearer | `CreateSupplementEventSchema`  | Creates a current-player supplement period with category, dates, dosage note, reason and notes.                                                                                                                 |
 | PATCH  | `/supplement-events/:id`             | Bearer | `UpdateSupplementEventSchema`  | Updates one current-player supplement period.                                                                                                                                                                   |
+| GET    | `/ai/reports`                        | Bearer | –                              | Lists the current player's latest 50 AI reports with status, markdown content and source metadata. Returns an empty list if the player profile does not exist yet.                                             |
+| GET    | `/ai/reports/:id`                    | Bearer | –                              | Returns one current-player AI report by id.                                                                                                                                                                     |
+| POST   | `/ai/reports/generate`               | Bearer | `GenerateWeeklyAiReportSchema` | Snapshots weekly source data, creates a queued `AIReport` and enqueues `generate-weekly-summary` for the worker.                                                                                                |
 
 Schemas live in `packages/shared/src/schemas/auth.ts` and
 `packages/shared/src/schemas/player.ts` and
@@ -74,7 +77,8 @@ Schemas live in `packages/shared/src/schemas/auth.ts` and
 `packages/shared/src/schemas/drill.ts` and
 `packages/shared/src/schemas/match.ts` and
 `packages/shared/src/schemas/training.ts` and
-`packages/shared/src/schemas/calendar.ts`.
+`packages/shared/src/schemas/calendar.ts` and
+`packages/shared/src/schemas/ai.ts`.
 Error codes returned by auth endpoints are defined in
 `packages/shared/src/errors/codes.ts` under `ErrorCodes.Auth.*` and must be
 translated by the web under `errors.api.<code>`.

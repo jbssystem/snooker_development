@@ -194,6 +194,55 @@
       "custom_factor": "Інший фактор"
     }
   },
+  "ai": {
+    "title": "AI-тренер",
+    "subtitle": "Тижневі звіти за тренуваннями, матчами та календарними факторами.",
+    "authRequired": "Увійдіть, щоб створювати й читати AI-звіти.",
+    "loginCta": "Увійти",
+    "loading": "Завантаження звітів…",
+    "empty": "Звітів поки немає. Сформуйте перший тижневий звіт.",
+    "required": "Обов'язкове поле",
+    "saving": "Постановка в чергу…",
+    "generate": {
+      "title": "Сформувати звіт",
+      "periodStart": "Початок періоду",
+      "periodEnd": "Кінець періоду",
+      "submit": "Створити weekly summary"
+    },
+    "profileRequired": {
+      "title": "Потрібен профіль гравця",
+      "description": "AI-звіт будується з профілю гравця та пов'язаних даних.",
+      "cta": "Відкрити профіль"
+    },
+    "report": {
+      "untitled": "Тижневий звіт",
+      "provider": "Провайдер",
+      "promptVersion": "Версія prompt",
+      "sourceHash": "Source hash",
+      "dataSources": "Джерела даних",
+      "content": "Зміст"
+    },
+    "sources": {
+      "trainingSessions": "Тренування",
+      "drillExecutions": "Вправи",
+      "matches": "Матчі",
+      "calendarEvents": "Події",
+      "lifestyleFactors": "Стан",
+      "supplementEvents": "Періоди добавок",
+      "previousReports": "Попередні звіти"
+    },
+    "status": {
+      "queued": "У черзі",
+      "running": "Генерується",
+      "completed": "Готовий",
+      "failed": "Помилка"
+    },
+    "statusText": {
+      "queued": "Звіт поставлено в чергу. Сторінка оновить статус автоматично.",
+      "running": "Worker зараз формує звіт.",
+      "failed": "Генерація звіту завершилась помилкою."
+    }
+  },
   "auth": {
     "login": {
       "title": "Вхід",

@@ -32,13 +32,16 @@ Implemented in initial migration:
   sleep, fatigue, stress, focus, mood, travel/illness/injury flags and notes.
 - `SupplementEvent` — player-owned supplement period with category, dates,
   dosage note, reason and notes.
+- `AIReport` — player-owned generated report with period, source-data hash,
+  source snapshot JSON, data-source counts JSON, prompt/provider metadata,
+  status and markdown result.
 
 Planned (next migrations, in this order):
 
 1. `PlayerCoachRelation`, `Academy`, `Club`
 2. `TrainingBlock`
 3. `Tournament`, `Shot`
-4. `AIReport`, `AIInsight`
+4. `AIInsight`
 5. `ExternalDataSource`, `ExternalImportJob`, `ExternalImportedRecord`
 6. `Attachment`, `CoachNote`, `PlayerNote`
 
@@ -183,9 +186,30 @@ Each new entity ships with:
 - Deleting a `PlayerProfile` cascades to its supplement events. Deleting the
   creating `User` also cascades through the `createdBy` relation.
 
+### AIReport
+
+- `id`, `playerProfileId`, `createdByUserId`, `reportType`, `title`,
+  `locale`, `periodStart`, `periodEnd`, `sourceDataHash`, `sourceDataJson`,
+  `dataSourcesJson`, `promptVersion`, `provider`, `model`, `status`,
+  optional `contentMarkdown`, optional `errorMessage`, optional `completedAt`,
+  `createdAt`, `updatedAt`.
+- `reportType` is a PostgreSQL enum mapped from lowercase API values; PH-1-010
+  writes `weekly_summary` only.
+- `status` is a PostgreSQL enum mapped from lowercase API values: `queued`,
+  `running`, `completed`, `failed`.
+- `sourceDataHash` is a sha-256 hash of stable stringified source snapshot
+  data. It lets the UI and future jobs identify what exact inputs produced a
+  report.
+- `dataSourcesJson` stores aggregate counts for training sessions, drill
+  executions, matches, calendar events, lifestyle factors, supplement periods
+  and previous AI reports.
+- Deleting a `PlayerProfile` cascades to its AI reports. Deleting the creating
+  `User` also cascades through the `createdBy` relation.
+
 ## Sensitive data
 
-`LifestyleFactor`, `SupplementEvent`, and wellness-tagged `CalendarEvent`
-rows are sensitive. PH-1-009 exposes them only to the current player's own
-account. Coach sharing will require explicit `wellness:read` permission and
-audit logging before shared coach views are introduced. See TZ §16.3.
+`LifestyleFactor`, `SupplementEvent`, wellness-tagged `CalendarEvent` rows and
+AI report source snapshots that include those rows are sensitive. PH-1-009 and
+PH-1-010 expose them only to the current player's own account. Coach sharing
+will require explicit `wellness:read` permission and audit logging before
+shared coach views are introduced. See TZ §16.3.

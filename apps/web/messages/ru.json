@@ -194,6 +194,55 @@
       "custom_factor": "Другой фактор"
     }
   },
+  "ai": {
+    "title": "AI-тренер",
+    "subtitle": "Недельные отчёты по тренировкам, матчам и календарным факторам.",
+    "authRequired": "Войдите, чтобы создавать и читать AI-отчёты.",
+    "loginCta": "Войти",
+    "loading": "Загрузка отчётов…",
+    "empty": "Отчётов пока нет. Сформируйте первую недельную сводку.",
+    "required": "Обязательное поле",
+    "saving": "Постановка в очередь…",
+    "generate": {
+      "title": "Сформировать отчёт",
+      "periodStart": "Начало периода",
+      "periodEnd": "Окончание периода",
+      "submit": "Создать weekly summary"
+    },
+    "profileRequired": {
+      "title": "Нужен профиль игрока",
+      "description": "AI-отчёт строится от профиля игрока и связанных данных.",
+      "cta": "Открыть профиль"
+    },
+    "report": {
+      "untitled": "Недельная сводка",
+      "provider": "Провайдер",
+      "promptVersion": "Версия prompt",
+      "sourceHash": "Source hash",
+      "dataSources": "Источники данных",
+      "content": "Содержание"
+    },
+    "sources": {
+      "trainingSessions": "Тренировки",
+      "drillExecutions": "Упражнения",
+      "matches": "Матчи",
+      "calendarEvents": "События",
+      "lifestyleFactors": "Состояние",
+      "supplementEvents": "Периоды добавок",
+      "previousReports": "Прошлые отчёты"
+    },
+    "status": {
+      "queued": "В очереди",
+      "running": "Генерируется",
+      "completed": "Готов",
+      "failed": "Ошибка"
+    },
+    "statusText": {
+      "queued": "Отчёт поставлен в очередь. Страница обновит статус автоматически.",
+      "running": "Worker сейчас формирует отчёт.",
+      "failed": "Генерация отчёта завершилась ошибкой."
+    }
+  },
   "auth": {
     "login": {
       "title": "Вход",

@@ -10,6 +10,7 @@ const NAV_KEYS = [
   { key: 'drills', href: '/drills' },
   { key: 'matches', href: '/matches' },
   { key: 'calendar', href: '/calendar' },
+  { key: 'ai', href: '/ai' },
   { key: 'analytics', href: '/analytics' },
   { key: 'profile', href: '/profile' },
 ] as const;

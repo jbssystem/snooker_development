@@ -11,6 +11,7 @@ import { TrainingModule } from './modules/training/training.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MatchesModule } from './modules/matches/matches.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CalendarModule } from './modules/calendar/calendar.module';
     DashboardModule,
     MatchesModule,
     CalendarModule,
+    AiModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
