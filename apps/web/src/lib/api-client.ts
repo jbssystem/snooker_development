@@ -2,11 +2,14 @@ import type {
   AuthMe,
   AuthSession,
   CreateEquipmentProfileInput,
+  CreateDrillTemplateInput,
+  DrillTemplate,
   EquipmentProfile,
   LoginInput,
   PlayerProfile,
   RegisterInput,
   Tokens,
+  UpdateDrillTemplateInput,
   UpdateEquipmentProfileInput,
   UpsertPlayerProfileInput,
 } from '@snooker/shared';
@@ -97,6 +100,29 @@ export const api = {
       }),
     deleteEquipment: (token: string, id: string) =>
       request<void>(`/players/me/equipment-profiles/${id}`, {
+        method: 'DELETE',
+        token,
+      }),
+  },
+  drills: {
+    listTemplates: (token: string) =>
+      request<DrillTemplate[]>('/drill-templates', { token }),
+    getTemplate: (token: string, id: string) =>
+      request<DrillTemplate>(`/drill-templates/${id}`, { token }),
+    createTemplate: (token: string, input: CreateDrillTemplateInput) =>
+      request<DrillTemplate>('/drill-templates', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    updateTemplate: (token: string, id: string, input: UpdateDrillTemplateInput) =>
+      request<DrillTemplate>(`/drill-templates/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    deleteTemplate: (token: string, id: string) =>
+      request<void>(`/drill-templates/${id}`, {
         method: 'DELETE',
         token,
       }),

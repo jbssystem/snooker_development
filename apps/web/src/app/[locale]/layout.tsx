@@ -1,24 +1,8 @@
-import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n/config';
 import { QueryProvider } from '@/providers/QueryProvider';
-import '../globals.css';
-
-export const metadata: Metadata = {
-  title: 'Snooker Player OS',
-  description: 'Long-term snooker player development system',
-  manifest: '/manifest.webmanifest',
-  themeColor: '#0E6B4D',
-  icons: {
-    icon: [
-      { url: '/favicon.ico' },
-      { url: '/icon.png', type: 'image/png' },
-    ],
-    apple: '/apple-touch-icon.png',
-  },
-};
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -38,12 +22,8 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="dark">
-      <body className="min-h-screen bg-background-primary text-text-primary antialiased">
-        <NextIntlClientProvider messages={messages}>
-          <QueryProvider>{children}</QueryProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages}>
+      <QueryProvider>{children}</QueryProvider>
+    </NextIntlClientProvider>
   );
 }

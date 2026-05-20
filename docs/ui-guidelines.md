@@ -68,6 +68,9 @@ Delivered so far (under `apps/web/src/components/layout/`):
   and a centered max-w-7xl container.
 - `(auth)/layout.tsx` route group — minimal centered card layout used by
   `login` and `register` pages.
+- `app/layout.tsx` is the required Next.js root document layout (`html`,
+  `body`, metadata, viewport). `[locale]/layout.tsx` is nested and owns only
+  `NextIntlClientProvider` + `QueryProvider`.
 
 Still to add under `packages/ui/src/components` as the design crystallises:
 
@@ -104,9 +107,21 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - The page uses client-side auth from `useAuthStore` and TanStack Query keys
   `player-profile` and `equipment-profiles`.
 
+## Drill Library UI
+
+- `/drills` lives in the `(app)` route group and is rendered by
+  `src/components/drills/DrillLibraryClient.tsx`.
+- The main column lists visible drill templates. Each item shows category,
+  difficulty, description, goal, success criteria and tags.
+- The side panel creates a new user-owned template with category, difficulty,
+  visibility, text fields and a compact metric-row editor. Metrics are stored
+  as `DrillMetricsSchema` (`version: 1`).
+- The initial default table layout is an empty full-size layout; PH-1-006 will
+  replace this with the visual `SnookerTableCanvas` editor.
+
 ## Providers
 
-`src/providers/QueryProvider.tsx` wraps the app under
+`src/providers/QueryProvider.tsx` wraps locale routes under
 `NextIntlClientProvider` in `[locale]/layout.tsx` and gives every page access
 to a per-request TanStack Query client (`staleTime: 30s`, `retry: 1`).
 

@@ -31,6 +31,33 @@ enum DominantHand {
   AMBIDEXTROUS
 }
 
+enum DrillCategory {
+  CUE_ACTION        @map("cue_action")
+  POTTING           @map("potting")
+  POSITIONAL_PLAY   @map("positional_play")
+  BREAK_BUILDING    @map("break_building")
+  SAFETY            @map("safety")
+  SNOOKER_ESCAPE    @map("snooker_escape")
+  TACTICAL_PLAY     @map("tactical_play")
+  MATCH_SIMULATION  @map("match_simulation")
+  PRESSURE_TRAINING @map("pressure_training")
+  MENTAL_ROUTINE    @map("mental_routine")
+  CUSTOM            @map("custom")
+}
+
+enum DrillDifficulty {
+  BEGINNER     @map("beginner")
+  INTERMEDIATE @map("intermediate")
+  ADVANCED     @map("advanced")
+  PROFESSIONAL @map("professional")
+}
+
+enum DrillVisibility {
+  PRIVATE @map("private")
+  SHARED  @map("shared")
+  SYSTEM  @map("system")
+}
+
 model User {
   id           String      @id @default(cuid())
   email        String      @unique
@@ -45,6 +72,7 @@ model User {
   refreshTokens RefreshToken[]
   playerProfile PlayerProfile?
   coachProfile  CoachProfile?
+  drillTemplates DrillTemplate[] @relation("CreatedDrillTemplates")
 }
 
 model RefreshToken {
@@ -128,6 +156,32 @@ model CoachProfile {
   updatedAt      DateTime @updatedAt
 
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DrillTemplate {
+  id                     String           @id @default(cuid())
+  name                   String
+  category               DrillCategory
+  difficulty             DrillDifficulty
+  description            String
+  goal                   String
+  rules                  String
+  successCriteria        String
+  metricsSchemaJson      Json
+  defaultTableLayoutJson Json?
+  tags                   String[]         @default([])
+  visibility             DrillVisibility  @default(PRIVATE)
+  createdByUserId        String
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  createdBy              User             @relation("CreatedDrillTemplates", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([createdByUserId])
+  @@index([category])
+  @@index([difficulty])
+  @@index([visibility])
+  @@index([createdAt])
 }
 
 // NOTE: Training sessions, drills, matches, frames, shots, calendar,

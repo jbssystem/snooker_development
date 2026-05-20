@@ -18,6 +18,33 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-004 — Drill library
+
+**Delivered:**
+- Prisma `DrillTemplate` model and migration
+  `20260520120200_add_drill_templates`, with enums for category,
+  difficulty and visibility.
+- `packages/shared/src/schemas/drill.ts` exports drill template DTOs,
+  category/difficulty/visibility schemas, metric schemas and a table-layout
+  JSON schema.
+- `packages/snooker-domain/src/drills/types.ts` now mirrors template metrics,
+  visibility and optional default table layout while staying renderer-free.
+- NestJS `DrillsModule` under `apps/api/src/modules/drills/` exposes guarded
+  `/drill-templates` list/get/create/update/delete endpoints with ownership
+  checks. Shared/system templates are readable; only current-user templates
+  are mutable.
+- Web `/drills` page under the `(app)` shell lists visible templates and
+  creates user-owned templates with a metric-row editor.
+- i18n keys added in all three locales (`ru`, `en`, `uk`) under `drills.*`.
+- Added the required Next.js root `app/layout.tsx` and moved locale providers
+  into nested `[locale]/layout.tsx`, which makes `next build` pass cleanly.
+- Docs updated: `docs/api-spec.md`, `docs/database-model.md`,
+  `docs/ui-guidelines.md`, `docs/development-log.md`.
+
+**Open items:**
+- Table layout editing is a placeholder empty full-size layout until
+  PH-1-006 introduces `SnookerTableCanvas`.
+
 ### Review hardening after PH-1-003
 
 **Delivered:**
@@ -129,8 +156,8 @@ Format:
 1. ✅ PH-1-001 — Auth foundation (backend).
 2. ✅ PH-1-002 — Web app shell + login/register UI + LocaleSwitcher.
 3. ✅ PH-1-003 — Player profile CRUD + equipment profile.
-4. ⏳ PH-1-004 — Drill library (categories, templates, metrics schema, table layout).
-5. PH-1-005 — Training session flow.
+4. ✅ PH-1-004 — Drill library (categories, templates, metrics schema, table layout).
+5. ⏳ PH-1-005 — Training session flow.
 6. PH-1-006 — SnookerTableCanvas (react-konva).
 7. PH-1-007 — Basic dashboard.
 8. PH-1-008 — Manual match log.

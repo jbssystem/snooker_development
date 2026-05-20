@@ -133,6 +133,73 @@
       }
     }
   },
+  "drills": {
+    "title": "Бібліотека вправ",
+    "subtitle": "Шаблони тренувальних задач, метрики та стартова розкладка столу.",
+    "authRequired": "Увійдіть, щоб працювати з бібліотекою вправ.",
+    "loginCta": "Увійти",
+    "empty": "Шаблони вправ ще не додано.",
+    "required": "Обов'язкове поле",
+    "saving": "Збереження…",
+    "delete": "Видалити",
+    "form": {
+      "title": "Новий шаблон",
+      "submit": "Створити шаблон"
+    },
+    "fields": {
+      "name": "Назва",
+      "category": "Категорія",
+      "difficulty": "Складність",
+      "visibility": "Доступ",
+      "description": "Опис",
+      "goal": "Ціль",
+      "rules": "Правила",
+      "successCriteria": "Критерій успіху",
+      "tags": "Теги"
+    },
+    "categories": {
+      "cue_action": "Техніка удару",
+      "potting": "Забивання",
+      "positional_play": "Виходи",
+      "break_building": "Серії",
+      "safety": "Відіграші",
+      "snooker_escape": "Вихід зі снукера",
+      "tactical_play": "Тактика",
+      "match_simulation": "Матчеві сценарії",
+      "pressure_training": "Тиск",
+      "mental_routine": "Ментальна рутина",
+      "custom": "Інше"
+    },
+    "difficulties": {
+      "beginner": "Початковий",
+      "intermediate": "Середній",
+      "advanced": "Просунутий",
+      "professional": "Професійний"
+    },
+    "visibility": {
+      "private": "Особистий",
+      "shared": "Спільний"
+    },
+    "metrics": {
+      "title": "Метрики",
+      "add": "Додати",
+      "remove": "Прибрати",
+      "key": "Ключ",
+      "label": "Назва",
+      "unit": "Од."
+    },
+    "defaultMetrics": {
+      "attempts": "Спроби",
+      "successes": "Успіхи"
+    },
+    "metricTypes": {
+      "number": "Число",
+      "boolean": "Так/ні",
+      "percentage": "%",
+      "time_ms": "Час",
+      "text": "Текст"
+    }
+  },
   "errors": {
     "notFound": "Сторінку не знайдено",
     "generic": "Щось пішло не так",

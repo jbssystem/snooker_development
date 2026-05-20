@@ -6,6 +6,7 @@ import { HealthController } from './modules/health/health.controller';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PlayersModule } from './modules/players/players.module';
+import { DrillsModule } from './modules/drills/drills.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PlayersModule } from './modules/players/players.module';
     PrismaModule,
     AuthModule,
     PlayersModule,
+    DrillsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

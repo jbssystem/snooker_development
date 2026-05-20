@@ -133,6 +133,73 @@
       }
     }
   },
+  "drills": {
+    "title": "Библиотека упражнений",
+    "subtitle": "Шаблоны тренировочных задач, метрики и стартовая раскладка стола.",
+    "authRequired": "Войдите, чтобы работать с библиотекой упражнений.",
+    "loginCta": "Войти",
+    "empty": "Шаблоны упражнений ещё не добавлены.",
+    "required": "Обязательное поле",
+    "saving": "Сохранение…",
+    "delete": "Удалить",
+    "form": {
+      "title": "Новый шаблон",
+      "submit": "Создать шаблон"
+    },
+    "fields": {
+      "name": "Название",
+      "category": "Категория",
+      "difficulty": "Сложность",
+      "visibility": "Доступ",
+      "description": "Описание",
+      "goal": "Цель",
+      "rules": "Правила",
+      "successCriteria": "Критерий успеха",
+      "tags": "Теги"
+    },
+    "categories": {
+      "cue_action": "Техника удара",
+      "potting": "Забивание",
+      "positional_play": "Выходы",
+      "break_building": "Серии",
+      "safety": "Отыгрыши",
+      "snooker_escape": "Выход из снукера",
+      "tactical_play": "Тактика",
+      "match_simulation": "Матчевые сценарии",
+      "pressure_training": "Давление",
+      "mental_routine": "Ментальная рутина",
+      "custom": "Другое"
+    },
+    "difficulties": {
+      "beginner": "Начальный",
+      "intermediate": "Средний",
+      "advanced": "Продвинутый",
+      "professional": "Профессиональный"
+    },
+    "visibility": {
+      "private": "Личный",
+      "shared": "Общий"
+    },
+    "metrics": {
+      "title": "Метрики",
+      "add": "Добавить",
+      "remove": "Убрать",
+      "key": "Ключ",
+      "label": "Название",
+      "unit": "Ед."
+    },
+    "defaultMetrics": {
+      "attempts": "Попытки",
+      "successes": "Успехи"
+    },
+    "metricTypes": {
+      "number": "Число",
+      "boolean": "Да/нет",
+      "percentage": "%",
+      "time_ms": "Время",
+      "text": "Текст"
+    }
+  },
   "errors": {
     "notFound": "Страница не найдена",
     "generic": "Что-то пошло не так",

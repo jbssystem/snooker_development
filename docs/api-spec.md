@@ -35,9 +35,15 @@ whenever an endpoint is added, changed or removed.
 | POST | `/players/me/equipment-profiles` | Bearer | `CreateEquipmentProfileSchema` | Creates an equipment profile for the current player profile. |
 | PATCH | `/players/me/equipment-profiles/:id` | Bearer | `UpdateEquipmentProfileSchema` | Updates one equipment profile owned by the current player profile. |
 | DELETE | `/players/me/equipment-profiles/:id` | Bearer | – | 204. Deletes one equipment profile owned by the current player profile. |
+| GET | `/drill-templates` | Bearer | – | Lists templates visible to the current user (own, shared, system). |
+| GET | `/drill-templates/:id` | Bearer | – | Returns one visible drill template. |
+| POST | `/drill-templates` | Bearer | `CreateDrillTemplateSchema` | Creates a user-owned template. User DTO allows `private` or `shared` visibility only. |
+| PATCH | `/drill-templates/:id` | Bearer | `UpdateDrillTemplateSchema` | Updates a template owned by the current user. System templates are immutable via this API. |
+| DELETE | `/drill-templates/:id` | Bearer | – | 204. Deletes a template owned by the current user. |
 
 Schemas live in `packages/shared/src/schemas/auth.ts` and
-`packages/shared/src/schemas/player.ts`.
+`packages/shared/src/schemas/player.ts` and
+`packages/shared/src/schemas/drill.ts`.
 Error codes returned by auth endpoints are defined in
 `packages/shared/src/errors/codes.ts` under `ErrorCodes.Auth.*` and must be
 translated by the web under `errors.api.<code>`.

@@ -5,10 +5,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  typedRoutes: true,
   transpilePackages: ['@snooker/shared', '@snooker/snooker-domain', '@snooker/ui'],
-  experimental: {
-    typedRoutes: true,
-  },
 };
 
 export default withNextIntl(nextConfig);

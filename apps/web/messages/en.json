@@ -133,6 +133,73 @@
       }
     }
   },
+  "drills": {
+    "title": "Drill library",
+    "subtitle": "Training templates, metrics and starting table layouts.",
+    "authRequired": "Sign in to work with the drill library.",
+    "loginCta": "Sign in",
+    "empty": "No drill templates have been added yet.",
+    "required": "Required",
+    "saving": "Saving…",
+    "delete": "Delete",
+    "form": {
+      "title": "New template",
+      "submit": "Create template"
+    },
+    "fields": {
+      "name": "Name",
+      "category": "Category",
+      "difficulty": "Difficulty",
+      "visibility": "Visibility",
+      "description": "Description",
+      "goal": "Goal",
+      "rules": "Rules",
+      "successCriteria": "Success criteria",
+      "tags": "Tags"
+    },
+    "categories": {
+      "cue_action": "Cue action",
+      "potting": "Potting",
+      "positional_play": "Positional play",
+      "break_building": "Break building",
+      "safety": "Safety",
+      "snooker_escape": "Snooker escape",
+      "tactical_play": "Tactical play",
+      "match_simulation": "Match simulation",
+      "pressure_training": "Pressure training",
+      "mental_routine": "Mental routine",
+      "custom": "Custom"
+    },
+    "difficulties": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "professional": "Professional"
+    },
+    "visibility": {
+      "private": "Private",
+      "shared": "Shared"
+    },
+    "metrics": {
+      "title": "Metrics",
+      "add": "Add",
+      "remove": "Remove",
+      "key": "Key",
+      "label": "Label",
+      "unit": "Unit"
+    },
+    "defaultMetrics": {
+      "attempts": "Attempts",
+      "successes": "Successes"
+    },
+    "metricTypes": {
+      "number": "Number",
+      "boolean": "Yes/no",
+      "percentage": "%",
+      "time_ms": "Time",
+      "text": "Text"
+    }
+  },
   "errors": {
     "notFound": "Page not found",
     "generic": "Something went wrong",

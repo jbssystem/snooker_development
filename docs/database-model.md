@@ -15,11 +15,13 @@ Implemented in initial migration:
 - `EquipmentProfile` — belongs to `PlayerProfile`; records cue, tip, chalk,
   extension, notes and active period (`activeFrom`, optional `activeTo`).
 - `CoachProfile`
+- `DrillTemplate` — reusable library item with category, difficulty, metrics
+    schema JSON, optional default table layout JSON, tags and visibility.
 
 Planned (next migrations, in this order):
 
 1. `PlayerCoachRelation`, `Academy`, `Club`
-2. `DrillTemplate`, `DrillExecution`, `DrillAttempt`
+2. `DrillExecution`, `DrillAttempt`
 3. `TrainingSession`, `TrainingBlock`
 4. `Tournament`, `Match`, `Frame`, `Shot`
 5. `CalendarEvent`, `LifestyleFactor`, `SupplementEvent`
@@ -58,6 +60,19 @@ Each new entity ships with:
 - Deleting a `PlayerProfile` cascades to its equipment profiles.
 - Multiple equipment profiles can overlap in MVP; analytics can later infer
     active intervals from `activeFrom` / `activeTo`.
+
+### DrillTemplate
+
+- `id`, `name`, `category`, `difficulty`, `description`, `goal`, `rules`,
+    `successCriteria`, `metricsSchemaJson`, optional `defaultTableLayoutJson`,
+    `tags`, `visibility`, `createdByUserId`, `createdAt`, `updatedAt`.
+- `category`, `difficulty` and `visibility` are PostgreSQL enums mapped from
+    the lowercase domain/API values.
+- `metricsSchemaJson` follows `DrillMetricsSchema` (`version: 1`, array of
+    metric definitions). `defaultTableLayoutJson` follows the table layout
+    shape used by `packages/snooker-domain`.
+- User create/update DTOs allow `private` and `shared`; `system` is reserved
+    for seeded templates and cannot be created through the user API.
 
 ## Sensitive data
 
