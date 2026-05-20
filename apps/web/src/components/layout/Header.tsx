@@ -11,6 +11,7 @@ const NAV_KEYS = [
   { key: 'matches', href: '/matches' },
   { key: 'calendar', href: '/calendar' },
   { key: 'analytics', href: '/analytics' },
+  { key: 'profile', href: '/profile' },
 ] as const;
 
 export async function Header() {

@@ -91,6 +91,30 @@ model PlayerProfile {
   updatedAt      DateTime      @updatedAt
 
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  equipment      EquipmentProfile[]
+}
+
+model EquipmentProfile {
+  id              String        @id @default(cuid())
+  playerProfileId String
+  cueName         String?
+  cueWeight       Float?
+  tipBrand        String?
+  tipSize         Float?
+  tipChangeDate   DateTime?
+  extension       String?
+  chalk           String?
+  notes           String?
+  activeFrom      DateTime      @default(now())
+  activeTo        DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([playerProfileId])
+  @@index([activeFrom])
+  @@index([activeTo])
 }
 
 model CoachProfile {

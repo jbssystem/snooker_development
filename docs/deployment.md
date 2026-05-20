@@ -14,6 +14,9 @@ pnpm dev:api
 pnpm dev:web
 ```
 
+On Windows with nvm, `corepack enable` can fail with EPERM. In that case use
+`npm install -g pnpm@9.12.0` and then run `pnpm install`.
+
 Or full stack via Docker:
 ```powershell
 docker compose up -d --build
@@ -36,7 +39,7 @@ before any non-local deployment.
 | web | 3000 | stateless |
 | api | 4000 | stateless |
 | worker | – | stateless |
-| postgres | 5432 | `postgres_data` volume |
+| postgres | 5433 | `postgres_data` volume |
 | redis | – (internal) | `redis_data` volume |
 | minio | 9000, 9001 | `minio_data` volume |
 | nginx | 80 | config-only |

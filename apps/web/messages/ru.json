@@ -30,6 +30,7 @@
     "wellness": "Состояние",
     "analytics": "Аналитика",
     "ai": "AI-тренер",
+    "profile": "Профиль",
     "settings": "Настройки"
   },
   "home": {
@@ -85,6 +86,51 @@
     "logout": "Выйти",
     "errors": {
       "required": "Обязательное поле"
+    }
+  },
+  "profile": {
+    "title": "Профиль игрока",
+    "subtitle": "Основные данные игрока и текущая экипировка.",
+    "authRequired": "Войдите, чтобы заполнить профиль игрока.",
+    "loginCta": "Войти",
+    "required": "Обязательное поле",
+    "saving": "Сохранение…",
+    "saveProfile": "Сохранить профиль",
+    "fields": {
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "dateOfBirth": "Дата рождения",
+      "country": "Страна",
+      "dominantHand": "Ведущая рука",
+      "level": "Уровень",
+      "seasonGoal": "Цель сезона"
+    },
+    "dominantHand": {
+      "empty": "Не указано",
+      "LEFT": "Левая",
+      "RIGHT": "Правая",
+      "AMBIDEXTROUS": "Обе"
+    },
+    "equipment": {
+      "title": "Экипировка",
+      "subtitle": "Кий, наклейка, мел и периоды использования.",
+      "add": "Добавить экипировку",
+      "history": "История экипировки",
+      "empty": "Экипировка ещё не добавлена.",
+      "unnamed": "Без названия",
+      "delete": "Удалить",
+      "needsProfile": "Сначала сохраните профиль игрока.",
+      "fields": {
+        "cueName": "Кий",
+        "cueWeight": "Вес кия",
+        "tipBrand": "Наклейка",
+        "tipSize": "Размер наклейки",
+        "tipChangeDate": "Дата смены наклейки",
+        "extension": "Удлинитель",
+        "chalk": "Мел",
+        "notes": "Заметки",
+        "activeFrom": "Активно с"
+      }
     }
   },
   "errors": {

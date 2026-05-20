@@ -1,4 +1,15 @@
-import type { AuthSession, RegisterInput, LoginInput, AuthMe, Tokens } from '@snooker/shared';
+import type {
+  AuthMe,
+  AuthSession,
+  CreateEquipmentProfileInput,
+  EquipmentProfile,
+  LoginInput,
+  PlayerProfile,
+  RegisterInput,
+  Tokens,
+  UpdateEquipmentProfileInput,
+  UpsertPlayerProfileInput,
+} from '@snooker/shared';
 
 const BASE_URL =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) ||
@@ -60,5 +71,34 @@ export const api = {
         body: JSON.stringify({ refreshToken }),
       }),
     me: (token: string) => request<AuthMe>('/auth/me', { token }),
+  },
+  players: {
+    getProfile: (token: string) =>
+      request<PlayerProfile | null>('/players/me/profile', { token }),
+    upsertProfile: (token: string, input: UpsertPlayerProfileInput) =>
+      request<PlayerProfile>('/players/me/profile', {
+        method: 'PUT',
+        token,
+        body: JSON.stringify(input),
+      }),
+    listEquipment: (token: string) =>
+      request<EquipmentProfile[]>('/players/me/equipment-profiles', { token }),
+    createEquipment: (token: string, input: CreateEquipmentProfileInput) =>
+      request<EquipmentProfile>('/players/me/equipment-profiles', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    updateEquipment: (token: string, id: string, input: UpdateEquipmentProfileInput) =>
+      request<EquipmentProfile>(`/players/me/equipment-profiles/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    deleteEquipment: (token: string, id: string) =>
+      request<void>(`/players/me/equipment-profiles/${id}`, {
+        method: 'DELETE',
+        token,
+      }),
   },
 };

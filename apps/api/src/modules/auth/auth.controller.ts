@@ -44,7 +44,7 @@ export class AuthController {
     @Req() req: Request,
     @Ip() ip: string,
   ): Promise<AuthSession> {
-    return this.auth.register(body, { userAgent: req.headers['user-agent'], ip });
+    return this.auth.register(body, requestMeta(req, ip));
   }
 
   @Post('login')
@@ -55,7 +55,7 @@ export class AuthController {
     @Req() req: Request,
     @Ip() ip: string,
   ): Promise<AuthSession> {
-    return this.auth.login(body, { userAgent: req.headers['user-agent'], ip });
+    return this.auth.login(body, requestMeta(req, ip));
   }
 
   @Post('refresh')
@@ -66,10 +66,7 @@ export class AuthController {
     @Req() req: Request,
     @Ip() ip: string,
   ): Promise<Tokens> {
-    return this.tokens.rotate(body.refreshToken, {
-      userAgent: req.headers['user-agent'],
-      ip,
-    });
+    return this.tokens.rotate(body.refreshToken, requestMeta(req, ip));
   }
 
   @Post('logout')
@@ -85,4 +82,11 @@ export class AuthController {
   me(@CurrentUserId() userId: string): Promise<AuthMe> {
     return this.auth.me(userId);
   }
+}
+
+function requestMeta(req: Request, ip: string): { userAgent?: string; ip?: string } {
+  return {
+    ...(req.headers['user-agent'] ? { userAgent: req.headers['user-agent'] } : {}),
+    ...(ip ? { ip } : {}),
+  };
 }

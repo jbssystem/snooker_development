@@ -25,8 +25,15 @@ whenever an endpoint is added, changed or removed.
 | POST | `/auth/refresh` | – | `RefreshSchema` | Returns `Tokens`. Rotates the refresh token (old one revoked). |
 | POST | `/auth/logout` | – | `RefreshSchema` | 204. Revokes the refresh token. |
 | GET | `/auth/me` | Bearer | – | Returns `AuthMe`. |
+| GET | `/players/me/profile` | Bearer | – | Returns current user's `PlayerProfile` or `null`. |
+| PUT | `/players/me/profile` | Bearer | `UpsertPlayerProfileSchema` | Creates or updates current user's player profile. |
+| GET | `/players/me/equipment-profiles` | Bearer | – | Lists current player's equipment profiles, newest active first. |
+| POST | `/players/me/equipment-profiles` | Bearer | `CreateEquipmentProfileSchema` | Creates an equipment profile for the current player profile. |
+| PATCH | `/players/me/equipment-profiles/:id` | Bearer | `UpdateEquipmentProfileSchema` | Updates one equipment profile owned by the current player profile. |
+| DELETE | `/players/me/equipment-profiles/:id` | Bearer | – | 204. Deletes one equipment profile owned by the current player profile. |
 
-Schemas live in `packages/shared/src/schemas/auth.ts`.
+Schemas live in `packages/shared/src/schemas/auth.ts` and
+`packages/shared/src/schemas/player.ts`.
 Error codes returned by auth endpoints are defined in
 `packages/shared/src/errors/codes.ts` under `ErrorCodes.Auth.*` and must be
 translated by the web under `errors.api.<code>`.

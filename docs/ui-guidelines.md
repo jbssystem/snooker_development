@@ -92,6 +92,18 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   `snooker.auth`. Phase 2 will move refresh tokens into httpOnly cookies
   and add SSR-aware session reads.
 
+## Profile UI
+
+- `/profile` lives in the `(app)` route group and is rendered by
+  `src/components/profile/ProfileClient.tsx`.
+- The left column edits the player profile (identity, country, dominant hand,
+  level and season goal). The right column creates equipment profiles and
+  lists historical equipment entries.
+- Equipment creation is disabled until a player profile exists; the UI keeps
+  that dependency visible with a warning message instead of silently failing.
+- The page uses client-side auth from `useAuthStore` and TanStack Query keys
+  `player-profile` and `equipment-profiles`.
+
 ## Providers
 
 `src/providers/QueryProvider.tsx` wraps the app under

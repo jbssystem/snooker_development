@@ -30,6 +30,7 @@
     "wellness": "Стан",
     "analytics": "Аналітика",
     "ai": "AI-тренер",
+    "profile": "Профіль",
     "settings": "Налаштування"
   },
   "home": {
@@ -85,6 +86,51 @@
     "logout": "Вийти",
     "errors": {
       "required": "Обов'язкове поле"
+    }
+  },
+  "profile": {
+    "title": "Профіль гравця",
+    "subtitle": "Основні дані гравця та поточне спорядження.",
+    "authRequired": "Увійдіть, щоб заповнити профіль гравця.",
+    "loginCta": "Увійти",
+    "required": "Обов'язкове поле",
+    "saving": "Збереження…",
+    "saveProfile": "Зберегти профіль",
+    "fields": {
+      "firstName": "Ім'я",
+      "lastName": "Прізвище",
+      "dateOfBirth": "Дата народження",
+      "country": "Країна",
+      "dominantHand": "Провідна рука",
+      "level": "Рівень",
+      "seasonGoal": "Ціль сезону"
+    },
+    "dominantHand": {
+      "empty": "Не вказано",
+      "LEFT": "Ліва",
+      "RIGHT": "Права",
+      "AMBIDEXTROUS": "Обидві"
+    },
+    "equipment": {
+      "title": "Спорядження",
+      "subtitle": "Кий, наклейка, крейда та періоди використання.",
+      "add": "Додати спорядження",
+      "history": "Історія спорядження",
+      "empty": "Спорядження ще не додано.",
+      "unnamed": "Без назви",
+      "delete": "Видалити",
+      "needsProfile": "Спочатку збережіть профіль гравця.",
+      "fields": {
+        "cueName": "Кий",
+        "cueWeight": "Вага кия",
+        "tipBrand": "Наклейка",
+        "tipSize": "Розмір наклейки",
+        "tipChangeDate": "Дата зміни наклейки",
+        "extension": "Подовжувач",
+        "chalk": "Крейда",
+        "notes": "Нотатки",
+        "activeFrom": "Активно з"
+      }
     }
   },
   "errors": {

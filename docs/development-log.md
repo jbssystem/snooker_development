@@ -18,6 +18,29 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-003 — Player profile CRUD + equipment profile
+
+**Delivered:**
+- Prisma `EquipmentProfile` model and migration
+  `20260520103808_add_equipment_profiles`.
+- `packages/shared/src/schemas/player.ts` now exports schemas/types for
+  player profile upsert plus equipment create/update/read DTOs.
+- NestJS `PlayersModule` under `apps/api/src/modules/players/` with guarded
+  endpoints for current-user profile and equipment profiles.
+- Web `/profile` page under the `(app)` shell. It edits player profile data,
+  creates equipment profiles and lists/deletes existing equipment entries.
+- Header navigation now includes Profile.
+- i18n keys added in all three locales (`ru`, `en`, `uk`) under `profile.*`
+  and `nav.profile`.
+- Local development Postgres host port changed to 5433; Docker API/worker
+  keep using the internal `postgres:5432` service URL via Compose override.
+- Docs updated: `docs/api-spec.md`, `docs/database-model.md`,
+  `docs/ui-guidelines.md`, `docs/deployment.md`.
+
+**Open items:**
+- `/profile` still relies on the PH-1-002 client-side token store. Server-side
+  route protection and httpOnly refresh tokens remain a PH-2 hardening item.
+
 ### PH-1-002 — Web app shell + auth UI
 
 **Delivered:**
@@ -78,8 +101,8 @@ Format:
 
 1. ✅ PH-1-001 — Auth foundation (backend).
 2. ✅ PH-1-002 — Web app shell + login/register UI + LocaleSwitcher.
-3. ⏳ PH-1-003 — Player profile CRUD + equipment profile.
-4. PH-1-004 — Drill library (categories, templates, metrics schema, table layout).
+3. ✅ PH-1-003 — Player profile CRUD + equipment profile.
+4. ⏳ PH-1-004 — Drill library (categories, templates, metrics schema, table layout).
 5. PH-1-005 — Training session flow.
 6. PH-1-006 — SnookerTableCanvas (react-konva).
 7. PH-1-007 — Basic dashboard.

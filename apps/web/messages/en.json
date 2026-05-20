@@ -30,6 +30,7 @@
     "wellness": "Wellness",
     "analytics": "Analytics",
     "ai": "AI Coach",
+    "profile": "Profile",
     "settings": "Settings"
   },
   "home": {
@@ -85,6 +86,51 @@
     "logout": "Sign out",
     "errors": {
       "required": "Required"
+    }
+  },
+  "profile": {
+    "title": "Player profile",
+    "subtitle": "Core player details and current equipment.",
+    "authRequired": "Sign in to fill in the player profile.",
+    "loginCta": "Sign in",
+    "required": "Required",
+    "saving": "Saving…",
+    "saveProfile": "Save profile",
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "dateOfBirth": "Date of birth",
+      "country": "Country",
+      "dominantHand": "Dominant hand",
+      "level": "Level",
+      "seasonGoal": "Season goal"
+    },
+    "dominantHand": {
+      "empty": "Not set",
+      "LEFT": "Left",
+      "RIGHT": "Right",
+      "AMBIDEXTROUS": "Ambidextrous"
+    },
+    "equipment": {
+      "title": "Equipment",
+      "subtitle": "Cue, tip, chalk and active periods.",
+      "add": "Add equipment",
+      "history": "Equipment history",
+      "empty": "No equipment has been added yet.",
+      "unnamed": "Unnamed",
+      "delete": "Delete",
+      "needsProfile": "Save the player profile first.",
+      "fields": {
+        "cueName": "Cue",
+        "cueWeight": "Cue weight",
+        "tipBrand": "Tip brand",
+        "tipSize": "Tip size",
+        "tipChangeDate": "Tip change date",
+        "extension": "Extension",
+        "chalk": "Chalk",
+        "notes": "Notes",
+        "activeFrom": "Active from"
+      }
     }
   },
   "errors": {
