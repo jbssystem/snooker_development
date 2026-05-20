@@ -9,6 +9,8 @@ Implemented in initial migration:
 
 - `User`
 - `Role`
+- `RefreshToken` — sha-256 hash of the raw token is stored; `expiresAt`,
+  optional `revokedAt`, `userAgent`, `ipAddress` for session bookkeeping.
 - `PlayerProfile`
 - `CoachProfile`
 

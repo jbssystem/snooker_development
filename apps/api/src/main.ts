@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { HttpErrorFilter } from './common/filters/http-error.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
+  app.useGlobalFilters(new HttpErrorFilter());
 
   const config = new DocumentBuilder()
     .setTitle('Snooker Player OS API')

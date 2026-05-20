@@ -17,9 +17,19 @@ whenever an endpoint is added, changed or removed.
 
 ## Implemented
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| GET | `/health` | Liveness probe |
+| Method | Path | Auth | DTO | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/health` | – | – | Liveness probe |
+| POST | `/auth/register` | – | `RegisterSchema` | Returns `AuthSession`. First user gets `PLAYER` role. |
+| POST | `/auth/login` | – | `LoginSchema` | Returns `AuthSession`. |
+| POST | `/auth/refresh` | – | `RefreshSchema` | Returns `Tokens`. Rotates the refresh token (old one revoked). |
+| POST | `/auth/logout` | – | `RefreshSchema` | 204. Revokes the refresh token. |
+| GET | `/auth/me` | Bearer | – | Returns `AuthMe`. |
+
+Schemas live in `packages/shared/src/schemas/auth.ts`.
+Error codes returned by auth endpoints are defined in
+`packages/shared/src/errors/codes.ts` under `ErrorCodes.Auth.*` and must be
+translated by the web under `errors.api.<code>`.
 
 ## Planned (per TZ §14)
 

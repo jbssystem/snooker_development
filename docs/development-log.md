@@ -14,6 +14,49 @@ Format:
 
 ---
 
+## Phase 1 — MVP (in progress)
+
+**Status:** 🟡 In progress (started 2026-05-20).
+
+### PH-1-001 — Auth foundation (backend)
+
+**Delivered:**
+- Prisma `RefreshToken` model + initial migration SQL under
+  `apps/api/prisma/migrations/20260520120000_init/`.
+- Zod schemas in `@snooker/shared`: `RegisterSchema`, `LoginSchema`,
+  `RefreshSchema`, `TokensSchema`, `AuthMeSchema`, `AuthSessionSchema`.
+- Stable error codes in `@snooker/shared/errors/codes` (`ErrorCodes.Auth.*`).
+- NestJS modules:
+  - `PrismaModule` (global, with lifecycle hooks).
+  - `AuthModule` with `AuthService`, `TokensService`, `JwtAuthGuard`,
+    `CurrentUserId` decorator.
+- Endpoints: `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`,
+  `POST /auth/logout`, `GET /auth/me`.
+- Refresh tokens: stored as sha-256 hash, rotated on use, revocation log.
+- Access tokens: HS256 JWT, 15 min TTL; refresh 30 days.
+- Password hashing: `argon2id` (replaces planned bcrypt).
+- Global `HttpErrorFilter` normalizes errors into `{ error: { code, ... } }`.
+- Global `ZodValidationPipe` for request validation.
+- New deps in `apps/api`: `@nestjs/jwt`, `argon2`. Dropped `nestjs-zod` in
+  favor of an in-house pipe (keeps `@snooker/shared` framework-free).
+- Docs updated: `docs/api-spec.md`, `docs/database-model.md`.
+
+### Phase 1 plan (epics)
+
+1. ✅ PH-1-001 — Auth foundation (backend).
+2. ⏳ PH-1-002 — Web app shell + login/register UI + LocaleSwitcher.
+3. PH-1-003 — Player profile CRUD + equipment profile.
+4. PH-1-004 — Drill library (categories, templates, metrics schema, table layout).
+5. PH-1-005 — Training session flow.
+6. PH-1-006 — SnookerTableCanvas (react-konva).
+7. PH-1-007 — Basic dashboard.
+8. PH-1-008 — Manual match log.
+9. PH-1-009 — Calendar factors.
+10. PH-1-010 — Weekly AI summary (Anthropic).
+11. PH-1-011 — Docker production deploy.
+
+---
+
 ## Phase 0 — Foundation
 
 **Status:** ✅ Complete (2026-05-20).

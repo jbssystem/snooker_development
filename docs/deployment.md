@@ -47,7 +47,16 @@ before any non-local deployment.
 pnpm --filter @snooker/api prisma:migrate
 ```
 
-In Docker, migrations run as a one-shot from the api container:
+For first-time setup against a fresh database, the initial migration SQL is
+already committed under `apps/api/prisma/migrations/20260520120000_init/`,
+so production servers can apply it with:
+
+```powershell
+pnpm --filter @snooker/api prisma generate
+pnpm --filter @snooker/api exec prisma migrate deploy
+```
+
+In Docker, run as a one-shot from the api container:
 ```powershell
 docker compose run --rm api pnpm prisma migrate deploy
 ```
