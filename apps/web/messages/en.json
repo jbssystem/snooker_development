@@ -97,6 +97,15 @@
       "empty": "No drills have been executed yet.",
       "meta": "{executions} executions · {attempts} attempts"
     },
+    "matches": {
+      "title": "Match form",
+      "played": "Matches",
+      "wins": "Wins",
+      "winRate": "Win rate",
+      "frames": "Frames",
+      "highBreak": "High break",
+      "centuries": "100+"
+    },
     "recent": {
       "title": "Recent sessions",
       "empty": "No sessions yet.",

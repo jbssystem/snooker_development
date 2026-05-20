@@ -79,7 +79,7 @@ export function DashboardClient() {
 function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
   const t = useTranslations('dashboard');
   const locale = useLocale();
-  const hasData = dashboard.totals.sessions > 0 || dashboard.totals.attempts > 0;
+  const hasData = dashboard.totals.sessions > 0 || dashboard.totals.attempts > 0 || dashboard.matchSummary.matches > 0;
 
   return (
     <>
@@ -127,6 +127,18 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
         </ChartPanel>
       </section>
 
+      <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+        <h2 className="text-xl font-semibold text-text-primary">{t('matches.title')}</h2>
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <StatCard label={t('matches.played')} value={dashboard.matchSummary.matches} />
+          <StatCard label={t('matches.wins')} value={dashboard.matchSummary.wins} />
+          <StatCard label={t('matches.winRate')} value={dashboard.matchSummary.winRate} suffix="%" />
+          <StatCard label={t('matches.frames')} value={`${dashboard.matchSummary.framesWon}:${dashboard.matchSummary.framesLost}`} />
+          <StatCard label={t('matches.highBreak')} value={dashboard.matchSummary.highBreak ?? 0} />
+          <StatCard label={t('matches.centuries')} value={dashboard.matchSummary.breaks100} />
+        </div>
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="rounded-lg border border-border-subtle bg-background-secondary p-5">
           <h2 className="text-xl font-semibold text-text-primary">{t('drills.title')}</h2>
@@ -163,14 +175,15 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
   );
 }
 
-function StatCard({ label, value, suffix }: { label: string; value: number; suffix?: string }) {
+function StatCard({ label, value, suffix }: { label: string; value: number | string; suffix?: string }) {
   const locale = useLocale();
+  const displayValue = typeof value === 'number' ? formatNumber(value, locale) : value;
 
   return (
     <article className="rounded-lg border border-border-subtle bg-background-secondary p-5">
       <p className="text-sm text-text-secondary">{label}</p>
       <p className="mt-3 text-3xl font-semibold text-text-primary">
-        {formatNumber(value, locale)}{suffix ? <span className="ml-1 text-base text-text-secondary">{suffix}</span> : null}
+        {displayValue}{suffix ? <span className="ml-1 text-base text-text-secondary">{suffix}</span> : null}
       </p>
     </article>
   );

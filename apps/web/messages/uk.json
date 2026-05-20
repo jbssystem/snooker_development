@@ -97,6 +97,15 @@
       "empty": "Вправи ще не виконувалися.",
       "meta": "{executions} виконань · {attempts} спроб"
     },
+    "matches": {
+      "title": "Матчева форма",
+      "played": "Матчі",
+      "wins": "Перемоги",
+      "winRate": "Win rate",
+      "frames": "Фрейми",
+      "highBreak": "High break",
+      "centuries": "100+"
+    },
     "recent": {
       "title": "Останні сесії",
       "empty": "Сесій поки немає.",

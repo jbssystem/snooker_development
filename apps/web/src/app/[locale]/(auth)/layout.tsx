@@ -9,7 +9,7 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
       <div className="w-full max-w-md rounded-xl border border-border-subtle bg-background-secondary p-8 shadow-glow">
         <div className="mb-6 flex flex-col items-center gap-3">
           <Image
-            src="/icon.png"
+            src="/icon-192.png"
             alt={tCommon('appName')}
             width={56}
             height={56}

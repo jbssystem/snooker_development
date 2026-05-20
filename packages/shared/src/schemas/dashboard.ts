@@ -41,6 +41,21 @@ export const DashboardDrillProgressSchema = z.object({
 });
 export type DashboardDrillProgress = z.infer<typeof DashboardDrillProgressSchema>;
 
+export const DashboardMatchSummarySchema = z.object({
+  matches: z.number().int().min(0),
+  wins: z.number().int().min(0),
+  losses: z.number().int().min(0),
+  draws: z.number().int().min(0),
+  framesWon: z.number().int().min(0),
+  framesLost: z.number().int().min(0),
+  winRate: z.number().min(0).max(100),
+  highBreak: z.number().int().min(0).optional(),
+  breaks50: z.number().int().min(0),
+  breaks70: z.number().int().min(0),
+  breaks100: z.number().int().min(0),
+});
+export type DashboardMatchSummary = z.infer<typeof DashboardMatchSummarySchema>;
+
 export const DashboardRecentSessionSchema = z.object({
   id: z.string().cuid(),
   title: z.string(),
@@ -59,6 +74,7 @@ export const PlayerDashboardSchema = z.object({
   totals: DashboardTotalsSchema,
   weeklyVolume: z.array(DashboardWeeklyPointSchema),
   drillProgress: z.array(DashboardDrillProgressSchema),
+  matchSummary: DashboardMatchSummarySchema,
   recentSessions: z.array(DashboardRecentSessionSchema),
 });
 export type PlayerDashboard = z.infer<typeof PlayerDashboardSchema>;

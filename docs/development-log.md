@@ -51,7 +51,8 @@ Format:
   sessions and drill executions without a new database migration.
 - Dashboard aggregates include sessions, finished/open sessions, training
   minutes, drill executions, attempts, successes, success rate, four weekly
-  buckets, top drill progress and five recent sessions.
+  buckets, match-performance summary, top drill progress and five recent
+  sessions.
 - Users without a player profile receive empty dashboard aggregates, keeping
   the page useful immediately after registration.
 - Web `/dashboard` now renders KPI tiles, Recharts training-volume and
@@ -63,9 +64,8 @@ Format:
   `docs/development-log.md`.
 
 **Open items:**
-- Dashboard is based on drill attempt success and elapsed finished-session
-  time. Match performance, break-building stats and long-term season views
-  remain planned analytics follow-ups.
+- Break-building stats and long-term season views remain planned analytics
+  follow-ups.
 
 ### PH-1-006 — SnookerTableCanvas
 
@@ -226,7 +226,7 @@ Format:
 - Old `[locale]/dashboard/page.tsx` removed; dashboard now lives under
   `[locale]/(app)/dashboard/page.tsx` (same URL, wrapped in the shell).
 - i18n keys added in all three locales (`ru`, `en`, `uk`):
-  `auth.*`, `dashboard.placeholder`, `home.cta.{login,register}`,
+  `auth.*`, `dashboard.*`, `home.cta.{login,register}`,
   `errors.api.{auth,validation,generic}.*`.
 - `docs/ui-guidelines.md` updated with the new layout primitives and
   auth-UI conventions.
@@ -235,8 +235,6 @@ Format:
 - Auth UI is fully client-rendered for MVP; no route protection at the
   middleware/server level yet. PH-2 will move refresh tokens into
   httpOnly cookies and add SSR-aware redirects.
-- `pnpm install` must be re-run locally to pick up the new auth deps from
-  PH-1-001 (`@nestjs/jwt`, `argon2`).
 
 ### PH-1-001 — Auth foundation (backend)
 
@@ -312,10 +310,8 @@ consistent skeleton.
   (nvm-windows + corepack hits EPERM without admin).
 
 **Open items:**
-- User to drop `logo.png`, `icon.png`, `apple-touch-icon.png`, `favicon.ico`,
-  `icon-192.png`, `icon-512.png` into `apps/web/public/`.
-- User to set `AI_API_KEY` in `.env` (already done locally, not committed).
-- Issue prefix for Phase 0 commits: `PH-0`.
+- User to set `AI_API_KEY` in `.env` before PH-1-010 AI summary work if it is
+  not already present in the local environment.
 
 ---
 

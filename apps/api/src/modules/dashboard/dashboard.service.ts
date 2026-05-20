@@ -16,6 +16,8 @@ type DashboardSession = Prisma.TrainingSessionGetPayload<{
   };
 }>;
 
+type DashboardMatch = Prisma.MatchGetPayload<Record<string, never>>;
+
 type DrillAggregate = {
   drillTemplateId: string;
   drillTemplateName: string;
@@ -47,26 +49,36 @@ export class DashboardService {
       return emptyDashboard(period, from);
     }
 
-    const sessions = await this.prisma.trainingSession.findMany({
-      where: {
-        playerProfileId: profile.id,
-        startedAt: { gte: from, lte: to },
-      },
-      include: {
-        drillExecutions: {
-          include: {
-            drillTemplate: { select: { id: true, name: true } },
+    const [sessions, matches] = await Promise.all([
+      this.prisma.trainingSession.findMany({
+        where: {
+          playerProfileId: profile.id,
+          startedAt: { gte: from, lte: to },
+        },
+        include: {
+          drillExecutions: {
+            include: {
+              drillTemplate: { select: { id: true, name: true } },
+            },
           },
         },
-      },
-      orderBy: { startedAt: 'desc' },
-    });
+        orderBy: { startedAt: 'desc' },
+      }),
+      this.prisma.match.findMany({
+        where: {
+          playerProfileId: profile.id,
+          matchDate: { gte: from, lte: to },
+        },
+        orderBy: { matchDate: 'desc' },
+      }),
+    ]);
 
     return {
       period,
       totals: calculateTotals(sessions),
       weeklyVolume: calculateWeeklyVolume(sessions, from),
       drillProgress: calculateDrillProgress(sessions),
+      matchSummary: calculateMatchSummary(matches),
       recentSessions: sessions.slice(0, 5).map(toRecentSession),
     };
   }
@@ -87,6 +99,7 @@ function emptyDashboard(period: PlayerDashboard['period'], from: Date): PlayerDa
     },
     weeklyVolume: buildEmptyBuckets(from),
     drillProgress: [],
+    matchSummary: emptyMatchSummary(),
     recentSessions: [],
   };
 }
@@ -163,6 +176,44 @@ function calculateDrillProgress(sessions: DashboardSession[]): DashboardDrillPro
       successRate: percent(aggregate.successes, aggregate.attempts),
       lastPracticedAt: aggregate.lastPracticedAt.toISOString(),
     }));
+}
+
+function calculateMatchSummary(matches: DashboardMatch[]): PlayerDashboard['matchSummary'] {
+  const wins = matches.filter((match) => match.result === 'PLAYER_WIN').length;
+  const losses = matches.filter((match) => match.result === 'OPPONENT_WIN').length;
+  const draws = matches.filter((match) => match.result === 'DRAW').length;
+  const highBreaks = matches
+    .map((match) => match.highBreak)
+    .filter((value): value is number => value !== null);
+
+  return {
+    matches: matches.length,
+    wins,
+    losses,
+    draws,
+    framesWon: sum(matches, (match) => match.framesWon),
+    framesLost: sum(matches, (match) => match.framesLost),
+    winRate: percent(wins, matches.length),
+    ...(highBreaks.length ? { highBreak: Math.max(...highBreaks) } : {}),
+    breaks50: sum(matches, (match) => match.breaks50),
+    breaks70: sum(matches, (match) => match.breaks70),
+    breaks100: sum(matches, (match) => match.breaks100),
+  };
+}
+
+function emptyMatchSummary(): PlayerDashboard['matchSummary'] {
+  return {
+    matches: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    framesWon: 0,
+    framesLost: 0,
+    winRate: 0,
+    breaks50: 0,
+    breaks70: 0,
+    breaks100: 0,
+  };
 }
 
 function toRecentSession(session: DashboardSession): DashboardRecentSession {

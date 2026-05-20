@@ -36,7 +36,7 @@ whenever an endpoint is added, changed or removed.
 | POST | `/players/me/equipment-profiles` | Bearer | `CreateEquipmentProfileSchema` | Creates an equipment profile for the current player profile. |
 | PATCH | `/players/me/equipment-profiles/:id` | Bearer | `UpdateEquipmentProfileSchema` | Updates one equipment profile owned by the current player profile. |
 | DELETE | `/players/me/equipment-profiles/:id` | Bearer | – | 204. Deletes one equipment profile owned by the current player profile. |
-| GET | `/players/me/dashboard` | Bearer | `PlayerDashboardSchema` | Returns current-player 28-day dashboard aggregates: totals, weekly volume, drill success progress and recent sessions. Empty aggregates are returned when the player profile does not exist yet. |
+| GET | `/players/me/dashboard` | Bearer | `PlayerDashboardSchema` | Returns current-player 28-day dashboard aggregates: totals, weekly volume, drill success progress, match summary and recent sessions. Empty aggregates are returned when the player profile does not exist yet. |
 | GET | `/drill-templates` | Bearer | – | Lists templates visible to the current user (own, shared, system). |
 | GET | `/drill-templates/:id` | Bearer | – | Returns one visible drill template. |
 | POST | `/drill-templates` | Bearer | `CreateDrillTemplateSchema` | Creates a user-owned template. User DTO allows `private` or `shared` visibility only. |

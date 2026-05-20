@@ -144,8 +144,8 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   `player-dashboard`, calling `GET /players/me/dashboard`.
 - The first dashboard slice is operational rather than decorative: KPI tiles
   for sessions, minutes, attempts and success rate; Recharts panels for
-  weekly training volume and attempt success trend; drill progress rows; and
-  recent sessions.
+  weekly training volume and attempt success trend; match-performance summary;
+  drill progress rows; and recent sessions.
 - Empty state keeps two practical exits visible: profile setup and starting a
   training session. The API returns empty aggregates when a profile does not
   exist yet, so the page can stay stable immediately after registration.

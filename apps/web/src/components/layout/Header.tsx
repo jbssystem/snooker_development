@@ -22,7 +22,7 @@ export async function Header() {
       <div className="mx-auto flex max-w-7xl items-center gap-6 px-6 py-3">
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image
-            src="/icon.png"
+            src="/icon-192.png"
             alt={tCommon('appName')}
             width={32}
             height={32}

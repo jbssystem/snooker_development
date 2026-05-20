@@ -97,6 +97,15 @@
       "empty": "Упражнения ещё не выполнялись.",
       "meta": "{executions} выполнений · {attempts} попыток"
     },
+    "matches": {
+      "title": "Матчевая форма",
+      "played": "Матчи",
+      "wins": "Победы",
+      "winRate": "Win rate",
+      "frames": "Фреймы",
+      "highBreak": "High break",
+      "centuries": "100+"
+    },
     "recent": {
       "title": "Последние сессии",
       "empty": "Сессий пока нет.",
