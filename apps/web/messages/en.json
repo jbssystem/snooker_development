@@ -112,6 +112,88 @@
       "meta": "{drills} drills · {attempts} attempts"
     }
   },
+  "calendar": {
+    "title": "Factor calendar",
+    "subtitle": "Events, wellness notes and supplement periods in one player timeline.",
+    "authRequired": "Sign in to manage the factor calendar.",
+    "loginCta": "Sign in",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "required": "Required field",
+    "sensitive": "Wellness/supplement data is sensitive",
+    "noScore": "No score",
+    "profileRequired": {
+      "title": "Player profile required",
+      "description": "Create a player profile before saving calendar events and lifestyle factors.",
+      "cta": "Open profile"
+    },
+    "events": {
+      "title": "Calendar",
+      "empty": "No events yet."
+    },
+    "lifestyle": {
+      "title": "Daily lifestyle",
+      "empty": "No lifestyle factors have been recorded yet.",
+      "meta": "Sleep {sleep} h · fatigue {fatigue}/10 · stress {stress}/10"
+    },
+    "supplements": {
+      "title": "Supplement periods",
+      "empty": "No supplement periods have been recorded yet."
+    },
+    "forms": {
+      "eventTitle": "Add event",
+      "lifestyleTitle": "Record day",
+      "supplementTitle": "Add period",
+      "saveEvent": "Save event",
+      "saveLifestyle": "Save day",
+      "saveSupplement": "Save period"
+    },
+    "fields": {
+      "type": "Type",
+      "title": "Title",
+      "startAt": "Start",
+      "endAt": "End",
+      "description": "Description",
+      "date": "Date",
+      "sleepHours": "Sleep, h",
+      "sleepQuality": "Sleep quality",
+      "fatigue": "Fatigue",
+      "stress": "Stress",
+      "focus": "Focus",
+      "mood": "Mood",
+      "illness": "Illness",
+      "injury": "Injury",
+      "travel": "Travel",
+      "notes": "Notes",
+      "name": "Name",
+      "category": "Category",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "dosageNote": "Dosage note",
+      "reason": "Reason"
+    },
+    "flags": {
+      "illness": "illness",
+      "injury": "injury",
+      "travel": "travel"
+    },
+    "types": {
+      "training": "Training",
+      "tournament": "Tournament",
+      "match": "Match",
+      "travel": "Travel",
+      "rest_day": "Rest day",
+      "illness": "Illness",
+      "injury": "Injury",
+      "equipment_change": "Equipment change",
+      "coach_change": "Coach change",
+      "supplement_start": "Supplement start",
+      "supplement_end": "Supplement end",
+      "sleep_issue": "Sleep issue",
+      "school_workload": "School/workload",
+      "custom_factor": "Custom factor"
+    }
+  },
   "auth": {
     "login": {
       "title": "Sign in",

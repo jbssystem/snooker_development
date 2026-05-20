@@ -15,23 +15,31 @@ import type {
   FinishTrainingSessionInput,
   LoginInput,
   AddMatchFrameInput,
+  CalendarEvent,
   Match,
   MatchFrame,
+  CreateCalendarEventInput,
   PlayerDashboard,
   PlayerProfile,
   RegisterInput,
+  CreateLifestyleFactorInput,
+  CreateSupplementEventInput,
+  LifestyleFactor,
+  SupplementEvent,
+  UpdateCalendarEventInput,
   TrainingSession,
   Tokens,
   UpdateDrillTemplateInput,
   UpdateEquipmentProfileInput,
   UpdateMatchInput,
+  UpdateLifestyleFactorInput,
+  UpdateSupplementEventInput,
   UpdateTrainingSessionInput,
   UpsertPlayerProfileInput,
 } from '@snooker/shared';
 
 const BASE_URL =
-  (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) ||
-  'http://localhost:4000';
+  (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) || 'http://localhost:4000';
 
 export class ApiError extends Error {
   constructor(
@@ -91,8 +99,7 @@ export const api = {
     me: (token: string) => request<AuthMe>('/auth/me', { token }),
   },
   players: {
-    getProfile: (token: string) =>
-      request<PlayerProfile | null>('/players/me/profile', { token }),
+    getProfile: (token: string) => request<PlayerProfile | null>('/players/me/profile', { token }),
     upsertProfile: (token: string, input: UpsertPlayerProfileInput) =>
       request<PlayerProfile>('/players/me/profile', {
         method: 'PUT',
@@ -120,8 +127,7 @@ export const api = {
       }),
   },
   drills: {
-    listTemplates: (token: string) =>
-      request<DrillTemplate[]>('/drill-templates', { token }),
+    listTemplates: (token: string) => request<DrillTemplate[]>('/drill-templates', { token }),
     getTemplate: (token: string, id: string) =>
       request<DrillTemplate>(`/drill-templates/${id}`, { token }),
     createTemplate: (token: string, input: CreateDrillTemplateInput) =>
@@ -143,8 +149,7 @@ export const api = {
       }),
   },
   training: {
-    listSessions: (token: string) =>
-      request<TrainingSession[]>('/training-sessions', { token }),
+    listSessions: (token: string) => request<TrainingSession[]>('/training-sessions', { token }),
     getSession: (token: string, id: string) =>
       request<TrainingSession>(`/training-sessions/${id}`, { token }),
     createSession: (token: string, input: CreateTrainingSessionInput) =>
@@ -206,6 +211,49 @@ export const api = {
     addFrame: (token: string, id: string, input: AddMatchFrameInput) =>
       request<MatchFrame>(`/matches/${id}/frames`, {
         method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+  },
+  calendar: {
+    listEvents: (token: string) => request<CalendarEvent[]>('/calendar-events', { token }),
+    createEvent: (token: string, input: CreateCalendarEventInput) =>
+      request<CalendarEvent>('/calendar-events', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    updateEvent: (token: string, id: string, input: UpdateCalendarEventInput) =>
+      request<CalendarEvent>(`/calendar-events/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    listLifestyleFactors: (token: string) =>
+      request<LifestyleFactor[]>('/lifestyle-factors', { token }),
+    saveLifestyleFactor: (token: string, input: CreateLifestyleFactorInput) =>
+      request<LifestyleFactor>('/lifestyle-factors', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    updateLifestyleFactor: (token: string, id: string, input: UpdateLifestyleFactorInput) =>
+      request<LifestyleFactor>(`/lifestyle-factors/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    listSupplementEvents: (token: string) =>
+      request<SupplementEvent[]>('/supplement-events', { token }),
+    createSupplementEvent: (token: string, input: CreateSupplementEventInput) =>
+      request<SupplementEvent>('/supplement-events', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    updateSupplementEvent: (token: string, id: string, input: UpdateSupplementEventInput) =>
+      request<SupplementEvent>(`/supplement-events/${id}`, {
+        method: 'PATCH',
         token,
         body: JSON.stringify(input),
       }),

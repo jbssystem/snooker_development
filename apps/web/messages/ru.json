@@ -112,6 +112,88 @@
       "meta": "{drills} упражнений · {attempts} попыток"
     }
   },
+  "calendar": {
+    "title": "Календарь факторов",
+    "subtitle": "События, состояние и периоды добавок в одной хронологии игрока.",
+    "authRequired": "Войдите, чтобы вести календарь факторов.",
+    "loginCta": "Войти",
+    "loading": "Загрузка…",
+    "saving": "Сохранение…",
+    "required": "Обязательное поле",
+    "sensitive": "Wellness/supplement данные чувствительные",
+    "noScore": "Нет оценки",
+    "profileRequired": {
+      "title": "Нужен профиль игрока",
+      "description": "Создайте профиль, чтобы сохранять события календаря и факторы состояния.",
+      "cta": "Открыть профиль"
+    },
+    "events": {
+      "title": "Календарь",
+      "empty": "Событий пока нет."
+    },
+    "lifestyle": {
+      "title": "Состояние по дням",
+      "empty": "Факторы состояния ещё не записывались.",
+      "meta": "Сон {sleep} ч · усталость {fatigue}/10 · стресс {stress}/10"
+    },
+    "supplements": {
+      "title": "Периоды добавок",
+      "empty": "Периоды добавок ещё не записывались."
+    },
+    "forms": {
+      "eventTitle": "Добавить событие",
+      "lifestyleTitle": "Записать день",
+      "supplementTitle": "Добавить период",
+      "saveEvent": "Сохранить событие",
+      "saveLifestyle": "Сохранить день",
+      "saveSupplement": "Сохранить период"
+    },
+    "fields": {
+      "type": "Тип",
+      "title": "Название",
+      "startAt": "Начало",
+      "endAt": "Окончание",
+      "description": "Описание",
+      "date": "Дата",
+      "sleepHours": "Сон, ч",
+      "sleepQuality": "Качество сна",
+      "fatigue": "Усталость",
+      "stress": "Стресс",
+      "focus": "Фокус",
+      "mood": "Настроение",
+      "illness": "Болезнь",
+      "injury": "Травма",
+      "travel": "Поездка",
+      "notes": "Заметки",
+      "name": "Название",
+      "category": "Категория",
+      "startDate": "Дата начала",
+      "endDate": "Дата окончания",
+      "dosageNote": "Дозировка",
+      "reason": "Причина"
+    },
+    "flags": {
+      "illness": "болезнь",
+      "injury": "травма",
+      "travel": "поездка"
+    },
+    "types": {
+      "training": "Тренировка",
+      "tournament": "Турнир",
+      "match": "Матч",
+      "travel": "Поездка",
+      "rest_day": "День отдыха",
+      "illness": "Болезнь",
+      "injury": "Травма",
+      "equipment_change": "Смена экипировки",
+      "coach_change": "Смена тренера",
+      "supplement_start": "Начало добавки",
+      "supplement_end": "Окончание добавки",
+      "sleep_issue": "Проблема со сном",
+      "school_workload": "Учёба/работа",
+      "custom_factor": "Другой фактор"
+    }
+  },
   "auth": {
     "login": {
       "title": "Вход",

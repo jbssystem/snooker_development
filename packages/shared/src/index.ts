@@ -4,5 +4,6 @@ export * from './schemas/dashboard';
 export * from './schemas/drill';
 export * from './schemas/match';
 export * from './schemas/training';
+export * from './schemas/calendar';
 export * from './constants/locales';
 export * from './errors/codes';

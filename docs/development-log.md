@@ -6,6 +6,7 @@ phase boundary is recorded here. Code-level changes go into commit messages,
 not this file.
 
 Format:
+
 - **Phase / Milestone** — date range, status.
 - **Goal** — what success looks like.
 - **Delivered** — what actually shipped.
@@ -18,9 +19,37 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-009 — Calendar factors
+
+**Delivered:**
+
+- Prisma migration `20260520120500_add_calendar_factors` adds
+  `CalendarEvent`, `LifestyleFactor`, `SupplementEvent`, `CalendarEventType`
+  and `CalendarEventSource`.
+- `packages/shared/src/schemas/calendar.ts` exports DTOs for creating and
+  updating calendar events, daily lifestyle factors and supplement periods.
+- NestJS `CalendarModule` exposes guarded current-player endpoints for
+  `/calendar-events`, `/lifestyle-factors` and `/supplement-events`.
+- Lifestyle factors are unique per player/date; `POST /lifestyle-factors`
+  saves the submitted day idempotently through an upsert.
+- Web `/calendar` now shows event timeline, daily lifestyle records,
+  supplement periods and compact forms for all three resources.
+- i18n keys added in all three locales (`ru`, `en`, `uk`) under
+  `calendar.*`.
+- Docs updated: `docs/api-spec.md`, `docs/database-model.md`,
+  `docs/ui-guidelines.md`, `docs/development-log.md`.
+
+**Open items:**
+
+- Coach access to wellness/supplement data still requires explicit
+  `wellness:read` permission and audit logging before shared coach views.
+- Analytics/AI may show correlations later, but must not state medical
+  causality or supplement advice.
+
 ### PH-1-008 — Manual match log
 
 **Delivered:**
+
 - Prisma migration `20260520120400_add_match_log` adds `Match`,
   `MatchFrame`, `MatchResult`, `MatchSource` and `FrameWinner`.
 - `packages/shared/src/schemas/match.ts` exports DTOs for manual match
@@ -37,12 +66,14 @@ Format:
   `docs/ui-guidelines.md`, `docs/development-log.md`.
 
 **Open items:**
+
 - Shot-by-shot mode remains a later analytics feature. The PH-1-008 schema
   keeps match/frame ownership boundaries ready for future `Shot` rows.
 
 ### PH-1-007 — Basic dashboard
 
 **Delivered:**
+
 - `packages/shared/src/schemas/dashboard.ts` exports the dashboard period,
   totals, weekly point, drill progress, recent session and full
   `PlayerDashboard` DTOs.
@@ -64,12 +95,14 @@ Format:
   `docs/development-log.md`.
 
 **Open items:**
+
 - Break-building stats and long-term season views remain planned analytics
   follow-ups.
 
 ### PH-1-006 — SnookerTableCanvas
 
 **Delivered:**
+
 - Added `apps/web/src/components/table-renderer/` with `SnookerTableCanvas`,
   `DrillLayoutEditor`, `TableLayoutPreview` and layout factory helpers.
 - `SnookerTableCanvas` renders the table surface, cushions, pockets, baulk
@@ -94,6 +127,7 @@ Format:
   `docs/development-log.md`.
 
 **Open items:**
+
 - Direct target-zone resizing and freehand path drawing remain future editor
   polish after real drill layouts are tested.
 - Physics, replay, ghost-ball and projected cue-ball overlays remain planned
@@ -102,6 +136,7 @@ Format:
 ### PH-1-005 — Training session flow
 
 **Delivered:**
+
 - Prisma migration `20260520120300_add_training_flow` adds
   `TrainingSession`, `DrillExecution`, `DrillAttempt`, session type enums and
   attempt result enums.
@@ -123,6 +158,7 @@ Format:
   `docs/ui-guidelines.md`, `docs/development-log.md`.
 
 **Open items:**
+
 - Attempt write idempotency is not generic yet; shared `Idempotency-Key`
   handling remains a PH-2 hardening item.
 - The table layout snapshot is copied from the template/default payload.
@@ -131,6 +167,7 @@ Format:
 ### PH-1-004 — Drill library
 
 **Delivered:**
+
 - Prisma `DrillTemplate` model and migration
   `20260520120200_add_drill_templates`, with enums for category,
   difficulty and visibility.
@@ -152,12 +189,14 @@ Format:
   `docs/ui-guidelines.md`, `docs/development-log.md`.
 
 **Open items:**
+
 - Richer direct layout editing gestures continue in renderer follow-ups after
   PH-1-006 introduced `SnookerTableCanvas`.
 
 ### Review hardening after PH-1-003
 
 **Delivered:**
+
 - Verified `.env` is ignored and has never been committed to git history.
 - Renamed equipment migration to `20260520120100_add_equipment_profiles` so
   Prisma applies it after `20260520120000_init` on fresh databases; local
@@ -178,6 +217,7 @@ Format:
   reports no known vulnerabilities.
 
 **Open items:**
+
 - Refresh tokens are still kept in the PH-1 client-side Zustand store. This is
   tracked as a PH-2 hardening item: move refresh tokens to httpOnly cookies
   and add SSR-aware route protection.
@@ -185,6 +225,7 @@ Format:
 ### PH-1-003 — Player profile CRUD + equipment profile
 
 **Delivered:**
+
 - Prisma `EquipmentProfile` model and migration
   `20260520120100_add_equipment_profiles`.
 - `packages/shared/src/schemas/player.ts` now exports schemas/types for
@@ -202,12 +243,14 @@ Format:
   `docs/ui-guidelines.md`, `docs/deployment.md`.
 
 **Open items:**
+
 - `/profile` still relies on the PH-1-002 client-side token store. Server-side
   route protection and httpOnly refresh tokens remain a PH-2 hardening item.
 
 ### PH-1-002 — Web app shell + auth UI
 
 **Delivered:**
+
 - Route groups: `apps/web/src/app/[locale]/(app)/` for authenticated
   surfaces and `(auth)/` for the login/register funnel.
 - `Header`, `LocaleSwitcher`, `UserMenu` components under
@@ -232,6 +275,7 @@ Format:
   auth-UI conventions.
 
 **Open items:**
+
 - Auth UI is fully client-rendered for MVP; no route protection at the
   middleware/server level yet. PH-2 will move refresh tokens into
   httpOnly cookies and add SSR-aware redirects.
@@ -239,6 +283,7 @@ Format:
 ### PH-1-001 — Auth foundation (backend)
 
 **Delivered:**
+
 - Prisma `RefreshToken` model + initial migration SQL under
   `apps/api/prisma/migrations/20260520120000_init/`.
 - Zod schemas in `@snooker/shared`: `RegisterSchema`, `LoginSchema`,
@@ -269,7 +314,7 @@ Format:
 6. ✅ PH-1-006 — SnookerTableCanvas (react-konva).
 7. ✅ PH-1-007 — Basic dashboard.
 8. ✅ PH-1-008 — Manual match log.
-9. ⏳ PH-1-009 — Calendar factors.
+9. ✅ PH-1-009 — Calendar factors.
 10. PH-1-010 — Weekly AI summary (Anthropic).
 11. PH-1-011 — Docker production deploy.
 
@@ -284,6 +329,7 @@ documentation and deployment plumbing so all subsequent work fits into a
 consistent skeleton.
 
 **Delivered:**
+
 - pnpm monorepo: `apps/{web,api,worker}` + `packages/{shared,snooker-domain,ui,ai-prompts}`.
 - Next.js 15 (App Router) web app with `next-intl`, locales `ru` (default), `en`, `uk`.
 - NestJS 10 API skeleton with `/health` and Swagger at `/docs`.
@@ -302,6 +348,7 @@ consistent skeleton.
   to be dropped into `apps/web/public/` per `apps/web/public/README.md`.
 
 **Decisions:**
+
 - Single player initially (multi-tenant schema kept for later, no UI surface).
 - Data ownership: **player** (parent acts on behalf of player when minor).
 - LLM provider: **Anthropic** (`AI_PROVIDER=anthropic`). Pluggable interface preserved.
@@ -310,6 +357,7 @@ consistent skeleton.
   (nvm-windows + corepack hits EPERM without admin).
 
 **Open items:**
+
 - User to set `AI_API_KEY` in `.env` before PH-1-010 AI summary work if it is
   not already present in the local environment.
 
@@ -324,6 +372,7 @@ Phase 1 the system can ingest sessions, drills, attempts, errors, notes;
 render a basic table layout; and generate a weekly AI summary.
 
 **Planned epics:**
+
 1. Auth (registration, login, JWT, refresh) + roles wiring.
 2. Player profile CRUD; equipment profile.
 3. Drill library (categories, templates, metrics schema, table layout).

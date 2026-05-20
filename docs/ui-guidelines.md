@@ -22,23 +22,23 @@ Update on every new component, pattern or interaction rule.
 
 Full spec: [docs/brand.md](brand.md). Quick reference:
 
-| Token | Use |
-| --- | --- |
-| `bg-background-primary` (#0E1116) | App background |
-| `bg-background-secondary` (#161B22) | Card surface |
-| `bg-background-elevated` (#1F2630) | Hover / nested blocks |
-| `border-border-subtle` (#2A323D) | Default card border |
-| `border-border-active` (#19A974) | Active / selected border |
-| `text-text-primary` (#E9E6DF) | Primary text |
-| `text-text-secondary` (#A8B0B8) | Secondary text |
-| `text-text-disabled` (#6F7A86) | Disabled / metadata |
-| `bg-brand-primary` (#0E6B4D) | Primary buttons, active nav, table outline |
-| `bg-brand-accent` (#19A974) | Success, AI recommendations, progress |
-| `text-brand-gold` (#C8A45D) | Personal bests, achievements, premium markers |
-| `text-state-error` (#D65A5A) | Errors, injury risk |
-| `text-state-warning` (#D89A3A) | Soft warnings, low-confidence AI |
-| `text-state-info` (#4A90E2) | Info, neutral AI |
-| `ball-*` | Snooker ball semantic colors only |
+| Token                               | Use                                           |
+| ----------------------------------- | --------------------------------------------- |
+| `bg-background-primary` (#0E1116)   | App background                                |
+| `bg-background-secondary` (#161B22) | Card surface                                  |
+| `bg-background-elevated` (#1F2630)  | Hover / nested blocks                         |
+| `border-border-subtle` (#2A323D)    | Default card border                           |
+| `border-border-active` (#19A974)    | Active / selected border                      |
+| `text-text-primary` (#E9E6DF)       | Primary text                                  |
+| `text-text-secondary` (#A8B0B8)     | Secondary text                                |
+| `text-text-disabled` (#6F7A86)      | Disabled / metadata                           |
+| `bg-brand-primary` (#0E6B4D)        | Primary buttons, active nav, table outline    |
+| `bg-brand-accent` (#19A974)         | Success, AI recommendations, progress         |
+| `text-brand-gold` (#C8A45D)         | Personal bests, achievements, premium markers |
+| `text-state-error` (#D65A5A)        | Errors, injury risk                           |
+| `text-state-warning` (#D89A3A)      | Soft warnings, low-confidence AI              |
+| `text-state-info` (#4A90E2)         | Info, neutral AI                              |
+| `ball-*`                            | Snooker ball semantic colors only             |
 
 ## Typography
 
@@ -58,7 +58,7 @@ Full spec: [docs/brand.md](brand.md). Quick reference:
 Delivered so far (under `apps/web/src/components/layout/`):
 
 - `Header` — server component; logo + primary navigation + `LocaleSwitcher`
-  + `UserMenu`. Sticky, `bg-background-secondary/80` with backdrop blur.
+  - `UserMenu`. Sticky, `bg-background-secondary/80` with backdrop blur.
 - `LocaleSwitcher` — client component; native `<select>` of `ru` / `en` / `uk`,
   preserves current pathname via `next-intl/navigation` (`localePrefix: 'always'`).
 - `UserMenu` — client component; reads the persisted Zustand auth store,
@@ -164,6 +164,19 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   match list.
 - Adding a frame invalidates `matches` and `player-dashboard` query keys so
   match history and downstream analytics refresh together.
+
+## Calendar Factors UI
+
+- `/calendar` lives in the `(app)` route group and is rendered by
+  `src/components/calendar/CalendarFactorsClient.tsx`.
+- The page uses the same client-side auth/profile pattern as training and
+  matches, with TanStack Query keys `calendar-events`, `lifestyle-factors`
+  and `supplement-events` scoped by token.
+- The main area shows a current-player event timeline, recent daily lifestyle
+  records and supplement periods. The side column keeps three compact forms:
+  add calendar event, save daily lifestyle factor and add supplement period.
+- Wellness and supplement copy stays descriptive only. The UI records factors
+  for later correlation, but does not make medical or causal claims.
 
 ## Providers
 

@@ -91,6 +91,28 @@ enum FrameWinner {
   UNKNOWN  @map("unknown")
 }
 
+enum CalendarEventType {
+  TRAINING         @map("training")
+  TOURNAMENT       @map("tournament")
+  MATCH            @map("match")
+  TRAVEL           @map("travel")
+  REST_DAY         @map("rest_day")
+  ILLNESS          @map("illness")
+  INJURY           @map("injury")
+  EQUIPMENT_CHANGE @map("equipment_change")
+  COACH_CHANGE     @map("coach_change")
+  SUPPLEMENT_START @map("supplement_start")
+  SUPPLEMENT_END   @map("supplement_end")
+  SLEEP_ISSUE      @map("sleep_issue")
+  SCHOOL_WORKLOAD  @map("school_workload")
+  CUSTOM_FACTOR    @map("custom_factor")
+}
+
+enum CalendarEventSource {
+  MANUAL   @map("manual")
+  EXTERNAL @map("external")
+}
+
 model User {
   id           String     @id @default(cuid())
   email        String     @unique
@@ -108,6 +130,8 @@ model User {
   drillTemplates          DrillTemplate[]   @relation("CreatedDrillTemplates")
   createdTrainingSessions TrainingSession[] @relation("CreatedTrainingSessions")
   createdMatches          Match[]           @relation("CreatedMatches")
+  createdCalendarEvents   CalendarEvent[]   @relation("CreatedCalendarEvents")
+  createdSupplementEvents SupplementEvent[] @relation("CreatedSupplementEvents")
 }
 
 model RefreshToken {
@@ -158,6 +182,9 @@ model PlayerProfile {
   trainingSessions TrainingSession[]
   drillExecutions  DrillExecution[]
   matches          Match[]
+  calendarEvents   CalendarEvent[]
+  lifestyleFactors LifestyleFactor[]
+  supplementEvents SupplementEvent[]
 }
 
 model EquipmentProfile {
@@ -366,6 +393,77 @@ model MatchFrame {
   @@index([winner])
 }
 
-// NOTE: Shot-by-shot, calendar, lifestyle, AI reports and external imports
-// will be added in subsequent migrations. Schema sketches live in
-// docs/database-model.md.
+model CalendarEvent {
+  id              String              @id @default(cuid())
+  playerProfileId String
+  createdByUserId String
+  eventType       CalendarEventType
+  title           String
+  description     String?
+  startAt         DateTime            @default(now())
+  endAt           DateTime?
+  source          CalendarEventSource @default(MANUAL)
+  metadataJson    Json?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  createdBy     User          @relation("CreatedCalendarEvents", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([playerProfileId])
+  @@index([createdByUserId])
+  @@index([eventType])
+  @@index([startAt])
+  @@index([source])
+}
+
+model LifestyleFactor {
+  id              String   @id @default(cuid())
+  playerProfileId String
+  date            DateTime
+  sleepHours      Float?
+  sleepQuality    Int?
+  fatigue         Int?
+  stress          Int?
+  focus           Int?
+  mood            String?
+  illness         Boolean  @default(false)
+  injury          Boolean  @default(false)
+  travel          Boolean  @default(false)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([playerProfileId, date])
+  @@index([playerProfileId])
+  @@index([date])
+}
+
+model SupplementEvent {
+  id              String    @id @default(cuid())
+  playerProfileId String
+  createdByUserId String
+  name            String
+  category        String?
+  startDate       DateTime
+  endDate         DateTime?
+  dosageNote      String?
+  reason          String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  createdBy     User          @relation("CreatedSupplementEvents", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([playerProfileId])
+  @@index([createdByUserId])
+  @@index([name])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+// NOTE: Shot-by-shot, AI reports and external imports will be added in
+// subsequent migrations. Schema sketches live in docs/database-model.md.

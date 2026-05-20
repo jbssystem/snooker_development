@@ -112,6 +112,88 @@
       "meta": "{drills} вправ · {attempts} спроб"
     }
   },
+  "calendar": {
+    "title": "Календар факторів",
+    "subtitle": "Події, стан і періоди добавок в одній хронології гравця.",
+    "authRequired": "Увійдіть, щоб вести календар факторів.",
+    "loginCta": "Увійти",
+    "loading": "Завантаження…",
+    "saving": "Збереження…",
+    "required": "Обов'язкове поле",
+    "sensitive": "Wellness/supplement дані чутливі",
+    "noScore": "Немає оцінки",
+    "profileRequired": {
+      "title": "Потрібен профіль гравця",
+      "description": "Створіть профіль, щоб зберігати події календаря та фактори стану.",
+      "cta": "Відкрити профіль"
+    },
+    "events": {
+      "title": "Календар",
+      "empty": "Подій поки немає."
+    },
+    "lifestyle": {
+      "title": "Стан по днях",
+      "empty": "Фактори стану ще не записувалися.",
+      "meta": "Сон {sleep} год · втома {fatigue}/10 · стрес {stress}/10"
+    },
+    "supplements": {
+      "title": "Періоди добавок",
+      "empty": "Періоди добавок ще не записувалися."
+    },
+    "forms": {
+      "eventTitle": "Додати подію",
+      "lifestyleTitle": "Записати день",
+      "supplementTitle": "Додати період",
+      "saveEvent": "Зберегти подію",
+      "saveLifestyle": "Зберегти день",
+      "saveSupplement": "Зберегти період"
+    },
+    "fields": {
+      "type": "Тип",
+      "title": "Назва",
+      "startAt": "Початок",
+      "endAt": "Кінець",
+      "description": "Опис",
+      "date": "Дата",
+      "sleepHours": "Сон, год",
+      "sleepQuality": "Якість сну",
+      "fatigue": "Втома",
+      "stress": "Стрес",
+      "focus": "Фокус",
+      "mood": "Настрій",
+      "illness": "Хвороба",
+      "injury": "Травма",
+      "travel": "Поїздка",
+      "notes": "Нотатки",
+      "name": "Назва",
+      "category": "Категорія",
+      "startDate": "Дата початку",
+      "endDate": "Дата завершення",
+      "dosageNote": "Дозування",
+      "reason": "Причина"
+    },
+    "flags": {
+      "illness": "хвороба",
+      "injury": "травма",
+      "travel": "поїздка"
+    },
+    "types": {
+      "training": "Тренування",
+      "tournament": "Турнір",
+      "match": "Матч",
+      "travel": "Поїздка",
+      "rest_day": "День відпочинку",
+      "illness": "Хвороба",
+      "injury": "Травма",
+      "equipment_change": "Зміна екіпірування",
+      "coach_change": "Зміна тренера",
+      "supplement_start": "Початок добавки",
+      "supplement_end": "Завершення добавки",
+      "sleep_issue": "Проблема зі сном",
+      "school_workload": "Навчання/робота",
+      "custom_factor": "Інший фактор"
+    }
+  },
   "auth": {
     "login": {
       "title": "Вхід",
