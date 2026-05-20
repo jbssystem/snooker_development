@@ -1,0 +1,65 @@
+{
+  "common": {
+    "appName": "Snooker Player OS",
+    "tagline": "Long-term snooker player development system",
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "back": "Back",
+      "next": "Next",
+      "finish": "Finish",
+      "loading": "Loading…"
+    },
+    "language": "Language",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "players": "Players",
+    "training": "Training",
+    "drills": "Drills",
+    "matches": "Matches",
+    "calendar": "Calendar",
+    "wellness": "Wellness",
+    "analytics": "Analytics",
+    "ai": "AI Coach",
+    "settings": "Settings"
+  },
+  "home": {
+    "title": "Snooker Player OS",
+    "subtitle": "Training, drills, matches and progress — built for the long run.",
+    "cta": {
+      "openDashboard": "Open dashboard",
+      "learnMore": "Learn more"
+    },
+    "sections": {
+      "training": {
+        "title": "Training",
+        "description": "Sessions, drills, metrics, errors and coach notes."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "Skill trends across weeks, months and seasons."
+      },
+      "ai": {
+        "title": "AI coach",
+        "description": "Summaries, recommendations and handover reports."
+      },
+      "continuity": {
+        "title": "Coach continuity",
+        "description": "Uninterrupted development history across coaching changes."
+      }
+    }
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "generic": "Something went wrong"
+  }
+}

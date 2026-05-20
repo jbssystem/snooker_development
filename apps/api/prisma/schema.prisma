@@ -1,0 +1,94 @@
+// Snooker Player Development OS — Prisma schema (initial skeleton)
+// See docs/database-model.md for the full mapping to the TZ entities.
+// Migrations are added incrementally per feature.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  INVITED
+}
+
+enum RoleType {
+  PLAYER
+  COACH
+  PARENT
+  ACADEMY_ADMIN
+  SYSTEM_ADMIN
+}
+
+enum DominantHand {
+  LEFT
+  RIGHT
+  AMBIDEXTROUS
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  displayName  String
+  status       UserStatus  @default(ACTIVE)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  lastLoginAt  DateTime?
+
+  roles        Role[]
+  playerProfile PlayerProfile?
+  coachProfile  CoachProfile?
+}
+
+model Role {
+  id        String   @id @default(cuid())
+  userId    String
+  roleType  RoleType
+  scopeType String?
+  scopeId   String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roleType])
+}
+
+model PlayerProfile {
+  id             String        @id @default(cuid())
+  userId         String        @unique
+  firstName      String
+  lastName       String
+  dateOfBirth    DateTime?
+  country        String?
+  dominantHand   DominantHand?
+  level          String?
+  seasonGoal     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CoachProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  displayName    String
+  country        String?
+  certifications String?
+  bio            String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// NOTE: Training sessions, drills, matches, frames, shots, calendar,
+// lifestyle, equipment, AI reports and external imports will be added
+// in subsequent migrations. Schema sketches live in docs/database-model.md.

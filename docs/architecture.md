@@ -1,0 +1,87 @@
+# Architecture
+
+Status: living document. Update with every change that introduces a new
+package, dependency, service or boundary.
+
+## High-level
+
+```
+┌────────────────────┐     HTTPS      ┌──────────────────┐
+│  Browser / PWA     │ ─────────────▶ │  nginx (80/443)  │
+└────────────────────┘                └────────┬─────────┘
+                                               │
+                ┌──────────────────────────────┼─────────────────┐
+                ▼                              ▼                 ▼
+        ┌──────────────┐              ┌──────────────┐   ┌──────────────┐
+        │  apps/web    │  REST/HTTP   │  apps/api    │   │  apps/worker │
+        │  Next.js 15  │ ───────────▶ │  NestJS      │   │  BullMQ      │
+        └──────────────┘              └──┬───────────┘   └────┬─────────┘
+                                         │                    │
+                              ┌──────────┼────────────────────┼──────────┐
+                              ▼          ▼          ▼          ▼          ▼
+                          Postgres    Redis     MinIO/S3   LLM API    External
+                                                                       APIs
+```
+
+## Apps
+
+| App | Stack | Responsibility |
+| --- | --- | --- |
+| `apps/web` | Next.js 15, App Router, next-intl, Tailwind, react-konva | All UI (PWA-capable). Server components for data fetching; client components for interactivity (table editor, drill execution). |
+| `apps/api` | NestJS 10, Prisma, Zod | Sole gateway to the database. Auth, REST endpoints, OpenAPI at `/docs`, queues fan-out. |
+| `apps/worker` | BullMQ + ioredis | Background jobs: AI summary generation, external data imports, analytics rollups, file post-processing. |
+
+## Packages
+
+| Package | Purpose | May import |
+| --- | --- | --- |
+| `@snooker/snooker-domain` | Pure TS domain types & constants (table, balls, drills, scoring) | nothing UI/framework specific |
+| `@snooker/shared` | Cross-cutting types + Zod schemas (DTOs) + locale constants | zod, snooker-domain |
+| `@snooker/ui` | Reusable React primitives (renderer-agnostic) | react, snooker-domain |
+| `@snooker/ai-prompts` | LLM prompt templates and loader | none |
+
+`snooker-domain` is the **purity boundary** — it MUST NOT import from React,
+canvas libraries, Prisma, or NestJS. Renderers are thin adapters living in
+`apps/web` (and later `packages/ui`) that consume domain types.
+
+## Data flow
+
+1. User action in `apps/web` → React Hook Form + Zod (shared schema) →
+   fetch to `apps/api`.
+2. `apps/api` validates DTO with the same Zod schema, persists via Prisma,
+   enqueues follow-up jobs in Redis if needed.
+3. `apps/worker` consumes queues, calls LLM/external APIs, writes results
+   back via Prisma.
+4. Web re-fetches via TanStack Query (or revalidates RSC).
+
+## Renderer strategy
+
+- **MVP:** react-konva 2D canvas inside `apps/web`. Pure functions take a
+  `TableLayout` and return Konva elements. Interaction events emit
+  domain-level updates back to the caller.
+- **Phase 5:** PixiJS for animation/replay. Same `TableLayout` interface;
+  swap the adapter only.
+
+Forbidden: putting domain logic (scoring, validation, drill rules) inside
+canvas components.
+
+## Dependencies of note
+
+- `next-intl` — i18n (ru default, en, uk).
+- `react-konva` / `konva` — MVP table renderer.
+- `prisma` — DB ORM.
+- `bullmq` — job queues over Redis.
+- `nestjs-zod` — wire Zod schemas to NestJS pipes.
+- `recharts` — analytics charts (swappable for ECharts later).
+
+Add a new dependency only with a one-line rationale in this section.
+
+## Environments
+
+- Local: `docker compose up -d` brings web/api/worker/postgres/redis/minio/nginx.
+- Local dev (no Docker): run each `pnpm dev:*` script, plus postgres/redis from Docker.
+- Production: same compose file behind nginx with TLS termination.
+
+## Open architecture decisions
+
+Tracked under `docs/decisions/`. Use ADR-style files for irreversible choices.
