@@ -15,6 +15,7 @@ import type {
 import { Link } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { localizeDrillName, localizeDrillTemplate } from '@/lib/drill-localization';
 import { TableLayoutPreview } from '@/components/table-renderer';
 
 type SessionFormValues = {
@@ -42,6 +43,7 @@ const defaultValues: SessionFormValues = {
 
 export function TrainingSessionClient() {
   const t = useTranslations('training');
+  const tSystemDrills = useTranslations('systemDrills');
   const tErr = useTranslations('errors.api');
   const queryClient = useQueryClient();
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
@@ -208,6 +210,7 @@ export function TrainingSessionClient() {
             setFinishFatigue={setFinishFatigue}
             setSelectedDrillId={setSelectedDrillId}
             t={t}
+            tSystemDrills={tSystemDrills}
           />
         ) : (
           <div className="rounded-lg border border-border-subtle bg-background-secondary p-8 text-text-secondary">
@@ -281,6 +284,7 @@ function ActiveSessionPanel({
   setFinishFatigue,
   setSelectedDrillId,
   t,
+  tSystemDrills,
 }: {
   activeExecution: DrillExecution | undefined;
   addAttempt: (result: DrillAttemptResult) => void;
@@ -299,6 +303,7 @@ function ActiveSessionPanel({
   setFinishFatigue: (value: string) => void;
   setSelectedDrillId: (id: string) => void;
   t: (key: string) => string;
+  tSystemDrills: ReturnType<typeof useTranslations>;
 }) {
   return (
     <div className="grid gap-5">
@@ -345,7 +350,7 @@ function ActiveSessionPanel({
             <select className={inputClass} onChange={(event) => setSelectedDrillId(event.target.value)} value={selectedDrillId}>
               <option value="">{t('drillPicker.empty')}</option>
               {drills.map((drill) => (
-                <option key={drill.id} value={drill.id}>{drill.name}</option>
+                <option key={drill.id} value={drill.id}>{localizeDrillTemplate(drill, tSystemDrills).name}</option>
               ))}
             </select>
             <button className={primaryButtonClass} disabled={!selectedDrillId || addDrillPending} onClick={addDrill} type="button">
@@ -370,7 +375,7 @@ function ActiveSessionPanel({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-text-primary">
-                  {execution.drillTemplateName ?? t('execution.unnamed')}
+                  {localizeDrillName(execution.drillTemplateId, execution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
                 </h3>
                 <p className="mt-1 text-sm text-text-secondary">
                   {execution.attempts} / {execution.successes} · {execution.endedAt ? t('status.finished') : t('status.active')}
@@ -396,7 +401,7 @@ function ActiveSessionPanel({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="text-xl font-semibold text-text-primary">
-                {activeExecution.drillTemplateName ?? t('execution.unnamed')}
+                {localizeDrillName(activeExecution.drillTemplateId, activeExecution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
               </h3>
               <p className="mt-1 text-sm text-text-secondary">
                 {activeExecution.attempts} {t('execution.attempts')} · {activeExecution.successes} {t('execution.successes')}

@@ -18,6 +18,7 @@ import type { DashboardDrillProgress, PlayerDashboard } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { localizeDrillName } from '@/lib/drill-localization';
 
 export function DashboardClient() {
   const t = useTranslations('dashboard');
@@ -200,12 +201,14 @@ function ChartPanel({ title, children }: { title: string; children: ReactNode })
 
 function DrillProgressRow({ drill }: { drill: DashboardDrillProgress }) {
   const t = useTranslations('dashboard');
+  const tSystemDrills = useTranslations('systemDrills');
   const locale = useLocale();
+  const drillName = localizeDrillName(drill.drillTemplateId, drill.drillTemplateName, tSystemDrills) ?? drill.drillTemplateName;
   return (
     <article className="grid gap-2 rounded-md border border-border-subtle bg-background-primary p-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-medium text-text-primary">{drill.drillTemplateName}</h3>
+          <h3 className="font-medium text-text-primary">{drillName}</h3>
           <p className="mt-1 text-xs text-text-disabled">{formatDate(drill.lastPracticedAt, locale)}</p>
         </div>
         <span className="rounded-md bg-background-elevated px-2 py-1 text-sm text-brand-gold">{drill.successRate}%</span>

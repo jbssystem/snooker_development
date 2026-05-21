@@ -36,7 +36,84 @@
     "analytics": "Analytics",
     "ai": "AI Coach",
     "profile": "Profile",
-    "settings": "Settings"
+    "settings": "Settings",
+    "more": "More"
+  },
+  "systemDrills": {
+    "templates": {
+      "cmseeddrill000000000000001": {
+        "name": "Straight cueing control",
+        "description": "A basic drill for a straight cue action, stable stance and center-ball contact without unwanted side spin.",
+        "goal": "Build a reliable straight delivery before potting and positional drills.",
+        "rules": "Place the cue ball on the brown line and a red in the center of the table. Play 20 shots at one tempo. After each shot, mark whether the cue ball left the line.",
+        "successCriteria": "At least 16 of 20 shots stay on line, with the cue ball remaining in the central corridor after contact.",
+        "tags": ["start", "technique", "15min"],
+        "metrics": { "attempts": "Attempts", "line_hits": "Line hits", "cue_ball_deviation_mm": "Cue ball deviation" }
+      },
+      "cmseeddrill000000000000002": {
+        "name": "Long red to the corner",
+        "description": "Long potting practice with sighting control and a calm acceleration through the cue ball.",
+        "goal": "Improve the long-red percentage and remove forced cueing on distance shots.",
+        "rules": "Play the red to the far top corner from the diagram position. Complete 5 sets of 10 shots, fixing the contact point before each shot.",
+        "successCriteria": "At least 5 reds potted in every set, with stable stance and repeatable preparation time.",
+        "tags": ["potting", "long shots", "30min"],
+        "metrics": { "attempts": "Attempts", "pots": "Pots", "pre_shot_time_ms": "Pre-shot time" }
+      },
+      "cmseeddrill000000000000003": {
+        "name": "Black with position on blue",
+        "description": "A positional drill: pot the black and bring the cue ball into a working zone for a continuation through blue.",
+        "goal": "Learn to control pace after the black and avoid leaving the cue ball tight to a cushion.",
+        "rules": "Play the black to the top right corner. After contact, the cue ball should return to the marked zone near the blue. Play 4 sets of 8 shots.",
+        "successCriteria": "At least 60% blacks potted and at least 50% cue-ball zone hits.",
+        "tags": ["position", "colors", "25min"],
+        "metrics": { "attempts": "Attempts", "pots": "Pots", "position_hits": "Position hits", "success_rate": "Success" }
+      },
+      "cmseeddrill000000000000004": {
+        "name": "Small break around the pink",
+        "description": "Break-building around pink and black to train next-ball choice, tempo and short cue-ball control.",
+        "goal": "Build a stable mini-break from reds around the pink while returning to pink or black.",
+        "rules": "Start from a chosen red near the pink. After each red, play a color and return to one of the marked zones. Work in runs of 6 reds.",
+        "successCriteria": "A 12+ point break in at least three of five attempts, without drifting the cue ball to a cushion after the color.",
+        "tags": ["break", "break-building", "40min"],
+        "metrics": { "attempts": "Attempts", "break_points": "Break points", "max_run": "Best break", "position_errors": "Position errors" }
+      },
+      "cmseeddrill000000000000005": {
+        "name": "Safe baulk safety",
+        "description": "A classic safety: send the object ball up-table and bring the cue ball back into baulk behind the colors.",
+        "goal": "Build a reliable safety that leaves the opponent a long, difficult reply.",
+        "rules": "Play a thin contact on the red. The cue ball returns into the marked baulk zone via a cushion, and the red leaves an easy potting line.",
+        "successCriteria": "In 7 of 10 attempts the cue ball finishes in baulk and the opponent has no short direct pot.",
+        "tags": ["safety", "tactics", "25min"],
+        "metrics": { "attempts": "Attempts", "safe_leaves": "Safe leaves", "cue_ball_zone_hits": "Cue ball in baulk" }
+      },
+      "cmseeddrill000000000000006": {
+        "name": "One-cushion snooker escape",
+        "description": "Practice calculating a cushion angle and controlling speed when escaping from a snooker.",
+        "goal": "Hit the object ball reliably through one cushion and leave a safe reply.",
+        "rules": "The cue ball is blocked by colors. Calculate the angle from the bottom cushion and hit the red. Start without potting pressure, then add safety control.",
+        "successCriteria": "At least 8 red contacts from 10 attempts, with no more than two fouls from pace or a miss.",
+        "tags": ["snooker", "cushions", "20min"],
+        "metrics": { "attempts": "Attempts", "escapes": "Ball contacts", "fouls": "Fouls", "safety_quality": "Safety quality" }
+      },
+      "cmseeddrill000000000000007": {
+        "name": "Final black under pressure",
+        "description": "A repeatable deciding-black situation: routine, breathing and one quality shot under score pressure.",
+        "goal": "Make the pre-shot routine stable when the shot value is higher than in normal practice.",
+        "rules": "Call the score before each shot and complete the full routine. The run ends after a miss or after 10 consecutive pots.",
+        "successCriteria": "Best streak of 7+ final blacks with the same routine and no rushed preparation.",
+        "tags": ["pressure", "routine", "match"],
+        "metrics": { "attempts": "Attempts", "pots": "Pots", "best_streak": "Best streak", "routine_kept": "Routine kept" }
+      },
+      "cmseeddrill000000000000008": {
+        "name": "6 reds: break control",
+        "description": "A match-style mini-break with six reds, correct color choice and decision-error tracking.",
+        "goal": "Transfer technical skills into a game scenario: plan, execute and adjust after errors.",
+        "rules": "Set six reds as shown. Play by match rules: red, color, next red. After the run, record whether the stop came from a decision or execution error.",
+        "successCriteria": "Average 18+ points per attempt with a clear reason why each break ended.",
+        "tags": ["match", "break", "analysis"],
+        "metrics": { "attempts": "Attempts", "break_points": "Break points", "max_run": "Best break", "decision_errors": "Decision errors", "execution_errors": "Execution errors" }
+      }
+    }
   },
   "home": {
     "title": "Snooker Player OS",

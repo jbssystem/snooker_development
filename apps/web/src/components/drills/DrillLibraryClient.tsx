@@ -16,6 +16,7 @@ import type {
 import { Link } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { localizeDrillTemplate } from '@/lib/drill-localization';
 import {
   DrillLayoutEditor,
   TableLayoutPreview,
@@ -73,6 +74,7 @@ const defaultValues: FormValues = {
 
 export function DrillLibraryClient() {
   const t = useTranslations('drills');
+  const tSystemDrills = useTranslations('systemDrills');
   const tErr = useTranslations('errors.api');
   const queryClient = useQueryClient();
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
@@ -140,6 +142,7 @@ export function DrillLibraryClient() {
               key={template.id}
               template={template}
               t={t}
+              tSystemDrills={tSystemDrills}
               onDelete={() => deleteTemplate.mutate(template.id)}
             />
           ))}
@@ -306,17 +309,21 @@ export function DrillLibraryClient() {
 function TemplateCard({
   template,
   t,
+  tSystemDrills,
   onDelete,
 }: {
   template: DrillTemplate;
   t: (key: string) => string;
+  tSystemDrills: ReturnType<typeof useTranslations>;
   onDelete: () => void;
 }) {
+  const localizedTemplate = localizeDrillTemplate(template, tSystemDrills);
+
   return (
     <article className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-text-primary">{template.name}</h2>
+          <h2 className="text-lg font-semibold text-text-primary">{localizedTemplate.name}</h2>
           <p className="mt-1 text-xs uppercase text-brand-accent">
             {t(`categories.${template.category}`)} · {t(`difficulties.${template.difficulty}`)}
           </p>
@@ -331,17 +338,17 @@ function TemplateCard({
           </button>
         )}
       </div>
-      <p className="mt-3 text-sm text-text-secondary">{template.description}</p>
+      <p className="mt-3 text-sm text-text-secondary">{localizedTemplate.description}</p>
       <div className="mt-4">
-        <TableLayoutPreview layout={template.defaultTableLayout ?? EMPTY_PREVIEW_LAYOUT} />
+        <TableLayoutPreview layout={localizedTemplate.defaultTableLayout ?? EMPTY_PREVIEW_LAYOUT} />
       </div>
       <dl className="mt-4 grid gap-3 text-sm">
-        <Meta label={t('fields.goal')} value={template.goal} />
-        <Meta label={t('fields.successCriteria')} value={template.successCriteria} />
+        <Meta label={t('fields.goal')} value={localizedTemplate.goal} />
+        <Meta label={t('fields.successCriteria')} value={localizedTemplate.successCriteria} />
       </dl>
-      {template.tags.length > 0 && (
+      {localizedTemplate.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
-          {template.tags.map((tag) => (
+          {localizedTemplate.tags.map((tag) => (
             <span key={tag} className="rounded-md bg-background-primary px-2 py-1 text-xs text-text-secondary">
               {tag}
             </span>

@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { isLocale, locales, localeFlags, type Locale } from '@/i18n/config';
+import { isLocale, locales, type Locale } from '@/i18n/config';
 
 export function LocaleSwitcher() {
   const t = useTranslations('common');
@@ -30,8 +30,7 @@ export function LocaleSwitcher() {
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
-        <span className="text-lg leading-none" aria-hidden="true">{localeFlags[locale]}</span>
-        <span className="hidden font-medium uppercase sm:inline">{locale}</span>
+        <FlagIcon locale={locale} />
         <span className="text-text-disabled" aria-hidden="true">v</span>
       </button>
 
@@ -56,7 +55,7 @@ export function LocaleSwitcher() {
               }}
               role="option"
             >
-              <span className="text-lg leading-none" aria-hidden="true">{localeFlags[l]}</span>
+              <FlagIcon locale={l} />
               <span>{t(`languages.${l}`)}</span>
             </a>
           ))}
@@ -74,4 +73,37 @@ function withoutLocalePrefix(pathname: string): string {
   }
 
   return segments.length > 0 ? `/${segments.join('/')}` : '';
+}
+
+function FlagIcon({ locale }: { locale: Locale }) {
+  const commonClass = 'inline-block h-4 w-6 shrink-0 overflow-hidden rounded-[2px] border border-border-subtle shadow-sm';
+
+  if (locale === 'ru') {
+    return (
+      <span
+        aria-hidden="true"
+        className={commonClass}
+        style={{ background: 'linear-gradient(to bottom, #fff 0 33.33%, #1c57a7 33.33% 66.66%, #d52b1e 66.66% 100%)' }}
+      />
+    );
+  }
+
+  if (locale === 'uk') {
+    return (
+      <span
+        aria-hidden="true"
+        className={commonClass}
+        style={{ background: 'linear-gradient(to bottom, #0057b7 0 50%, #ffd700 50% 100%)' }}
+      />
+    );
+  }
+
+  return (
+    <span aria-hidden="true" className={`${commonClass} relative bg-[#012169]`}>
+      <span className="absolute left-1/2 top-0 h-full w-1 -translate-x-1/2 bg-white" />
+      <span className="absolute left-0 top-1/2 h-1 w-full -translate-y-1/2 bg-white" />
+      <span className="absolute left-1/2 top-0 h-full w-0.5 -translate-x-1/2 bg-[#c8102e]" />
+      <span className="absolute left-0 top-1/2 h-0.5 w-full -translate-y-1/2 bg-[#c8102e]" />
+    </span>
+  );
 }
