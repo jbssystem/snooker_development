@@ -86,7 +86,10 @@ Add a new dependency only with a one-line rationale in this section.
 
 - Local: `docker compose up -d` brings web/api/worker/postgres/redis/minio/nginx.
 - Local dev (no Docker): run each `pnpm dev:*` script, plus postgres/redis from Docker.
-- Production: same compose file behind nginx with TLS termination.
+- Production: `docker-compose.prod.yml` builds standalone web/api/worker
+  images, runs postgres/redis/minio on the private Compose network and exposes
+  only the app nginx service on `APP_HTTP_BIND` (`127.0.0.1:3300` by default)
+  for host-nginx TLS termination at `snooker.appshub.pl`.
 
 ## Open architecture decisions
 

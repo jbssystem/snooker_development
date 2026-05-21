@@ -111,15 +111,14 @@ export class AuthController {
 }
 
 const REFRESH_COOKIE = 'snooker_refresh';
-const REFRESH_COOKIE_PATH = '/auth';
 const REFRESH_COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 function setRefreshCookie(res: Response, refreshToken: string): void {
   res.cookie(REFRESH_COOKIE, refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: refreshCookieSecure(),
     sameSite: 'strict',
-    path: REFRESH_COOKIE_PATH,
+    path: refreshCookiePath(),
     maxAge: REFRESH_COOKIE_MAX_AGE_MS,
   });
 }
@@ -127,10 +126,22 @@ function setRefreshCookie(res: Response, refreshToken: string): void {
 function clearRefreshCookie(res: Response): void {
   res.clearCookie(REFRESH_COOKIE, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: refreshCookieSecure(),
     sameSite: 'strict',
-    path: REFRESH_COOKIE_PATH,
+    path: refreshCookiePath(),
   });
+}
+
+function refreshCookiePath(): string {
+  const configured = process.env.AUTH_REFRESH_COOKIE_PATH?.trim();
+  return configured?.startsWith('/') ? configured : '/auth';
+}
+
+function refreshCookieSecure(): boolean {
+  const configured = process.env.AUTH_REFRESH_COOKIE_SECURE?.trim().toLowerCase();
+  if (configured === 'true') return true;
+  if (configured === 'false') return false;
+  return process.env.NODE_ENV === 'production';
 }
 
 function readRefreshCookie(req: Request): string | undefined {

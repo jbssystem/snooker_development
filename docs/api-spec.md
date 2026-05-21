@@ -8,8 +8,9 @@ whenever an endpoint is added, changed or removed.
 
 - REST + JSON. URLs are kebab-case plural nouns (`/training-sessions`).
 - Auth: `Authorization: Bearer <access-token>`; refresh tokens are stored in
-  an httpOnly `snooker_refresh` cookie scoped to `/auth` and rotated via
-  `/auth/refresh`.
+  an httpOnly `snooker_refresh` cookie and rotated via `/auth/refresh`.
+  Default local cookie path is `/auth`; production behind the `/api` nginx
+  prefix sets `AUTH_REFRESH_COOKIE_PATH=/api/auth`.
 - Pagination: `?limit=<n>&cursor=<id>`; responses include `nextCursor`.
 - Filtering: documented per resource. Time ranges as ISO 8601.
 - Errors: `{ error: { code, message?, details? } }`. `code` is stable.

@@ -19,6 +19,33 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### PH-1-011 — Docker production deploy
+
+**Delivered:**
+
+- Added production Compose file `docker-compose.prod.yml` for web, api,
+  worker, postgres, redis, minio, nginx and a one-shot `migrate` service.
+- Added `.env.production.example` for `snooker.appshub.pl`, including
+  `NEXT_PUBLIC_API_URL=/api`, production CORS, secure refresh-cookie settings
+  and loopback nginx bind for host TLS termination.
+- Added `.dockerignore` so Docker builds do not send local `node_modules`,
+  build outputs, logs or secret env files as context.
+- Web Docker image now builds Next.js in `standalone` mode with a build-time
+  API base URL and runs the traced server as a non-root user.
+- API and worker images use reproducible frozen-lockfile installs and run as
+  non-root users; worker image generates Prisma Client before compiling.
+- Nginx now serves `snooker.appshub.pl`, proxies `/api/*` to NestJS, exposes
+  `/health`, caches `_next/static` assets and preserves forwarded headers.
+- API refresh-cookie path and secure flag can be configured per environment,
+  which keeps httpOnly refresh rotation working behind `/api/auth/*`.
+
+**Open items:**
+
+- Server-side TLS certificate and host-nginx site for `snooker.appshub.pl`
+  must be configured on the target machine before public HTTPS cutover.
+- Real production secrets must be written to the server `.env`; committed
+  files intentionally contain placeholders only.
+
 ### Post PH-1-010 default training library
 
 **Delivered:**

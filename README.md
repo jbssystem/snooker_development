@@ -31,6 +31,15 @@ pnpm dev:worker
 Brand & color tokens: [docs/brand.md](docs/brand.md).
 Development journal: [docs/development-log.md](docs/development-log.md).
 
+## Production deploy
+
+Production is shipped with Docker Compose through
+[docker-compose.prod.yml](docker-compose.prod.yml). The current domain is
+`snooker.appshub.pl`; copy [.env.production.example](.env.production.example)
+to `.env` on the server, replace secrets, run migrations with the `migrate`
+service, then start the stack. Full steps live in
+[docs/deployment.md](docs/deployment.md).
+
 ## Languages
 
 UI is available in **ru** (default), **en**, **uk**.

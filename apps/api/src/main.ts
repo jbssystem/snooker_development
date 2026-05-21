@@ -7,6 +7,10 @@ import { HttpErrorFilter } from './common/filters/http-error.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  if (configService.get<string>('NODE_ENV') === 'production') {
+    const express = app.getHttpAdapter().getInstance() as { set?: (name: string, value: unknown) => void };
+    express.set?.('trust proxy', 1);
+  }
   app.use(securityHeaders(configService));
   app.enableCors({ origin: corsOrigins(configService), credentials: true });
   app.useGlobalFilters(new HttpErrorFilter());

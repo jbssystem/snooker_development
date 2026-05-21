@@ -32,6 +32,11 @@ See `.env.example`. Anything secret must be set per environment and never
 committed. `API_JWT_SECRET` MUST be rotated before any non-local deployment.
 `CORS_ORIGINS` is a comma-separated allow-list; production disables CORS if
 the allow-list is missing instead of accepting every origin.
+Production starts from `.env.production.example`; copy it to `.env` on the
+server and replace every placeholder secret before starting containers.
+For `snooker.appshub.pl`, the web build uses `NEXT_PUBLIC_API_URL=/api` and
+the API uses `AUTH_REFRESH_COOKIE_PATH=/api/auth` so the httpOnly refresh
+cookie is sent to `/api/auth/refresh` and `/api/auth/logout`.
 The API sets baseline security headers itself (`nosniff`, `DENY`, CSP,
 `no-referrer`, permissions policy, and HSTS in production). Keep equivalent
 nginx headers aligned rather than loosening them at the proxy.
@@ -54,6 +59,11 @@ development uses `localhost:5433` and `localhost:6379`.
 AI report generation needs Redis only when `/ai/reports/generate` is called;
 the normal API process can start without opening the AI queue connection.
 
+Production uses `docker-compose.prod.yml`. Only the internal nginx service is
+published, defaulting to `127.0.0.1:3300`; postgres, redis, minio, api and web
+stay on the Docker network. A host nginx with Let's Encrypt should proxy
+`https://snooker.appshub.pl` to `http://127.0.0.1:3300`.
+
 ## Migrations
 
 ```powershell
@@ -69,9 +79,19 @@ pnpm --filter @snooker/api prisma generate
 pnpm --filter @snooker/api exec prisma migrate deploy
 ```
 
-In Docker, run as a one-shot from the api container:
+In local Docker, run as a one-shot from the api container:
 ```powershell
 docker compose run --rm api pnpm prisma migrate deploy
+```
+
+In production, use the dedicated one-shot service after database containers are
+up and before exposing the new app version:
+
+```powershell
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d postgres redis minio
+docker compose -f docker-compose.prod.yml run --rm migrate
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ## Backups (production)
@@ -82,16 +102,49 @@ configured.
 
 ## TLS
 
-nginx terminates TLS in production. Use Let's Encrypt via certbot on the
-host; mount certificates into the nginx container.
+The committed app nginx config is HTTP-only and intended to sit behind a host
+nginx that terminates TLS. Host nginx should own the Let's Encrypt certificate
+for `snooker.appshub.pl` and proxy all traffic to `127.0.0.1:3300` unless
+`APP_HTTP_BIND` is changed.
+
+Example host nginx site:
+
+```nginx
+server {
+	listen 80;
+	server_name snooker.appshub.pl;
+	return 301 https://$host$request_uri;
+}
+
+server {
+	listen 443 ssl http2;
+	server_name snooker.appshub.pl;
+
+	location / {
+		proxy_pass http://127.0.0.1:3300;
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Host $host;
+		proxy_set_header X-Forwarded-Proto https;
+	}
+}
+```
 
 ## Production deploy (template)
 
 Per organization SSH-deploy convention (see user notes):
 1. `git archive --format=tar.gz -o tmp.tar.gz HEAD`
 2. `scp` to server target dir.
-3. `tar -xzf` and `docker compose --env-file .env up -d --build`.
-4. Run pending migrations: `docker compose run --rm api pnpm prisma migrate deploy`.
+3. `tar -xzf` into the server target dir.
+4. Ensure server `.env` exists, based on `.env.production.example`, with real
+	secrets and `PUBLIC_APP_URL=https://snooker.appshub.pl`.
+5. `docker compose -f docker-compose.prod.yml build`.
+6. `docker compose -f docker-compose.prod.yml up -d postgres redis minio`.
+7. `docker compose -f docker-compose.prod.yml run --rm migrate`.
+8. `docker compose -f docker-compose.prod.yml up -d`.
+9. Check `curl -f http://127.0.0.1:3300/health` from the server and then
+	`https://snooker.appshub.pl/ru/login` externally after TLS is configured.
 
 Do not commit `docker-compose.override.yml`; it lives on the server and
 controls port bindings behind the host nginx.
