@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
   transpilePackages: ['@snooker/shared', '@snooker/snooker-domain', '@snooker/ui', 'konva', 'react-konva'],
+  async rewrites() {
+    return [{ source: '/icon.png', destination: '/icon-192.png' }];
+  },
   webpack: (config) => {
     config.resolve = config.resolve ?? {};
     config.resolve.fallback = {

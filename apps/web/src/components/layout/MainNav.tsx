@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, usePathname } from '@/i18n/navigation';
+import { ChevronDown } from './ChevronDown';
 
 const PRIMARY_NAV_KEYS = [
   { key: 'dashboard', href: '/dashboard' },
@@ -44,6 +45,8 @@ export function MainNav() {
       })}
       <div
         className="relative shrink-0"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
         onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget)) {
             setOpen(false);
@@ -61,8 +64,10 @@ export function MainNav() {
           onClick={() => setOpen((value) => !value)}
           type="button"
         >
-          {t('more')}
-          <span className="ml-2 text-text-disabled" aria-hidden="true">v</span>
+          <span className="inline-flex items-center gap-2">
+            {t('more')}
+            <ChevronDown open={open} />
+          </span>
         </button>
         {open && (
           <div className="absolute left-0 z-30 mt-2 w-44 overflow-hidden rounded-md border border-border-subtle bg-background-secondary py-1 shadow-glow" role="menu">

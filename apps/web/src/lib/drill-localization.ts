@@ -64,7 +64,8 @@ function localizeLayout(layout: TableLayout, t: Translator, key: string): TableL
 
 function text(t: Translator, key: string, fallback: string): string {
   try {
-    return t(key);
+    const value = t(key);
+    return value === key || value.startsWith('templates.') ? fallback : value;
   } catch {
     return fallback;
   }

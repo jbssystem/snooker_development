@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { isLocale, locales, type Locale } from '@/i18n/config';
+import { ChevronDown } from './ChevronDown';
 
 export function LocaleSwitcher() {
   const t = useTranslations('common');
@@ -17,11 +18,16 @@ export function LocaleSwitcher() {
   }
 
   return (
-    <div className="relative" onBlur={(event) => {
-      if (!event.currentTarget.contains(event.relatedTarget)) {
-        setOpen(false);
-      }
-    }}>
+    <div
+      className="relative z-40"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false);
+        }
+      }}
+    >
       <button
         aria-expanded={open}
         aria-haspopup="listbox"
@@ -31,7 +37,7 @@ export function LocaleSwitcher() {
         type="button"
       >
         <FlagIcon locale={locale} />
-        <span className="text-text-disabled" aria-hidden="true">v</span>
+        <ChevronDown open={open} />
       </button>
 
       {open && (
