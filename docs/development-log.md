@@ -19,6 +19,21 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Post PH-1-010 default training library
+
+**Delivered:**
+
+- Added Prisma migration `20260520120700_seed_system_drill_templates`, which
+  creates an inactive system coach account and seeds eight immutable
+  `system` drill templates.
+- The default library covers cue action, long potting, positional play, break
+  building, safety, snooker escape, pressure routine and match simulation.
+- Every seeded drill includes a metrics schema and a visual
+  `defaultTableLayoutJson`, so new players can immediately add useful drills
+  to real training sessions and receive a copied table-layout snapshot.
+- Docs updated: `docs/database-model.md`, `docs/api-spec.md`,
+  `docs/development-log.md`.
+
 ### Post PH-1-010 audit hardening
 
 **Delivered:**

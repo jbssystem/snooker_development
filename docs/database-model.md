@@ -90,6 +90,12 @@ Each new entity ships with:
   shape used by `packages/snooker-domain`.
 - User create/update DTOs allow `private` and `shared`; `system` is reserved
   for seeded templates and cannot be created through the user API.
+- Migration `20260520120700_seed_system_drill_templates` creates an inactive
+  system coach user and seeds the initial `system` drill library. The seeded
+  templates cover cue action, potting, positional play, break building,
+  safety, snooker escape, pressure training and match simulation; each one has
+  metrics and a visual `defaultTableLayoutJson` so fresh installs are useful
+  before a player creates private templates.
 
 ### TrainingSession
 
