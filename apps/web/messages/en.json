@@ -14,6 +14,11 @@
       "loading": "Loading…"
     },
     "language": "Language",
+    "languages": {
+      "ru": "Русский",
+      "en": "English",
+      "uk": "Українська"
+    },
     "theme": {
       "light": "Light",
       "dark": "Dark",
@@ -110,6 +115,45 @@
       "title": "Recent sessions",
       "empty": "No sessions yet.",
       "meta": "{drills} drills · {attempts} attempts"
+    }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Training trends, drill success and match form.",
+    "authRequired": "Sign in to see player analytics.",
+    "loginCta": "Sign in",
+    "loading": "Loading analytics…",
+    "error": "Could not load analytics. Check the API and try again.",
+    "empty": "No analytics data yet. Start a training session or add a match to see trends.",
+    "period": "Last {days} days",
+    "units": {
+      "minutes": "min"
+    },
+    "stats": {
+      "sessions": "Sessions",
+      "trainingMinutes": "Minutes",
+      "attempts": "Attempts",
+      "successRate": "Success rate"
+    },
+    "charts": {
+      "volume": "Training volume",
+      "successTrend": "Success trend"
+    },
+    "tooltip": {
+      "trainingMinutes": "Minutes",
+      "successRate": "Success rate"
+    },
+    "drills": {
+      "title": "Drill progress",
+      "empty": "No drills have been executed yet.",
+      "meta": "{executions} executions · {attempts} attempts"
+    },
+    "matches": {
+      "title": "Match form",
+      "played": "Matches",
+      "winRate": "Win rate",
+      "frames": "Frames",
+      "highBreak": "High break"
     }
   },
   "calendar": {

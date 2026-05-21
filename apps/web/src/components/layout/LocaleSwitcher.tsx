@@ -1,41 +1,77 @@
 'use client';
 
-import { useLocale } from 'next-intl';
-import { useTransition } from 'react';
-import { locales, localeFlags, localeLabels, type Locale } from '@/i18n/config';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { useLocale, useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { isLocale, locales, localeFlags, type Locale } from '@/i18n/config';
 
 export function LocaleSwitcher() {
+  const t = useTranslations('common');
   const locale = useLocale() as Locale;
-  const router = useRouter();
-  const pathname = usePathname();
-  const [pending, startTransition] = useTransition();
+  const pathname = usePathname() ?? `/${locale}`;
+  const [open, setOpen] = useState(false);
+  const normalizedPathname = useMemo(() => withoutLocalePrefix(pathname), [pathname]);
 
-  function switchLocale(next: Locale) {
-    startTransition(() => {
-      router.replace(pathname, { locale: next });
-    });
+  function hrefFor(nextLocale: Locale) {
+    return `/${nextLocale}${normalizedPathname}`;
   }
 
   return (
-    <div className="flex items-center gap-1">
-      {locales.map((l) => (
-        <button
-          key={l}
-          type="button"
-          disabled={pending || l === locale}
-          onClick={() => switchLocale(l)}
-          aria-label={localeLabels[l]}
-          title={localeLabels[l]}
-          className={`rounded-md px-1.5 py-1 text-lg leading-none transition ${
-            l === locale
-              ? 'bg-background-elevated ring-1 ring-border-active'
-              : 'opacity-60 hover:opacity-100 hover:bg-background-elevated'
-          } ${pending ? 'pointer-events-none opacity-40' : ''}`}
+    <div className="relative" onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) {
+        setOpen(false);
+      }
+    }}>
+      <button
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-label={t('language')}
+        className="flex min-h-11 items-center gap-2 rounded-md border border-border-subtle bg-background-primary px-2.5 py-2 text-sm text-text-primary transition hover:border-brand-accent focus:border-border-active focus:outline-none"
+        onClick={() => setOpen((value) => !value)}
+        type="button"
+      >
+        <span className="text-lg leading-none" aria-hidden="true">{localeFlags[locale]}</span>
+        <span className="hidden font-medium uppercase sm:inline">{locale}</span>
+        <span className="text-text-disabled" aria-hidden="true">v</span>
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 z-30 mt-2 w-44 overflow-hidden rounded-md border border-border-subtle bg-background-secondary py-1 shadow-glow"
+          role="listbox"
         >
-          {localeFlags[l]}
-        </button>
-      ))}
+          {locales.map((l) => (
+            <a
+              key={l}
+              aria-selected={l === locale}
+              className={`flex min-h-11 items-center gap-3 px-3 py-2 text-sm transition ${
+                l === locale
+                  ? 'bg-background-elevated text-text-primary'
+                  : 'text-text-secondary hover:bg-background-elevated hover:text-text-primary'
+              }`}
+              href={hrefFor(l)}
+              onClick={() => {
+                document.cookie = `NEXT_LOCALE=${l}; path=/; max-age=31536000; samesite=lax`;
+                setOpen(false);
+              }}
+              role="option"
+            >
+              <span className="text-lg leading-none" aria-hidden="true">{localeFlags[l]}</span>
+              <span>{t(`languages.${l}`)}</span>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+function withoutLocalePrefix(pathname: string): string {
+  const segments = pathname.split('/').filter(Boolean);
+
+  while (isLocale(segments[0])) {
+    segments.shift();
+  }
+
+  return segments.length > 0 ? `/${segments.join('/')}` : '';
 }

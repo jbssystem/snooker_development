@@ -14,6 +14,11 @@
       "loading": "Завантаження…"
     },
     "language": "Мова",
+    "languages": {
+      "ru": "Русский",
+      "en": "English",
+      "uk": "Українська"
+    },
     "theme": {
       "light": "Світла",
       "dark": "Темна",
@@ -110,6 +115,45 @@
       "title": "Останні сесії",
       "empty": "Сесій поки немає.",
       "meta": "{drills} вправ · {attempts} спроб"
+    }
+  },
+  "analytics": {
+    "title": "Аналітика",
+    "subtitle": "Тренди тренувань, успішність вправ і матчева форма.",
+    "authRequired": "Увійдіть, щоб бачити аналітику гравця.",
+    "loginCta": "Увійти",
+    "loading": "Завантаження аналітики…",
+    "error": "Не вдалося завантажити аналітику. Перевірте API і спробуйте ще раз.",
+    "empty": "Даних для аналітики поки немає. Почніть тренування або додайте матч, щоб побачити динаміку.",
+    "period": "Останні {days} днів",
+    "units": {
+      "minutes": "хв"
+    },
+    "stats": {
+      "sessions": "Сесії",
+      "trainingMinutes": "Хвилини",
+      "attempts": "Спроби",
+      "successRate": "Успішність"
+    },
+    "charts": {
+      "volume": "Тренувальний обсяг",
+      "successTrend": "Тренд успішності"
+    },
+    "tooltip": {
+      "trainingMinutes": "Хвилини",
+      "successRate": "Успішність"
+    },
+    "drills": {
+      "title": "Прогрес вправ",
+      "empty": "Вправи ще не виконувалися.",
+      "meta": "{executions} виконань · {attempts} спроб"
+    },
+    "matches": {
+      "title": "Матчева форма",
+      "played": "Матчі",
+      "winRate": "Win rate",
+      "frames": "Фрейми",
+      "highBreak": "High break"
     }
   },
   "calendar": {

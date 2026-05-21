@@ -1,27 +1,17 @@
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import type { Locale } from '@/i18n/config';
 import { LocaleSwitcher } from './LocaleSwitcher';
+import { MainNav } from './MainNav';
 import { UserMenu } from './UserMenu';
 
-const NAV_KEYS = [
-  { key: 'dashboard', href: '/dashboard' },
-  { key: 'training', href: '/training' },
-  { key: 'drills', href: '/drills' },
-  { key: 'matches', href: '/matches' },
-  { key: 'calendar', href: '/calendar' },
-  { key: 'ai', href: '/ai' },
-  { key: 'analytics', href: '/analytics' },
-  { key: 'profile', href: '/profile' },
-] as const;
-
-export async function Header() {
-  const t = await getTranslations('nav');
-  const tCommon = await getTranslations('common');
+export async function Header({ locale }: { locale: Locale }) {
+  const tCommon = await getTranslations({ locale, namespace: 'common' });
   return (
-    <header className="sticky top-0 z-10 border-b border-border-subtle bg-background-secondary/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 md:gap-6 md:px-6">
-        <Link href="/dashboard" className="flex shrink-0 items-center gap-3">
+    <header className="sticky top-0 z-20 border-b border-border-subtle bg-background-secondary/90 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-3 py-3 sm:px-4 md:gap-4 md:px-6">
+        <Link href="/dashboard" locale={locale as Locale} className="flex min-w-0 shrink-0 items-center gap-3">
           <Image
             src="/icon-192.png"
             alt={tCommon('appName')}
@@ -30,22 +20,12 @@ export async function Header() {
             className="h-8 w-8 rounded"
             priority
           />
-          <span className="text-sm font-semibold tracking-wide text-text-primary">
+          <span className="hidden max-w-[180px] truncate text-sm font-semibold tracking-wide text-text-primary sm:inline lg:max-w-none">
             {tCommon('appName')}
           </span>
         </Link>
-        <nav className="order-3 -mx-4 flex w-[calc(100%+2rem)] gap-1 overflow-x-auto px-4 pb-1 md:order-none md:mx-0 md:w-auto md:flex-1 md:overflow-visible md:px-0 md:pb-0">
-          {NAV_KEYS.map(({ key, href }) => (
-            <Link
-              key={key}
-              href={href as never}
-              className="shrink-0 rounded-md px-3 py-1.5 text-sm text-text-secondary transition hover:bg-background-elevated hover:text-text-primary"
-            >
-              {t(key)}
-            </Link>
-          ))}
-        </nav>
-        <div className="ml-auto flex shrink-0 items-center gap-3">
+        <MainNav />
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <LocaleSwitcher />
           <UserMenu />
         </div>

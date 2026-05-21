@@ -127,8 +127,8 @@ export function DrillLibraryClient() {
   }
 
   return (
-    <main className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_460px]">
-      <section>
+    <main className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_460px]">
+      <section className="min-w-0">
         <header className="mb-6">
           <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
           <p className="mt-2 text-text-secondary">{t('subtitle')}</p>
@@ -151,7 +151,7 @@ export function DrillLibraryClient() {
         </div>
       </section>
 
-      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
         <h2 className="text-xl font-semibold text-text-primary">{t('form.title')}</h2>
         <form
           className="mt-5 grid gap-4"
@@ -186,7 +186,7 @@ export function DrillLibraryClient() {
             <input className={inputClass} {...form.register('name', { required: t('required') })} />
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Field label={t('fields.category')}>
               <select className={inputClass} {...form.register('category')}>
                 {categories.map((category) => (
@@ -242,7 +242,7 @@ export function DrillLibraryClient() {
             </div>
             {metrics.map((metric, index) => (
               <div key={index} className="grid gap-2 rounded-md border border-border-subtle p-3">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-2 sm:grid-cols-2">
                   <input
                     className={inputClass}
                     placeholder={t('metrics.key')}
@@ -256,7 +256,7 @@ export function DrillLibraryClient() {
                     onChange={(e) => updateMetric(index, { label: e.target.value }, setMetrics)}
                   />
                 </div>
-                <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
                   <select
                     className={inputClass}
                     value={metric.type}
@@ -275,7 +275,7 @@ export function DrillLibraryClient() {
                     onChange={(e) => updateMetric(index, { unit: e.target.value }, setMetrics)}
                   />
                   <button
-                    className="rounded-md border border-border-subtle px-2 text-sm text-text-secondary hover:border-state-error hover:text-state-error"
+                    className="min-h-11 rounded-md border border-border-subtle px-2 text-sm text-text-secondary hover:border-state-error hover:text-state-error"
                     onClick={() => setMetrics((items) => items.filter((_, itemIndex) => itemIndex !== index))}
                     type="button"
                   >
@@ -313,8 +313,8 @@ function TemplateCard({
   onDelete: () => void;
 }) {
   return (
-    <article className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-      <div className="flex items-start justify-between gap-3">
+    <article className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-text-primary">{template.name}</h2>
           <p className="mt-1 text-xs uppercase text-brand-accent">
@@ -355,9 +355,9 @@ function TemplateCard({
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
 const primaryButtonClass =
-  'rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
+  'min-h-11 rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
 const secondaryButtonClass =
-  'rounded-md border border-border-subtle px-3 py-1.5 text-sm text-text-secondary hover:border-brand-accent hover:text-text-primary';
+  'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary hover:border-brand-accent hover:text-text-primary';
 
 function Field({ label, error, children }: { label: string; error?: string | undefined; children: React.ReactNode }) {
   return (

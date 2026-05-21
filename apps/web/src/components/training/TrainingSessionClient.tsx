@@ -150,8 +150,8 @@ export function TrainingSessionClient() {
   }
 
   return (
-    <main className="grid gap-8 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
-      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+    <main className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
+      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
         <div className="mt-5 grid gap-2">
@@ -216,7 +216,7 @@ export function TrainingSessionClient() {
         )}
       </section>
 
-      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
         <h2 className="text-xl font-semibold text-text-primary">{t('form.title')}</h2>
         <form
           className="mt-5 grid gap-4"
@@ -235,7 +235,7 @@ export function TrainingSessionClient() {
           <Field label={t('fields.goal')}>
             <textarea className={`${inputClass} min-h-20`} {...form.register('goal')} />
           </Field>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <Field label={t('fields.intensity')}>
               <input className={inputClass} max={10} min={1} type="number" {...form.register('intensity')} />
             </Field>
@@ -302,7 +302,7 @@ function ActiveSessionPanel({
 }) {
   return (
     <div className="grid gap-5">
-      <header className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+      <header className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase text-brand-accent">{t(`sessionTypes.${session.sessionType}`)}</p>
@@ -339,7 +339,7 @@ function ActiveSessionPanel({
       </header>
 
       {!session.endedAt && (
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+        <section className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
           <h3 className="text-lg font-semibold text-text-primary">{t('drillPicker.title')}</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <select className={inputClass} onChange={(event) => setSelectedDrillId(event.target.value)} value={selectedDrillId}>
@@ -392,7 +392,7 @@ function ActiveSessionPanel({
       </section>
 
       {activeExecution && (
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+        <section className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="text-xl font-semibold text-text-primary">
@@ -415,7 +415,7 @@ function ActiveSessionPanel({
           </div>
 
           {!activeExecution.endedAt && (
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {attemptResults.map((result) => (
                 <button
                   key={result}
@@ -437,8 +437,8 @@ function ActiveSessionPanel({
             </div>
           )}
 
-          <div className="mt-5 overflow-hidden rounded-md border border-border-subtle">
-            <table className="w-full text-left text-sm">
+          <div className="mt-5 overflow-x-auto rounded-md border border-border-subtle">
+            <table className="min-w-[420px] w-full text-left text-sm">
               <thead className="bg-background-primary text-text-disabled">
                 <tr>
                   <th className="px-3 py-2">{t('attempts.number')}</th>
@@ -471,9 +471,9 @@ function ActiveSessionPanel({
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
 const primaryButtonClass =
-  'rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
+  'min-h-11 rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
 const secondaryButtonClass =
-  'rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-60';
+  'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-60';
 
 function Field({ label, error, children }: { label: string; error?: string | undefined; children: React.ReactNode }) {
   return (

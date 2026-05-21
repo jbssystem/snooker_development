@@ -57,15 +57,18 @@ Full spec: [docs/brand.md](brand.md). Quick reference:
 
 Delivered so far (under `apps/web/src/components/layout/`):
 
-- `Header` — server component; logo + primary navigation + `LocaleSwitcher`
-  - `UserMenu`. Sticky, `bg-background-secondary/80` with backdrop blur.
-  On mobile, primary navigation remains visible as a horizontal scroll rail
-  instead of disappearing behind a menu that does not exist yet.
-- `LocaleSwitcher` — client component; native `<select>` of `ru` / `en` / `uk`,
-  preserves current pathname via `next-intl/navigation` (`localePrefix: 'always'`).
+- `Header` — server component; logo, `MainNav`, `LocaleSwitcher` and
+  `UserMenu`. Sticky, `bg-background-secondary/90` with backdrop blur.
+  On mobile, primary navigation remains visible as a horizontal scroll rail.
+- `MainNav` — client component; renders the primary app links and highlights
+  the active route from the locale-aware pathname.
+- `LocaleSwitcher` — client component; compact dropdown with flag options.
+  It builds explicit locale-prefixed URLs after stripping any existing locale
+  segments, so switching from a malformed path like `/uk/en/dashboard`
+  normalizes back to `/en/dashboard`.
 - `UserMenu` — client component; reads the persisted Zustand auth store,
-  shows the display name and a sign-out button when authenticated, otherwise
-  routes to `/login`.
+  shows an initials avatar dropdown with profile and sign-out actions when
+  authenticated, otherwise routes to `/login`.
 - `(app)/layout.tsx` route group — wraps authenticated pages with `Header`
   and a centered max-w-7xl container.
 - `(auth)/layout.tsx` route group — minimal centered card layout used by
@@ -153,6 +156,15 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - Empty state keeps two practical exits visible: profile setup and starting a
   training session. The API returns empty aggregates when a profile does not
   exist yet, so the page can stay stable immediately after registration.
+
+## Analytics UI
+
+- `/analytics` lives in the `(app)` route group and is rendered by
+  `src/components/analytics/AnalyticsClient.tsx`.
+- The page reuses the player dashboard API for MVP analytics: KPI cards,
+  training volume chart, success trend chart, drill progress and match summary.
+- The layout is mobile-first; charts stack before moving into two columns on
+  wide screens.
 
 ## Match Log UI
 

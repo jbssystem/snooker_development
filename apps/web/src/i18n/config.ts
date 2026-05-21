@@ -13,3 +13,7 @@ export const localeFlags: Record<Locale, string> = {
   en: '🇬🇧',
   uk: '🇺🇦',
 };
+
+export function isLocale(value: string | undefined): value is Locale {
+  return Boolean(value && (locales as readonly string[]).includes(value));
+}

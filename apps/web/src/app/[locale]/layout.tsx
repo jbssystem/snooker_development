@@ -18,11 +18,12 @@ export default async function LocaleLayout({ children, params }: Props) {
   if (!(locales as readonly string[]).includes(locale)) {
     notFound();
   }
-  setRequestLocale(locale as Locale);
-  const messages = await getMessages();
+  const activeLocale = locale as Locale;
+  setRequestLocale(activeLocale);
+  const messages = await getMessages({ locale: activeLocale });
 
   return (
-    <NextIntlClientProvider messages={messages}>
+    <NextIntlClientProvider locale={activeLocale} messages={messages}>
       <QueryProvider>{children}</QueryProvider>
     </NextIntlClientProvider>
   );
