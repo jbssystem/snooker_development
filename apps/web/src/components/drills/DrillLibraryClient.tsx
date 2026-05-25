@@ -14,6 +14,7 @@ import type {
   UserDrillVisibility,
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
+import { AccordionSection } from '@/components/layout/AccordionSection';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillTemplate } from '@/lib/drill-localization';
@@ -154,43 +155,48 @@ export function DrillLibraryClient() {
         </div>
       </section>
 
-      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
-        <h2 className="text-xl font-semibold text-text-primary">{t('form.title')}</h2>
-        <form
-          className="mt-5 grid gap-4"
-          onSubmit={form.handleSubmit((values) =>
-            createTemplate.mutate({
-              name: values.name,
-              category: values.category,
-              difficulty: values.difficulty,
-              visibility: values.visibility,
-              description: values.description,
-              goal: values.goal,
-              rules: values.rules,
-              successCriteria: values.successCriteria,
-              tags: parseTags(values.tags),
-              metricsSchema: {
-                version: 1,
-                metrics: metrics
-                  .filter((metric) => metric.key.trim() && metric.label.trim())
-                  .map((metric) => ({
-                    key: metric.key.trim(),
-                    label: metric.label.trim(),
-                    type: metric.type,
-                    unit: metric.unit.trim() || undefined,
-                    required: metric.required,
-                  })),
-              },
-              defaultTableLayout: layout,
-            }),
-          )}
-        >
-          <Field label={t('fields.name')} error={form.formState.errors.name?.message}>
-            <input className={inputClass} {...form.register('name', { required: t('required') })} />
+      <aside className="content-start">
+        <AccordionSection defaultOpen testId="drill-template-form" title={t('form.title')}>
+          <form
+            className="grid gap-4"
+            onSubmit={form.handleSubmit((values) =>
+              createTemplate.mutate({
+                name: values.name,
+                category: values.category,
+                difficulty: values.difficulty,
+                visibility: values.visibility,
+                description: values.description,
+                goal: values.goal,
+                rules: values.rules,
+                successCriteria: values.successCriteria,
+                tags: parseTags(values.tags),
+                metricsSchema: {
+                  version: 1,
+                  metrics: metrics
+                    .filter((metric) => metric.key.trim() && metric.label.trim())
+                    .map((metric) => ({
+                      key: metric.key.trim(),
+                      label: metric.label.trim(),
+                      type: metric.type,
+                      unit: metric.unit.trim() || undefined,
+                      required: metric.required,
+                    })),
+                },
+                defaultTableLayout: layout,
+              }),
+            )}
+          >
+          <Field error={form.formState.errors.name?.message} hint={t('hints.name')} label={t('fields.name')}>
+            <input
+              autoFocus
+              className={inputClass}
+              placeholder={t('placeholders.name')}
+              {...form.register('name', { required: t('required') })}
+            />
           </Field>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label={t('fields.category')}>
+            <Field hint={t('hints.category')} label={t('fields.category')}>
               <select className={inputClass} {...form.register('category')}>
                 {categories.map((category) => (
                   <option key={category} value={category}>
@@ -199,7 +205,7 @@ export function DrillLibraryClient() {
                 ))}
               </select>
             </Field>
-            <Field label={t('fields.difficulty')}>
+            <Field hint={t('hints.difficulty')} label={t('fields.difficulty')}>
               <select className={inputClass} {...form.register('difficulty')}>
                 {difficulties.map((difficulty) => (
                   <option key={difficulty} value={difficulty}>
@@ -210,30 +216,47 @@ export function DrillLibraryClient() {
             </Field>
           </div>
 
-          <Field label={t('fields.visibility')}>
+          <Field hint={t('hints.visibility')} label={t('fields.visibility')}>
             <select className={inputClass} {...form.register('visibility')}>
               <option value="private">{t('visibility.private')}</option>
               <option value="shared">{t('visibility.shared')}</option>
             </select>
           </Field>
 
-          <Field label={t('fields.description')} error={form.formState.errors.description?.message}>
-            <textarea className={`${inputClass} min-h-20`} {...form.register('description', { required: t('required') })} />
+          <Field error={form.formState.errors.description?.message} hint={t('hints.description')} label={t('fields.description')}>
+            <textarea
+              className={`${inputClass} min-h-20`}
+              placeholder={t('placeholders.description')}
+              {...form.register('description', { required: t('required') })}
+            />
           </Field>
-          <Field label={t('fields.goal')} error={form.formState.errors.goal?.message}>
-            <textarea className={`${inputClass} min-h-20`} {...form.register('goal', { required: t('required') })} />
+          <Field error={form.formState.errors.goal?.message} hint={t('hints.goal')} label={t('fields.goal')}>
+            <textarea
+              className={`${inputClass} min-h-20`}
+              placeholder={t('placeholders.goal')}
+              {...form.register('goal', { required: t('required') })}
+            />
           </Field>
-          <Field label={t('fields.rules')} error={form.formState.errors.rules?.message}>
-            <textarea className={`${inputClass} min-h-24`} {...form.register('rules', { required: t('required') })} />
+          <Field error={form.formState.errors.rules?.message} hint={t('hints.rules')} label={t('fields.rules')}>
+            <textarea
+              className={`${inputClass} min-h-24`}
+              placeholder={t('placeholders.rules')}
+              {...form.register('rules', { required: t('required') })}
+            />
           </Field>
           <Field
-            label={t('fields.successCriteria')}
             error={form.formState.errors.successCriteria?.message}
+            hint={t('hints.successCriteria')}
+            label={t('fields.successCriteria')}
           >
-            <textarea className={`${inputClass} min-h-20`} {...form.register('successCriteria', { required: t('required') })} />
+            <textarea
+              className={`${inputClass} min-h-20`}
+              placeholder={t('placeholders.successCriteria')}
+              {...form.register('successCriteria', { required: t('required') })}
+            />
           </Field>
-          <Field label={t('fields.tags')}>
-            <input className={inputClass} {...form.register('tags')} />
+          <Field hint={t('hints.tags')} label={t('fields.tags')}>
+            <input className={inputClass} placeholder={t('placeholders.tags')} {...form.register('tags')} />
           </Field>
 
           <section className="grid gap-3 rounded-md border border-border-subtle bg-background-primary p-3">
@@ -301,6 +324,7 @@ export function DrillLibraryClient() {
             {createTemplate.isPending ? t('saving') : t('form.submit')}
           </button>
         </form>
+        </AccordionSection>
       </aside>
     </main>
   );
@@ -366,11 +390,22 @@ const primaryButtonClass =
 const secondaryButtonClass =
   'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary hover:border-brand-accent hover:text-text-primary';
 
-function Field({ label, error, children }: { label: string; error?: string | undefined; children: React.ReactNode }) {
+function Field({
+  children,
+  error,
+  hint,
+  label,
+}: {
+  children: React.ReactNode;
+  error?: string | undefined;
+  hint?: string | undefined;
+  label: string;
+}) {
   return (
     <label className="flex flex-col gap-1.5 text-sm">
       <span className="text-text-secondary">{label}</span>
       {children}
+      {hint && <span className="text-xs leading-5 text-text-disabled">{hint}</span>}
       {error && <span className="text-xs text-state-error">{error}</span>}
     </label>
   );

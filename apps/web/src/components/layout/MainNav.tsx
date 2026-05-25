@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link, usePathname } from '@/i18n/navigation';
+import { useDismissable } from '@/lib/use-dismissable';
 import { ChevronDown } from './ChevronDown';
 
 const PRIMARY_NAV_KEYS = [
@@ -22,6 +23,8 @@ export function MainNav() {
   const t = useTranslations('nav');
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const dropdownRef = useDismissable<HTMLDivElement>(open, close);
   const moreActive = MORE_NAV_KEYS.some(({ href }) => pathname === href || pathname.startsWith(`${href}/`));
 
   return (
@@ -43,16 +46,7 @@ export function MainNav() {
           </Link>
         );
       })}
-      <div
-        className="relative shrink-0"
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) {
-            setOpen(false);
-          }
-        }}
-      >
+      <div className="relative shrink-0" ref={dropdownRef}>
         <button
           aria-expanded={open}
           aria-haspopup="menu"

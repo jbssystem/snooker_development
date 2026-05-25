@@ -1,8 +1,8 @@
 import createMiddleware from 'next-intl/middleware';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { isLocale } from './src/i18n/config';
-import { routing } from './src/i18n/routing';
+import { isLocale } from './i18n/config';
+import { routing } from './i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 

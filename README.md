@@ -28,6 +28,22 @@ pnpm dev:web      # Next.js on :3000
 pnpm dev:worker
 ```
 
+## Demo customer profile
+
+After migrations are applied, seed a reusable customer-style player profile:
+
+```powershell
+pnpm seed:demo
+```
+
+The command recreates only this demo account and fills it with profile details,
+equipment history, training sessions, drill executions and attempts, matches,
+calendar factors, lifestyle records, supplement/routine periods and AI report
+states.
+
+Login: `customer.player.demo@snooker.local`
+Password: `CustomerDemo2026!`
+
 Brand & color tokens: [docs/brand.md](docs/brand.md).
 Development journal: [docs/development-log.md](docs/development-log.md).
 

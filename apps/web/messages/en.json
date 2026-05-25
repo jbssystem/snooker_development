@@ -318,7 +318,26 @@
     },
     "events": {
       "title": "Calendar",
+      "listTitle": "Events",
       "empty": "No events yet."
+    },
+    "view": {
+      "calendar": "Calendar",
+      "list": "List"
+    },
+    "details": {
+      "day": "Day",
+      "empty": "Select an event, day or period to see details.",
+      "close": "Close"
+    },
+    "list": {
+      "showMore": "Show {count} more"
+    },
+    "month": {
+      "previous": "Previous month",
+      "next": "Next month",
+      "today": "Today",
+      "more": "+{count} more"
     },
     "lifestyle": {
       "title": "Daily lifestyle",
@@ -330,6 +349,13 @@
       "empty": "No supplement periods have been recorded yet."
     },
     "forms": {
+      "quickTitle": "Quick entry",
+      "quickSubtitle": "Add data without hunting for the right form.",
+      "tabs": {
+        "event": "Event",
+        "lifestyle": "Day",
+        "supplement": "Period"
+      },
       "eventTitle": "Add event",
       "lifestyleTitle": "Record day",
       "supplementTitle": "Add period",
@@ -360,6 +386,36 @@
       "endDate": "End date",
       "dosageNote": "Dosage note",
       "reason": "Reason"
+    },
+    "placeholders": {
+      "title": "E.g. coaching session",
+      "description": "What matters about this event",
+      "sleepHours": "7.5",
+      "score": "1-10",
+      "mood": "Calm, focused",
+      "notes": "Short note for later analysis",
+      "name": "Supplement or period name",
+      "category": "Vitamins, recovery...",
+      "dosageNote": "No advice, only the recorded fact",
+      "reason": "Why this period matters in the history"
+    },
+    "hints": {
+      "type": "The type keeps calendar filtering and reports fast.",
+      "title": "Short names are easier to scan in the month grid.",
+      "startAt": "Use the real start time to make daily load visible.",
+      "endAt": "Leave empty when the event has no exact duration.",
+      "description": "Add context: place, goal, opponent or important condition.",
+      "date": "This record belongs to one calendar day.",
+      "sleepHours": "Decimals are fine, for example 7.5 hours.",
+      "score": "Use a 1-10 scale: 1 low, 10 highest.",
+      "mood": "One phrase is enough to reveal patterns later.",
+      "notes": "Record observations that help a coach understand the day.",
+      "name": "Record the period name without medical conclusions.",
+      "category": "Optional: helps group periods.",
+      "startDate": "Date from which the period appears in the calendar.",
+      "endDate": "Leave empty while the period is still active.",
+      "dosageNote": "Record the fact, not advice or a prescription.",
+      "reason": "Neutrally describe why this period appears in the history."
     },
     "flags": {
       "illness": "illness",
@@ -474,7 +530,20 @@
       "seasonGoal": "Season goal"
     },
     "placeholders": {
-      "country": "GB"
+      "firstName": "E.g. Mark",
+      "lastName": "Selby",
+      "country": "GB",
+      "level": "Junior, amateur, pro...",
+      "seasonGoal": "Main season goal and success measure"
+    },
+    "hints": {
+      "firstName": "Used in reports, profile screens and address copy.",
+      "lastName": "Helps distinguish the player in long-term history.",
+      "dateOfBirth": "Adds age context for training and competition history.",
+      "country": "Two-letter country code, for example GB or UA.",
+      "dominantHand": "Adds technical context to drills and coach notes.",
+      "level": "Briefly describe the player's current level.",
+      "seasonGoal": "Make it measurable: event, break, ranking or skill."
     },
     "dominantHand": {
       "empty": "Not set",
@@ -501,6 +570,26 @@
         "chalk": "Chalk",
         "notes": "Notes",
         "activeFrom": "Active from"
+      },
+      "placeholders": {
+        "cueName": "Main cue",
+        "cueWeight": "18.5 oz",
+        "tipBrand": "Taom, Century...",
+        "tipSize": "9.5",
+        "extension": "Mini butt, telescopic...",
+        "chalk": "Taom V10",
+        "notes": "What changed in feel or performance"
+      },
+      "hints": {
+        "cueName": "Use a clear name so the period is easy to find later.",
+        "cueWeight": "Enter a number when known, or leave empty.",
+        "tipSize": "Tip size in mm, for example 9.5.",
+        "tipBrand": "Brand/model helps connect equipment to cue action changes.",
+        "tipChangeDate": "Useful when checking dips after a tip change.",
+        "extension": "Only fill this when a different extension was really used.",
+        "chalk": "Chalk can also explain feel and error patterns.",
+        "activeFrom": "Equipment is treated as active from this date.",
+        "notes": "Record facts briefly without long analysis."
       }
     }
   },
@@ -527,6 +616,25 @@
       "rules": "Rules",
       "successCriteria": "Success criteria",
       "tags": "Tags"
+    },
+    "placeholders": {
+      "name": "Long red with position",
+      "description": "Briefly describe what the drill trains",
+      "goal": "Which skill should improve",
+      "rules": "Sets, positions and what to record",
+      "successCriteria": "For example, 6 of 10 with zone control",
+      "tags": "longs, position, 30min"
+    },
+    "hints": {
+      "name": "Short names are easier to pick during practice.",
+      "category": "Category drives library grouping and reports.",
+      "difficulty": "Choose the level where this drill should become normal.",
+      "visibility": "Private is only yours; shared can be reused later.",
+      "description": "One or two sentences to remember the drill quickly.",
+      "goal": "Describe the training effect, not the execution steps.",
+      "rules": "Write it so a coach can run the drill without extra explanation.",
+      "successCriteria": "Make it measurable by attempts, zone control or break size.",
+      "tags": "Separate tags with commas, up to 12."
     },
     "categories": {
       "cue_action": "Cue action",
@@ -597,6 +705,18 @@
       "fatigueAfter": "Fatigue after",
       "focusLevel": "Focus",
       "mood": "Mood"
+    },
+    "placeholders": {
+      "title": "Cue action and long reds",
+      "goal": "What should improve by the end",
+      "mood": "Calm, tired, sharp..."
+    },
+    "hints": {
+      "title": "The name should make the session easy to find later.",
+      "sessionType": "Type separates solo, match-prep and coached days.",
+      "goal": "One concrete goal works better than a long plan.",
+      "score": "Use a 1-10 scale: 1 low, 10 highest.",
+      "mood": "A short phrase helps compare attempt quality later."
     },
     "sessionTypes": {
       "solo": "Solo",
@@ -677,6 +797,39 @@
       "sourceUrl": "Source",
       "videoUrl": "Video",
       "notes": "Notes"
+    },
+    "placeholders": {
+      "opponentName": "Opponent name",
+      "tournament": "League, club event...",
+      "round": "QF, group, final...",
+      "format": "Best of 5",
+      "country": "GB",
+      "city": "Sheffield",
+      "club": "Club name",
+      "videoUrl": "https://...",
+      "sourceUrl": "Match sheet or event page link",
+      "notes": "Key match takeaways",
+      "frameNotes": "Error, strong safety or deciding moment"
+    },
+    "hints": {
+      "opponentName": "Opponent history is grouped by this name.",
+      "matchDate": "Leave empty if the exact time is unknown.",
+      "frameScore": "Enter the final match score in frames.",
+      "tournament": "Context separates practice from competition matches.",
+      "round": "Round helps analyze pressure moments.",
+      "format": "For example Best of 5 or race to 3.",
+      "count": "Count for the whole match or frame.",
+      "percent": "Percentage from 0 to 100 without the % sign.",
+      "country": "Country code or name, whichever is clearer in history.",
+      "city": "City helps connect matches with travel and fatigue.",
+      "club": "Venue or club when table conditions matter.",
+      "videoUrl": "A link makes later review faster.",
+      "sourceUrl": "Result source or event page.",
+      "notes": "Capture 1-3 observations for the next review.",
+      "frameNumber": "Leave empty if the API should assign the next number.",
+      "framePoints": "Frame points, when known.",
+      "winner": "Keep not set when the frame is recorded without a result.",
+      "duration": "Approximate duration in minutes."
     },
     "stats": {
       "result": "Result"

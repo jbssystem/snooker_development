@@ -2,8 +2,9 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { isLocale, locales, type Locale } from '@/i18n/config';
+import { useDismissable } from '@/lib/use-dismissable';
 import { ChevronDown } from './ChevronDown';
 
 export function LocaleSwitcher() {
@@ -11,6 +12,8 @@ export function LocaleSwitcher() {
   const locale = useLocale() as Locale;
   const pathname = usePathname() ?? `/${locale}`;
   const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const containerRef = useDismissable<HTMLDivElement>(open, close);
   const normalizedPathname = useMemo(() => withoutLocalePrefix(pathname), [pathname]);
 
   function hrefFor(nextLocale: Locale) {
@@ -18,16 +21,7 @@ export function LocaleSwitcher() {
   }
 
   return (
-    <div
-      className="relative z-40"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          setOpen(false);
-        }
-      }}
-    >
+    <div className="relative z-40" ref={containerRef}>
       <button
         aria-expanded={open}
         aria-haspopup="listbox"

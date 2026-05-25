@@ -69,6 +69,16 @@ Delivered so far (under `apps/web/src/components/layout/`):
 - `UserMenu` — client component; reads the persisted Zustand auth store,
   shows an initials avatar dropdown with profile and sign-out actions when
   authenticated, otherwise routes to `/login`.
+- `AccordionSection` — client component for long secondary forms and detail
+  sections. It uses a stable card surface, keyboard-accessible button header,
+  optional default-open state and a short grid-row transition for smooth
+  expand/collapse.
+- Field-level hints — dense data-entry forms should show one short helper line
+  for ranges, optional fields or downstream usage. Hints sit below the control
+  in `text-text-disabled` and do not replace validation errors.
+- Quiet transitions — view swaps, selected detail panels and compact feedback
+  may use the global `ui-fade-in` class (160ms fade/translate). Keep motion
+  functional and respect `prefers-reduced-motion`.
 - `(app)/layout.tsx` route group — wraps authenticated pages with `Header`
   and a centered max-w-7xl container.
 - `(auth)/layout.tsx` route group — minimal centered card layout used by
@@ -109,6 +119,9 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - The left column edits the player profile (identity, country, dominant hand,
   level and season goal). The right column creates equipment profiles and
   lists historical equipment entries.
+- Equipment creation sits in a right-column accordion that is open by default
+  for fast setup, while still allowing the user to collapse it when reviewing
+  equipment history.
 - Equipment creation is disabled until a player profile exists; the UI keeps
   that dependency visible with a warning message instead of silently failing.
 - The page uses client-side auth from `useAuthStore` and TanStack Query keys
@@ -120,9 +133,11 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   `src/components/drills/DrillLibraryClient.tsx`.
 - The main column lists visible drill templates. Each item shows category,
   difficulty, description, goal, success criteria and tags.
-- The side panel creates a new user-owned template with category, difficulty,
-  visibility, text fields and a compact metric-row editor. Metrics are stored
-  as `DrillMetricsSchema` (`version: 1`).
+- The side panel creates a new user-owned template inside a default-open
+  accordion with category, difficulty, visibility, text fields and a compact
+  metric-row editor. Metrics are stored as `DrillMetricsSchema` (`version: 1`).
+- Template fields include helper hints and placeholders so a coach can create
+  a usable drill without guessing how much detail each field needs.
 - The same form now embeds `DrillLayoutEditor`, which stores a visual
   `defaultTableLayout` with balls, target zones and shot paths. Drill cards
   show a compact `TableLayoutPreview`.
@@ -132,8 +147,9 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - `/training` lives in the `(app)` route group and is rendered by
   `src/components/training/TrainingSessionClient.tsx`.
 - The left rail selects recent sessions, the center panel operates the active
-  session, and the right panel starts a new session. This keeps the tablet
-  workflow stable while a coach records attempts.
+  session, and the right panel starts a new session from a default-open
+  accordion. This keeps the next data-entry action visible while preserving a
+  stable tablet workflow for recording attempts.
 - Starting a session captures title, type, goal, intensity, pre-session
   fatigue, focus and mood. Finishing captures post-session fatigue.
 - A visible drill template can be added to the active session. The execution
@@ -173,6 +189,9 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - The layout mirrors the training screen rhythm: match history on the left,
   selected match detail and frames in the center, and manual match creation on
   the right.
+- Manual match creation and frame entry use default-open accordions so input is
+  immediately available, while analysis and frame tables can still reclaim
+  space when the user collapses the forms.
 - Match creation captures opponent, date, tournament context, venue, frame
   score, breaks, safety/long-pot percentages, error counts, links and notes.
 - The selected match detail shows score/result, key stat tiles, a frame table,
@@ -188,9 +207,20 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - The page uses the same client-side auth/profile pattern as training and
   matches, with TanStack Query keys `calendar-events`, `lifestyle-factors`
   and `supplement-events` scoped by token.
-- The main area shows a current-player event timeline, recent daily lifestyle
-  records and supplement periods. The side column keeps three compact forms:
-  add calendar event, save daily lifestyle factor and add supplement period.
+- The main area uses a compact segmented switch between a monthly calendar grid
+  and list summaries. Calendar items stay clipped inside day cells to avoid
+  overlapping neighboring days; the `+N more` control selects the full day and
+  shows every item in the detail panel.
+- The calendar surface is master-detail on wide screens: the grid/list stays on
+  the left and the selected event/day/period detail remains in a sticky side
+  panel. On narrow screens it stacks directly below the calendar content.
+- List summaries are paged with compact "show more" controls so long histories
+  stay scannable without hiding data permanently.
+- The side column is a quick-entry tab panel for event, lifestyle day and
+  supplement period forms. This avoids three closed accordions and keeps input
+  one tap away.
+- Calendar form fields include placeholders, visible ranges and neutral helper
+  hints so data can be entered quickly without guessing formats.
 - Wellness and supplement copy stays descriptive only. The UI records factors
   for later correlation, but does not make medical or causal claims.
 
@@ -199,8 +229,8 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - `/ai` lives in the `(app)` route group and is rendered by
   `src/components/ai/AiReportsClient.tsx`.
 - The layout uses a report history rail, a central report detail pane and a
-  side form for generating a weekly summary. This keeps generated content
-  scannable without hiding source metadata.
+  collapsed side form for generating a weekly summary. This keeps generated
+  content scannable without hiding source metadata.
 - The page uses client-side auth/profile checks from `useAuthStore` and TanStack
   Query key `ai-reports`; queued/running reports poll every five seconds until
   the worker completes or fails them.

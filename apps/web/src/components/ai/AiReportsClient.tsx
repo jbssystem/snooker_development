@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { AiReport, GenerateWeeklyAiReportInput } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
+import { AccordionSection } from '@/components/layout/AccordionSection';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -111,10 +112,9 @@ export function AiReportsClient() {
             </Link>
           </section>
         )}
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-          <h2 className="text-xl font-semibold text-text-primary">{t('generate.title')}</h2>
+        <AccordionSection testId="ai-generate-form" title={t('generate.title')}>
           <form
-            className="mt-5 grid gap-4"
+            className="grid gap-4"
             onSubmit={form.handleSubmit((values) => generateReport.mutate(toGenerateInput(values, locale)))}
           >
             <label className="grid gap-1 text-sm text-text-secondary">
@@ -130,7 +130,7 @@ export function AiReportsClient() {
               {generateReport.isPending ? t('saving') : t('generate.submit')}
             </button>
           </form>
-        </section>
+        </AccordionSection>
       </aside>
     </main>
   );

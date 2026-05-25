@@ -13,6 +13,7 @@ import type {
   TrainingSessionType,
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
+import { AccordionSection } from '@/components/layout/AccordionSection';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillName, localizeDrillTemplate } from '@/lib/drill-localization';
@@ -219,48 +220,58 @@ export function TrainingSessionClient() {
         )}
       </section>
 
-      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
-        <h2 className="text-xl font-semibold text-text-primary">{t('form.title')}</h2>
-        <form
-          className="mt-5 grid gap-4"
-          onSubmit={form.handleSubmit((values) => createSession.mutate(toCreateSessionInput(values)))}
-        >
-          <Field label={t('fields.title')} error={form.formState.errors.title?.message}>
-            <input className={inputClass} {...form.register('title', { required: t('required') })} />
-          </Field>
-          <Field label={t('fields.sessionType')}>
-            <select className={inputClass} {...form.register('sessionType')}>
-              {sessionTypes.map((type) => (
-                <option key={type} value={type}>{t(`sessionTypes.${type}`)}</option>
-              ))}
-            </select>
-          </Field>
-          <Field label={t('fields.goal')}>
-            <textarea className={`${inputClass} min-h-20`} {...form.register('goal')} />
-          </Field>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Field label={t('fields.intensity')}>
-              <input className={inputClass} max={10} min={1} type="number" {...form.register('intensity')} />
+      <aside className="content-start">
+        <AccordionSection defaultOpen testId="training-session-form" title={t('form.title')}>
+          <form
+            className="grid gap-4"
+            onSubmit={form.handleSubmit((values) => createSession.mutate(toCreateSessionInput(values)))}
+          >
+            <Field error={form.formState.errors.title?.message} hint={t('hints.title')} label={t('fields.title')}>
+              <input
+                autoFocus
+                className={inputClass}
+                placeholder={t('placeholders.title')}
+                {...form.register('title', { required: t('required') })}
+              />
             </Field>
-            <Field label={t('fields.fatigueBefore')}>
-              <input className={inputClass} max={10} min={1} type="number" {...form.register('fatigueBefore')} />
+            <Field hint={t('hints.sessionType')} label={t('fields.sessionType')}>
+              <select className={inputClass} {...form.register('sessionType')}>
+                {sessionTypes.map((type) => (
+                  <option key={type} value={type}>{t(`sessionTypes.${type}`)}</option>
+                ))}
+              </select>
             </Field>
-            <Field label={t('fields.focusLevel')}>
-              <input className={inputClass} max={10} min={1} type="number" {...form.register('focusLevel')} />
+            <Field hint={t('hints.goal')} label={t('fields.goal')}>
+              <textarea
+                className={`${inputClass} min-h-20`}
+                placeholder={t('placeholders.goal')}
+                {...form.register('goal')}
+              />
             </Field>
-          </div>
-          <Field label={t('fields.mood')}>
-            <input className={inputClass} {...form.register('mood')} />
-          </Field>
-          {serverError && (
-            <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
-              {serverError}
-            </p>
-          )}
-          <button className={primaryButtonClass} disabled={createSession.isPending} type="submit">
-            {createSession.isPending ? t('saving') : t('form.submit')}
-          </button>
-        </form>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field hint={t('hints.score')} label={t('fields.intensity')}>
+                <input className={inputClass} max={10} min={1} type="number" {...form.register('intensity')} />
+              </Field>
+              <Field hint={t('hints.score')} label={t('fields.fatigueBefore')}>
+                <input className={inputClass} max={10} min={1} type="number" {...form.register('fatigueBefore')} />
+              </Field>
+              <Field hint={t('hints.score')} label={t('fields.focusLevel')}>
+                <input className={inputClass} max={10} min={1} type="number" {...form.register('focusLevel')} />
+              </Field>
+            </div>
+            <Field hint={t('hints.mood')} label={t('fields.mood')}>
+              <input className={inputClass} placeholder={t('placeholders.mood')} {...form.register('mood')} />
+            </Field>
+            {serverError && (
+              <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
+                {serverError}
+              </p>
+            )}
+            <button className={primaryButtonClass} disabled={createSession.isPending} type="submit">
+              {createSession.isPending ? t('saving') : t('form.submit')}
+            </button>
+          </form>
+        </AccordionSection>
       </aside>
     </main>
   );
@@ -318,7 +329,7 @@ function ActiveSessionPanel({
           </div>
           {!session.endedAt && (
             <div className="flex flex-wrap items-end gap-2">
-              <Field label={t('fields.fatigueAfter')}>
+              <Field hint={t('hints.score')} label={t('fields.fatigueAfter')}>
                 <input
                   className={`${inputClass} w-24`}
                   max={10}
@@ -480,11 +491,22 @@ const primaryButtonClass =
 const secondaryButtonClass =
   'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-60';
 
-function Field({ label, error, children }: { label: string; error?: string | undefined; children: React.ReactNode }) {
+function Field({
+  children,
+  error,
+  hint,
+  label,
+}: {
+  children: React.ReactNode;
+  error?: string | undefined;
+  hint?: string | undefined;
+  label: string;
+}) {
   return (
     <label className="flex flex-col gap-1.5 text-sm">
       <span className="text-text-secondary">{label}</span>
       {children}
+      {hint && <span className="text-xs leading-5 text-text-disabled">{hint}</span>}
       {error && <span className="text-xs text-state-error">{error}</span>}
     </label>
   );

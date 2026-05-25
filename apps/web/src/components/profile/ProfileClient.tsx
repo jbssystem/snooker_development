@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { CreateEquipmentProfileInput, UpsertPlayerProfileInput } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
+import { AccordionSection } from '@/components/layout/AccordionSection';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -155,19 +156,41 @@ export function ProfileClient() {
             }),
           )}
         >
-          <Field label={t('fields.firstName')} error={profileForm.formState.errors.firstName?.message}>
-            <input className={inputClass} {...profileForm.register('firstName', { required: t('required') })} />
+          <Field
+            error={profileForm.formState.errors.firstName?.message}
+            hint={t('hints.firstName')}
+            label={t('fields.firstName')}
+          >
+            <input
+              autoFocus
+              className={inputClass}
+              placeholder={t('placeholders.firstName')}
+              {...profileForm.register('firstName', { required: t('required') })}
+            />
           </Field>
-          <Field label={t('fields.lastName')} error={profileForm.formState.errors.lastName?.message}>
-            <input className={inputClass} {...profileForm.register('lastName', { required: t('required') })} />
+          <Field
+            error={profileForm.formState.errors.lastName?.message}
+            hint={t('hints.lastName')}
+            label={t('fields.lastName')}
+          >
+            <input
+              className={inputClass}
+              placeholder={t('placeholders.lastName')}
+              {...profileForm.register('lastName', { required: t('required') })}
+            />
           </Field>
-          <Field label={t('fields.dateOfBirth')}>
+          <Field hint={t('hints.dateOfBirth')} label={t('fields.dateOfBirth')}>
             <input className={inputClass} type="date" {...profileForm.register('dateOfBirth')} />
           </Field>
-          <Field label={t('fields.country')}>
-            <input className={inputClass} maxLength={2} placeholder={t('placeholders.country')} {...profileForm.register('country')} />
+          <Field hint={t('hints.country')} label={t('fields.country')}>
+            <input
+              className={inputClass}
+              maxLength={2}
+              placeholder={t('placeholders.country')}
+              {...profileForm.register('country')}
+            />
           </Field>
-          <Field label={t('fields.dominantHand')}>
+          <Field hint={t('hints.dominantHand')} label={t('fields.dominantHand')}>
             <select className={inputClass} {...profileForm.register('dominantHand')}>
               <option value="">{t('dominantHand.empty')}</option>
               <option value="RIGHT">{t('dominantHand.RIGHT')}</option>
@@ -175,12 +198,20 @@ export function ProfileClient() {
               <option value="AMBIDEXTROUS">{t('dominantHand.AMBIDEXTROUS')}</option>
             </select>
           </Field>
-          <Field label={t('fields.level')}>
-            <input className={inputClass} {...profileForm.register('level')} />
+          <Field hint={t('hints.level')} label={t('fields.level')}>
+            <input
+              className={inputClass}
+              placeholder={t('placeholders.level')}
+              {...profileForm.register('level')}
+            />
           </Field>
           <div className="sm:col-span-2">
-            <Field label={t('fields.seasonGoal')}>
-              <textarea className={`${inputClass} min-h-28`} {...profileForm.register('seasonGoal')} />
+            <Field hint={t('hints.seasonGoal')} label={t('fields.seasonGoal')}>
+              <textarea
+                className={`${inputClass} min-h-28`}
+                placeholder={t('placeholders.seasonGoal')}
+                {...profileForm.register('seasonGoal')}
+              />
             </Field>
           </div>
           {serverError && (
@@ -197,12 +228,14 @@ export function ProfileClient() {
       </section>
 
       <aside className="flex flex-col gap-5">
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-          <h2 className="text-xl font-semibold text-text-primary">{t('equipment.title')}</h2>
-          <p className="mt-1 text-sm text-text-secondary">{t('equipment.subtitle')}</p>
-
+        <AccordionSection
+          defaultOpen
+          subtitle={t('equipment.subtitle')}
+          testId="profile-equipment-form"
+          title={t('equipment.title')}
+        >
           <form
-            className="mt-5 grid gap-3"
+            className="grid gap-3"
             onSubmit={equipmentForm.handleSubmit((values) =>
               addEquipment.mutate({
                 cueName: values.cueName || undefined,
@@ -217,36 +250,66 @@ export function ProfileClient() {
               }),
             )}
           >
-            <Field label={t('equipment.fields.cueName')}>
-              <input className={inputClass} {...equipmentForm.register('cueName')} />
+            <Field hint={t('equipment.hints.cueName')} label={t('equipment.fields.cueName')}>
+              <input
+                className={inputClass}
+                placeholder={t('equipment.placeholders.cueName')}
+                {...equipmentForm.register('cueName')}
+              />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label={t('equipment.fields.cueWeight')}>
-                <input className={inputClass} inputMode="decimal" {...equipmentForm.register('cueWeight')} />
+              <Field hint={t('equipment.hints.cueWeight')} label={t('equipment.fields.cueWeight')}>
+                <input
+                  className={inputClass}
+                  inputMode="decimal"
+                  placeholder={t('equipment.placeholders.cueWeight')}
+                  {...equipmentForm.register('cueWeight')}
+                />
               </Field>
-              <Field label={t('equipment.fields.tipSize')}>
-                <input className={inputClass} inputMode="decimal" {...equipmentForm.register('tipSize')} />
+              <Field hint={t('equipment.hints.tipSize')} label={t('equipment.fields.tipSize')}>
+                <input
+                  className={inputClass}
+                  inputMode="decimal"
+                  placeholder={t('equipment.placeholders.tipSize')}
+                  {...equipmentForm.register('tipSize')}
+                />
               </Field>
             </div>
-            <Field label={t('equipment.fields.tipBrand')}>
-              <input className={inputClass} {...equipmentForm.register('tipBrand')} />
+            <Field hint={t('equipment.hints.tipBrand')} label={t('equipment.fields.tipBrand')}>
+              <input
+                className={inputClass}
+                placeholder={t('equipment.placeholders.tipBrand')}
+                {...equipmentForm.register('tipBrand')}
+              />
             </Field>
-            <Field label={t('equipment.fields.tipChangeDate')}>
+            <Field hint={t('equipment.hints.tipChangeDate')} label={t('equipment.fields.tipChangeDate')}>
               <input className={inputClass} type="date" {...equipmentForm.register('tipChangeDate')} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label={t('equipment.fields.extension')}>
-                <input className={inputClass} {...equipmentForm.register('extension')} />
+              <Field hint={t('equipment.hints.extension')} label={t('equipment.fields.extension')}>
+                <input
+                  className={inputClass}
+                  placeholder={t('equipment.placeholders.extension')}
+                  {...equipmentForm.register('extension')}
+                />
               </Field>
-              <Field label={t('equipment.fields.chalk')}>
-                <input className={inputClass} {...equipmentForm.register('chalk')} />
+              <Field hint={t('equipment.hints.chalk')} label={t('equipment.fields.chalk')}>
+                <input
+                  className={inputClass}
+                  placeholder={t('equipment.placeholders.chalk')}
+                  {...equipmentForm.register('chalk')}
+                />
               </Field>
             </div>
-            <Field label={t('equipment.fields.activeFrom')}>
+            <Field hint={t('equipment.hints.activeFrom')} label={t('equipment.fields.activeFrom')}>
               <input className={inputClass} type="date" {...equipmentForm.register('activeFrom')} />
             </Field>
-            <Field label={t('equipment.fields.notes')}>
-              <textarea className={`${inputClass} min-h-20`} {...equipmentForm.register('notes')} />
+            <Field hint={t('equipment.hints.notes')} label={t('equipment.fields.notes')}>
+              <textarea
+                className={`${inputClass} min-h-20`}
+                placeholder={t('equipment.placeholders.notes')}
+                {...equipmentForm.register('notes')}
+              />
             </Field>
             <button
               className={primaryButtonClass}
@@ -259,7 +322,7 @@ export function ProfileClient() {
               <p className="text-xs text-state-warning">{t('equipment.needsProfile')}</p>
             )}
           </form>
-        </section>
+        </AccordionSection>
 
         <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
           <h2 className="text-lg font-semibold text-text-primary">{t('equipment.history')}</h2>
@@ -306,18 +369,21 @@ const primaryButtonClass =
   'rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
 
 function Field({
-  label,
-  error,
   children,
+  error,
+  hint,
+  label,
 }: {
-  label: string;
-  error?: string | undefined;
   children: React.ReactNode;
+  error?: string | undefined;
+  hint?: string | undefined;
+  label: string;
 }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm">
       <span className="text-text-secondary">{label}</span>
       {children}
+      {hint && <span className="text-xs leading-5 text-text-disabled">{hint}</span>}
       {error && <span className="text-xs text-state-error">{error}</span>}
     </label>
   );

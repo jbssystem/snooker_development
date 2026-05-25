@@ -12,6 +12,7 @@ import type {
   Match,
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
+import { AccordionSection } from '@/components/layout/AccordionSection';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -224,96 +225,110 @@ export function MatchLogClient() {
         )}
       </section>
 
-      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-        <h2 className="text-xl font-semibold text-text-primary">{t('form.title')}</h2>
-        <form
-          className="mt-5 grid gap-4"
-          onSubmit={matchForm.handleSubmit((values) => createMatch.mutate(toCreateMatchInput(values)))}
-        >
-          <Field label={t('fields.opponentName')} error={matchForm.formState.errors.opponentName?.message}>
-            <input className={inputClass} {...matchForm.register('opponentName', { required: t('required') })} />
-          </Field>
-          <Field label={t('fields.matchDate')}>
-            <input className={inputClass} type="datetime-local" {...matchForm.register('matchDate')} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t('fields.framesWon')}>
-              <input className={inputClass} min={0} type="number" {...matchForm.register('framesWon')} />
+      <aside className="content-start">
+        <AccordionSection defaultOpen testId="match-create-form" title={t('form.title')}>
+          <form
+            className="grid gap-4"
+            onSubmit={matchForm.handleSubmit((values) => createMatch.mutate(toCreateMatchInput(values)))}
+          >
+            <Field error={matchForm.formState.errors.opponentName?.message} hint={t('hints.opponentName')} label={t('fields.opponentName')}>
+              <input
+                autoFocus
+                className={inputClass}
+                placeholder={t('placeholders.opponentName')}
+                {...matchForm.register('opponentName', { required: t('required') })}
+              />
             </Field>
-            <Field label={t('fields.framesLost')}>
-              <input className={inputClass} min={0} type="number" {...matchForm.register('framesLost')} />
+            <Field hint={t('hints.matchDate')} label={t('fields.matchDate')}>
+              <input className={inputClass} type="datetime-local" {...matchForm.register('matchDate')} />
             </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t('fields.tournament')}>
-              <input className={inputClass} {...matchForm.register('tournament')} />
+            <div className="grid grid-cols-2 gap-3">
+              <Field hint={t('hints.frameScore')} label={t('fields.framesWon')}>
+                <input className={inputClass} min={0} type="number" {...matchForm.register('framesWon')} />
+              </Field>
+              <Field hint={t('hints.frameScore')} label={t('fields.framesLost')}>
+                <input className={inputClass} min={0} type="number" {...matchForm.register('framesLost')} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field hint={t('hints.tournament')} label={t('fields.tournament')}>
+                <input
+                  className={inputClass}
+                  placeholder={t('placeholders.tournament')}
+                  {...matchForm.register('tournament')}
+                />
+              </Field>
+              <Field hint={t('hints.round')} label={t('fields.round')}>
+                <input className={inputClass} placeholder={t('placeholders.round')} {...matchForm.register('round')} />
+              </Field>
+            </div>
+            <Field hint={t('hints.format')} label={t('fields.format')}>
+              <input className={inputClass} placeholder={t('placeholders.format')} {...matchForm.register('format')} />
             </Field>
-            <Field label={t('fields.round')}>
-              <input className={inputClass} {...matchForm.register('round')} />
+            <div className="grid grid-cols-3 gap-2">
+              <Field hint={t('hints.count')} label={t('fields.highBreak')}>
+                <input className={inputClass} min={0} type="number" {...matchForm.register('highBreak')} />
+              </Field>
+              <Field hint={t('hints.count')} label={t('fields.breaks50')}>
+                <input className={inputClass} min={0} type="number" {...matchForm.register('breaks50')} />
+              </Field>
+              <Field hint={t('hints.count')} label={t('fields.breaks70')}>
+                <input className={inputClass} min={0} type="number" {...matchForm.register('breaks70')} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <Field hint={t('hints.count')} label={t('fields.breaks100')}>
+                <input className={inputClass} min={0} type="number" {...matchForm.register('breaks100')} />
+              </Field>
+              <Field hint={t('hints.percent')} label={t('fields.safetySuccess')}>
+                <input className={inputClass} max={100} min={0} type="number" {...matchForm.register('safetySuccess')} />
+              </Field>
+              <Field hint={t('hints.percent')} label={t('fields.longPotSuccess')}>
+                <input className={inputClass} max={100} min={0} type="number" {...matchForm.register('longPotSuccess')} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field hint={t('hints.country')} label={t('fields.country')}>
+                <input className={inputClass} placeholder={t('placeholders.country')} {...matchForm.register('country')} />
+              </Field>
+              <Field hint={t('hints.city')} label={t('fields.city')}>
+                <input className={inputClass} placeholder={t('placeholders.city')} {...matchForm.register('city')} />
+              </Field>
+            </div>
+            <Field hint={t('hints.club')} label={t('fields.club')}>
+              <input className={inputClass} placeholder={t('placeholders.club')} {...matchForm.register('club')} />
             </Field>
-          </div>
-          <Field label={t('fields.format')}>
-            <input className={inputClass} {...matchForm.register('format')} />
-          </Field>
-          <div className="grid grid-cols-3 gap-2">
-            <Field label={t('fields.highBreak')}>
-              <input className={inputClass} min={0} type="number" {...matchForm.register('highBreak')} />
+            <div className="grid grid-cols-2 gap-3">
+              <Field hint={t('hints.count')} label={t('fields.unforcedErrors')}>
+                <input className={inputClass} min={0} type="number" {...matchForm.register('unforcedErrors')} />
+              </Field>
+              <Field hint={t('hints.count')} label={t('fields.tacticalErrors')}>
+                <input className={inputClass} min={0} type="number" {...matchForm.register('tacticalErrors')} />
+              </Field>
+            </div>
+            <Field hint={t('hints.videoUrl')} label={t('fields.videoUrl')}>
+              <input className={inputClass} placeholder={t('placeholders.videoUrl')} {...matchForm.register('videoUrl')} />
             </Field>
-            <Field label={t('fields.breaks50')}>
-              <input className={inputClass} min={0} type="number" {...matchForm.register('breaks50')} />
+            <Field hint={t('hints.sourceUrl')} label={t('fields.sourceUrl')}>
+              <input className={inputClass} placeholder={t('placeholders.sourceUrl')} {...matchForm.register('sourceUrl')} />
             </Field>
-            <Field label={t('fields.breaks70')}>
-              <input className={inputClass} min={0} type="number" {...matchForm.register('breaks70')} />
+            <Field hint={t('hints.notes')} label={t('fields.notes')}>
+              <textarea
+                className={`${inputClass} min-h-20`}
+                placeholder={t('placeholders.notes')}
+                {...matchForm.register('notes')}
+              />
             </Field>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <Field label={t('fields.breaks100')}>
-              <input className={inputClass} min={0} type="number" {...matchForm.register('breaks100')} />
-            </Field>
-            <Field label={t('fields.safetySuccess')}>
-              <input className={inputClass} max={100} min={0} type="number" {...matchForm.register('safetySuccess')} />
-            </Field>
-            <Field label={t('fields.longPotSuccess')}>
-              <input className={inputClass} max={100} min={0} type="number" {...matchForm.register('longPotSuccess')} />
-            </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t('fields.country')}>
-              <input className={inputClass} {...matchForm.register('country')} />
-            </Field>
-            <Field label={t('fields.city')}>
-              <input className={inputClass} {...matchForm.register('city')} />
-            </Field>
-          </div>
-          <Field label={t('fields.club')}>
-            <input className={inputClass} {...matchForm.register('club')} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t('fields.unforcedErrors')}>
-              <input className={inputClass} min={0} type="number" {...matchForm.register('unforcedErrors')} />
-            </Field>
-            <Field label={t('fields.tacticalErrors')}>
-              <input className={inputClass} min={0} type="number" {...matchForm.register('tacticalErrors')} />
-            </Field>
-          </div>
-          <Field label={t('fields.videoUrl')}>
-            <input className={inputClass} {...matchForm.register('videoUrl')} />
-          </Field>
-          <Field label={t('fields.sourceUrl')}>
-            <input className={inputClass} {...matchForm.register('sourceUrl')} />
-          </Field>
-          <Field label={t('fields.notes')}>
-            <textarea className={`${inputClass} min-h-20`} {...matchForm.register('notes')} />
-          </Field>
-          {serverError && (
-            <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
-              {serverError}
-            </p>
-          )}
-          <button className={primaryButtonClass} disabled={createMatch.isPending || profileMissing} type="submit">
-            {createMatch.isPending ? t('saving') : t('form.submit')}
-          </button>
-        </form>
+            {serverError && (
+              <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
+                {serverError}
+              </p>
+            )}
+            <button className={primaryButtonClass} disabled={createMatch.isPending || profileMissing} type="submit">
+              {createMatch.isPending ? t('saving') : t('form.submit')}
+            </button>
+          </form>
+        </AccordionSection>
       </aside>
     </main>
   );
@@ -407,50 +422,60 @@ function MatchDetail({
         </div>
       </section>
 
-      <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-        <h2 className="text-xl font-semibold text-text-primary">{t('frames.add')}</h2>
-        <form className="mt-4 grid gap-4 lg:grid-cols-6" onSubmit={frameForm.handleSubmit(addFrame)}>
-          <Field label={t('frames.number')}>
+      <AccordionSection defaultOpen testId="match-frame-form" title={t('frames.add')}>
+        <form className="grid gap-4 lg:grid-cols-6" onSubmit={frameForm.handleSubmit(addFrame)}>
+          <Field hint={t('hints.frameNumber')} label={t('frames.number')}>
             <input className={inputClass} min={1} type="number" {...frameForm.register('frameNumber')} />
           </Field>
-          <Field label={t('frames.playerScore')}>
+          <Field hint={t('hints.framePoints')} label={t('frames.playerScore')}>
             <input className={inputClass} min={0} type="number" {...frameForm.register('playerScore')} />
           </Field>
-          <Field label={t('frames.opponentScore')}>
+          <Field hint={t('hints.framePoints')} label={t('frames.opponentScore')}>
             <input className={inputClass} min={0} type="number" {...frameForm.register('opponentScore')} />
           </Field>
-          <Field label={t('frames.winner')}>
+          <Field hint={t('hints.winner')} label={t('frames.winner')}>
             <select className={inputClass} {...frameForm.register('winner')}>
               {frameWinners.map((winner) => (
                 <option key={winner} value={winner}>{t(`winner.${winner}`)}</option>
               ))}
             </select>
           </Field>
-          <Field label={t('fields.highBreak')}>
+          <Field hint={t('hints.count')} label={t('fields.highBreak')}>
             <input className={inputClass} min={0} type="number" {...frameForm.register('highBreak')} />
           </Field>
-          <Field label={t('frames.duration')}>
+          <Field hint={t('hints.duration')} label={t('frames.duration')}>
             <input className={inputClass} min={1} type="number" {...frameForm.register('frameDurationMinutes')} />
           </Field>
           <div className="lg:col-span-5">
-            <Field label={t('fields.notes')}>
-              <input className={inputClass} {...frameForm.register('notes')} />
+            <Field hint={t('hints.notes')} label={t('fields.notes')}>
+              <input className={inputClass} placeholder={t('placeholders.frameNotes')} {...frameForm.register('notes')} />
             </Field>
           </div>
           <button className={`${primaryButtonClass} self-end`} disabled={addFramePending} type="submit">
             {addFramePending ? t('saving') : t('frames.submit')}
           </button>
         </form>
-      </section>
+      </AccordionSection>
     </div>
   );
 }
 
-function Field({ children, error, label }: { children: ReactNode; error?: string | undefined; label: string }) {
+function Field({
+  children,
+  error,
+  hint,
+  label,
+}: {
+  children: ReactNode;
+  error?: string | undefined;
+  hint?: string | undefined;
+  label: string;
+}) {
   return (
     <label className="grid gap-1 text-sm text-text-secondary">
       <span>{label}</span>
       {children}
+      {hint && <span className="text-xs leading-5 text-text-disabled">{hint}</span>}
       {error && <span className="text-xs text-state-error">{error}</span>}
     </label>
   );

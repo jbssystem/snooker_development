@@ -1,10 +1,11 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Link, useRouter } from '@/i18n/navigation';
 import { api } from '@/lib/api-client';
+import { useDismissable } from '@/lib/use-dismissable';
 import { ChevronDown } from './ChevronDown';
 
 export function UserMenu() {
@@ -14,6 +15,8 @@ export function UserMenu() {
   const clear = useAuthStore((s) => s.clear);
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const containerRef = useDismissable<HTMLDivElement>(open, close);
 
   const onLogout = async () => {
     try {
@@ -37,16 +40,7 @@ export function UserMenu() {
   }
 
   return (
-    <div
-      className="relative z-40 text-sm"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          setOpen(false);
-        }
-      }}
-    >
+    <div className="relative z-40 text-sm" ref={containerRef}>
       <button
         aria-expanded={open}
         aria-haspopup="menu"
