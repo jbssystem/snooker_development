@@ -143,8 +143,10 @@ Each new entity ships with:
 - `result` is a PostgreSQL enum mapped from lowercase API values:
   `player_win`, `opponent_win`, `draw`, `unknown`.
 - `source` is a PostgreSQL enum mapped from lowercase API values: `manual`,
-  `external`. PH-1-008 writes manual matches only; external import keeps the
-  same model surface for later phases.
+  `external`. CueTracker import writes external matches with normalized
+  player/opponent orientation, `opponentExternalId`, `format`,
+  `sourceUrl`, frame-derived breaks and JSON notes containing referee,
+  head-to-head URL, points-per-frame, progress and raw break context.
 - Deleting a `PlayerProfile` cascades to its matches. Deleting the creating
   `User` also cascades through the `createdBy` relation.
 
@@ -158,6 +160,10 @@ Each new entity ships with:
   all saved frame winners.
 - `winner` is a PostgreSQL enum mapped from lowercase API values: `player`,
   `opponent`, `unknown`.
+- CueTracker import stores frame scores after normalizing the page's
+  first/second player order to current-player/opponent order. `highBreak`
+  stores the current player's highest break in the frame, while `notes`
+  keeps raw frame score and both players' break lists for later AI analysis.
 
 ### CalendarEvent
 
@@ -208,9 +214,24 @@ Each new entity ships with:
   report.
 - `dataSourcesJson` stores aggregate counts for training sessions, drill
   executions, matches, calendar events, lifestyle factors, supplement periods
-  and previous AI reports.
+  previous AI reports and latest external import snapshots.
 - Deleting a `PlayerProfile` cascades to its AI reports. Deleting the creating
   `User` also cascades through the `createdBy` relation.
+
+### ExternalPlayerLink and ExternalImportJob
+
+- `ExternalPlayerLink` connects a player profile to one external source
+  (`wst` or `cuetracker`) with source id, original URL, optional display name,
+  sync flag and last-sync timestamp. The model is unique per
+  `(playerProfileId, source)`.
+- `ExternalImportJob` tracks queued/running/completed/failed sync attempts,
+  imported/skipped match counts, imported-stat flag, error message and
+  `logJson`.
+- CueTracker `logJson` stores the full import snapshot for AI use: season
+  match/frame/point/break stats, imported match payloads, normalized frame
+  details, and per-opponent head-to-head summaries including comparison,
+  match stats and rounds played. This keeps rich external analytics available
+  without adding a separate statistics table yet.
 
 ## Sensitive data
 

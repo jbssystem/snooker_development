@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const AiReportTypeSchema = z.enum(['weekly_summary']);
+export const AiReportTypeSchema = z.enum(['weekly_summary', 'external_analysis']);
 export type AiReportType = z.infer<typeof AiReportTypeSchema>;
 
 export const AiReportStatusSchema = z.enum(['queued', 'running', 'completed', 'failed']);
@@ -17,6 +17,7 @@ export const AiReportDataSourcesSchema = z.object({
   lifestyleFactors: z.number().int().min(0),
   supplementEvents: z.number().int().min(0),
   previousReports: z.number().int().min(0),
+  externalImports: z.number().int().min(0),
 });
 export type AiReportDataSources = z.infer<typeof AiReportDataSourcesSchema>;
 

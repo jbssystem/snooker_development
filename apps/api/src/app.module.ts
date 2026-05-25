@@ -12,6 +12,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MatchesModule } from './modules/matches/matches.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
 import { AiModule } from './modules/ai/ai.module';
+import { ExternalSourcesModule } from './modules/external-sources/external-sources.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AiModule } from './modules/ai/ai.module';
     MatchesModule,
     CalendarModule,
     AiModule,
+    ExternalSourcesModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

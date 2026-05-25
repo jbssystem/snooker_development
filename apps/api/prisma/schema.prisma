@@ -114,7 +114,20 @@ enum CalendarEventSource {
 }
 
 enum AiReportType {
-  WEEKLY_SUMMARY @map("weekly_summary")
+  WEEKLY_SUMMARY     @map("weekly_summary")
+  EXTERNAL_ANALYSIS  @map("external_analysis")
+}
+
+enum ExternalSource {
+  WST         @map("wst")
+  CUETRACKER  @map("cuetracker")
+}
+
+enum ImportJobStatus {
+  QUEUED    @map("queued")
+  RUNNING   @map("running")
+  COMPLETED @map("completed")
+  FAILED    @map("failed")
 }
 
 enum AiReportStatus {
@@ -189,15 +202,19 @@ model PlayerProfile {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  equipment        EquipmentProfile[]
-  trainingSessions TrainingSession[]
-  drillExecutions  DrillExecution[]
-  matches          Match[]
-  calendarEvents   CalendarEvent[]
-  lifestyleFactors LifestyleFactor[]
-  supplementEvents SupplementEvent[]
-  aiReports        AiReport[]
+  wstId            String?
+  cuetrackerId     String?
+
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  equipment         EquipmentProfile[]
+  trainingSessions  TrainingSession[]
+  drillExecutions   DrillExecution[]
+  matches           Match[]
+  calendarEvents    CalendarEvent[]
+  lifestyleFactors  LifestyleFactor[]
+  supplementEvents  SupplementEvent[]
+  aiReports         AiReport[]
+  externalLinks     ExternalPlayerLink[]
 }
 
 model EquipmentProfile {
@@ -371,6 +388,7 @@ model Match {
   result              MatchResult  @default(UNKNOWN)
   source              MatchSource  @default(MANUAL)
   sourceUrl           String?
+  externalImportJobId String?
   videoUrl            String?
   notes               String?
   createdAt           DateTime     @default(now())
@@ -509,6 +527,47 @@ model AiReport {
   @@index([status])
   @@index([periodStart])
   @@index([periodEnd])
+  @@index([createdAt])
+}
+
+model ExternalPlayerLink {
+  id              String         @id @default(cuid())
+  playerProfileId String
+  source          ExternalSource
+  externalId      String
+  externalUrl     String
+  displayName     String?
+  syncEnabled     Boolean        @default(true)
+  lastSyncedAt    DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  playerProfile PlayerProfile      @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  importJobs    ExternalImportJob[]
+
+  @@unique([playerProfileId, source])
+  @@index([playerProfileId])
+  @@index([source])
+  @@index([syncEnabled])
+}
+
+model ExternalImportJob {
+  id                   String          @id @default(cuid())
+  externalPlayerLinkId String
+  status               ImportJobStatus @default(QUEUED)
+  startedAt            DateTime?
+  completedAt          DateTime?
+  matchesImported      Int             @default(0)
+  matchesSkipped       Int             @default(0)
+  statsImported        Boolean         @default(false)
+  errorMessage         String?
+  logJson              Json?
+  createdAt            DateTime        @default(now())
+
+  externalLink ExternalPlayerLink @relation(fields: [externalPlayerLinkId], references: [id], onDelete: Cascade)
+
+  @@index([externalPlayerLinkId])
+  @@index([status])
   @@index([createdAt])
 }
 

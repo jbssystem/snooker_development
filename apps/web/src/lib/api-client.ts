@@ -6,12 +6,15 @@ import type {
   CreateEquipmentProfileInput,
   CreateDrillTemplateInput,
   CreateDrillAttemptInput,
+  CreateExternalLinkInput,
   CreateMatchInput,
   CreateTrainingSessionInput,
   DrillAttempt,
   DrillExecution,
   DrillTemplate,
   EquipmentProfile,
+  ExternalImportJob,
+  ExternalPlayerLink,
   FinishDrillExecutionInput,
   FinishTrainingSessionInput,
   GenerateWeeklyAiReportInput,
@@ -40,6 +43,34 @@ import type {
   UpsertPlayerProfileInput,
 } from '@snooker/shared';
 import { useAuthStore } from '@/lib/auth-store';
+
+export type ImportedMatch = {
+  id: string;
+  matchDate: string;
+  tournament: string | null;
+  round: string | null;
+  format: string | null;
+  opponentName: string;
+  opponentExternalId: string | null;
+  framesWon: number;
+  framesLost: number;
+  highBreak: number | null;
+  breaks50: number;
+  breaks70: number;
+  breaks100: number;
+  decidingFrameResult: string | null;
+  result: string;
+  sourceUrl: string | null;
+  notes: string | null;
+  frames: Array<{
+    frameNumber: number;
+    playerScore: number | null;
+    opponentScore: number | null;
+    winner: string;
+    highBreak: number | null;
+    notes: string | null;
+  }>;
+};
 
 const BASE_URL =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) || 'http://localhost:4000';
@@ -303,5 +334,29 @@ export const api = {
         token,
         body: JSON.stringify(input),
       }),
+  },
+  externalSources: {
+    listLinks: (token: string) => request<ExternalPlayerLink[]>('/external-links', { token }),
+    createLink: (token: string, input: CreateExternalLinkInput) =>
+      request<ExternalPlayerLink>('/external-links', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    deleteLink: (token: string, id: string) =>
+      request<void>(`/external-links/${id}`, {
+        method: 'DELETE',
+        token,
+      }),
+    triggerSync: (token: string, id: string) =>
+      request<ExternalImportJob>(`/external-links/${id}/sync`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({}),
+      }),
+    listJobs: (token: string, id: string) =>
+      request<ExternalImportJob[]>(`/external-links/${id}/jobs`, { token }),
+    listImportedMatches: (token: string) =>
+      request<ImportedMatch[]>('/external-links/imported-matches', { token }),
   },
 };

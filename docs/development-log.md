@@ -19,6 +19,22 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Post PH-1-011 external analytics import
+
+**Delivered:**
+
+- CueTracker sync now normalizes match rows by current-player/opponent order,
+  so imported frame scores, match result, points and breaks stay correct even
+  when the player appears second on the source page.
+- Imported external matches now keep referee, format, opponent external id,
+  head-to-head URL, progress, points-per-frame, player/opponent break lists
+  and frame-level raw score context.
+- CueTracker sync fetches bounded per-opponent head-to-head pages and stores
+  comparison, match-stat and round-stat snapshots in `ExternalImportJob.logJson`
+  for future AI coaching analysis.
+- Weekly AI report source snapshots now include match frames and the latest
+  external import analytics.
+
 ### PH-1-011 — Docker production deploy
 
 **Delivered:**

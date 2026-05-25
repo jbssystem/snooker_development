@@ -1,12 +1,19 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { Worker } from 'bullmq';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   AI_REPORT_QUEUE,
+  EXTERNAL_IMPORT_QUEUE,
   GENERATE_WEEKLY_AI_REPORT_JOB,
+  SYNC_PLAYER_EXTERNAL_DATA_JOB,
+  type ExternalImportResult,
+  type ExternalFrameDetail,
+  type ExternalMatchResult,
   type GenerateWeeklyAiReportJob,
+  type SyncPlayerExternalDataJob,
 } from '@snooker/shared';
+import { parseCuetrackerWithDelay, parseWst } from './parsers';
 
 type SourceData = {
   period?: { from?: string; to?: string };
@@ -20,6 +27,7 @@ type SourceData = {
   lifestyleFactors?: Array<{ illness?: boolean; injury?: boolean; travel?: boolean; sleepHours?: number | null }>;
   supplementEvents?: unknown[];
   previousReports?: unknown[];
+  externalImports?: unknown[];
 };
 
 const prisma = new PrismaClient();
@@ -165,6 +173,7 @@ function localWeeklySummary(
   const attempts = sum(drillExecutions, (execution) => execution.attempts ?? 0);
   const successes = sum(drillExecutions, (execution) => execution.successes ?? 0);
   const matches = sourceData.matches ?? [];
+  const externalImports = sourceData.externalImports ?? [];
   const lifestyleFlags = sourceData.lifestyleFactors ?? [];
   const successRate = attempts > 0 ? Math.round((successes / attempts) * 1000) / 10 : 0;
   const caveat = sessions.length < 3 ? text(locale, 'smallSample') : text(locale, 'normalSample');
@@ -179,6 +188,7 @@ function localWeeklySummary(
     `- ${text(locale, 'volume')}: ${sessions.length} ${text(locale, 'sessions')}, ${drillExecutions.length} ${text(locale, 'drills')}.`,
     `- ${text(locale, 'attempts')}: ${attempts}, ${text(locale, 'successRate')}: ${successRate}%.`,
     `- ${text(locale, 'matches')}: ${matches.length}.`,
+    `- ${text(locale, 'externalImports')}: ${externalImports.length}.`,
     '',
     '## Numbers',
     '| Metric | Value |',
@@ -188,6 +198,7 @@ function localWeeklySummary(
     `| ${text(locale, 'attempts')} | ${attempts} |`,
     `| ${text(locale, 'successRate')} | ${successRate}% |`,
     `| ${text(locale, 'matches')} | ${matches.length} |`,
+    `| ${text(locale, 'externalImports')} | ${externalImports.length} |`,
     '',
     '## What improved',
     `- ${text(locale, 'fallbackImproved')}`,
@@ -221,6 +232,7 @@ function text(locale: 'ru' | 'en' | 'uk', key: string): string {
       attempts: 'Попытки',
       successRate: 'успешность',
       matches: 'Матчи',
+      externalImports: 'Внешняя аналитика',
       fallbackImproved: 'Для уверенного вывода о прогрессе нужен повтор по тем же упражнениям или больше данных.',
       fallbackRegressed: 'Явных просадок по сохранённым данным не выделено.',
       focusPractice: 'Повторить упражнения с наибольшим числом попыток и сверить процент успеха.',
@@ -239,6 +251,7 @@ function text(locale: 'ru' | 'en' | 'uk', key: string): string {
       attempts: 'Attempts',
       successRate: 'success rate',
       matches: 'Matches',
+      externalImports: 'External analytics',
       fallbackImproved: 'A stronger improvement read needs repeated drills or more data.',
       fallbackRegressed: 'No clear regression is visible in the saved data.',
       focusPractice: 'Repeat the highest-volume drills and compare success rate.',
@@ -257,6 +270,7 @@ function text(locale: 'ru' | 'en' | 'uk', key: string): string {
       attempts: 'Спроби',
       successRate: 'успішність',
       matches: 'Матчі',
+      externalImports: 'Зовнішня аналітика',
       fallbackImproved: 'Для впевненого висновку про прогрес потрібні повтори тих самих вправ або більше даних.',
       fallbackRegressed: 'Явних просідань за збереженими даними не виділено.',
       focusPractice: 'Повторити вправи з найбільшою кількістю спроб і порівняти відсоток успіху.',
@@ -277,9 +291,12 @@ function sum<T>(items: T[], selector: (item: T) => number): number {
 
 async function shutdown(worker: Worker<GenerateWeeklyAiReportJob>): Promise<void> {
   await worker.close();
+  await externalImportWorker?.close();
   await prisma.$disconnect();
   process.exit(0);
 }
+
+let externalImportWorker: Worker<SyncPlayerExternalDataJob> | undefined;
 
 function redisConnection(redisUrl: string | undefined) {
   const parsed = new URL(redisUrl || 'redis://localhost:6379');
@@ -292,4 +309,210 @@ function redisConnection(redisUrl: string | undefined) {
   };
 }
 
+async function processExternalImport(data: SyncPlayerExternalDataJob): Promise<void> {
+  const { externalPlayerLinkId, importJobId } = data;
+
+  await prisma.externalImportJob.update({
+    where: { id: importJobId },
+    data: { status: 'RUNNING', startedAt: new Date() },
+  });
+
+  try {
+    const link = await prisma.externalPlayerLink.findUnique({
+      where: { id: externalPlayerLinkId },
+      include: { playerProfile: { include: { user: true } } },
+    });
+    if (!link) throw new Error('External link not found');
+
+    const source = link.source.toLowerCase();
+    let importResult: ExternalImportResult;
+
+    if (source === 'cuetracker') {
+      importResult = await parseCuetrackerWithDelay(link.externalId);
+    } else if (source === 'wst') {
+      importResult = await parseWst(link.externalId);
+    } else {
+      throw new Error(`Unknown source: ${source}`);
+    }
+
+    let matchesImported = 0;
+    let matchesSkipped = 0;
+    let matchesUpdated = 0;
+
+    for (const match of importResult.matches) {
+      const existing = await prisma.match.findFirst({
+        where: {
+          playerProfileId: link.playerProfileId,
+          source: 'EXTERNAL',
+          matchDate: new Date(match.date),
+          opponentName: match.opponent,
+          tournament: match.tournament,
+        },
+      });
+
+      const framesWon = match.framesWon;
+      const framesLost = match.framesLost;
+      let result: 'PLAYER_WIN' | 'OPPONENT_WIN' | 'DRAW' | 'UNKNOWN' = 'UNKNOWN';
+      if (framesWon > framesLost) result = 'PLAYER_WIN';
+      else if (framesLost > framesWon) result = 'OPPONENT_WIN';
+      else if (framesWon === framesLost && framesWon > 0) result = 'DRAW';
+
+      const matchData = {
+        playerProfileId: link.playerProfileId,
+        createdByUserId: link.playerProfile.userId,
+        matchDate: new Date(match.date),
+        tournament: match.tournament,
+        round: match.round,
+        opponentName: match.opponent,
+        opponentExternalId: match.opponentExternalId ?? null,
+        format: match.format ?? null,
+        framesWon,
+        framesLost,
+        highBreak: match.highBreak,
+        breaks50: match.breaks50,
+        breaks70: match.breaks70 ?? 0,
+        breaks100: match.breaks100,
+        decidingFrameResult: getDecidingFrameResult(match.format, match.frameDetails),
+        result,
+        source: 'EXTERNAL' as const,
+        sourceUrl: match.sourceUrl,
+        externalImportJobId: importJobId,
+        notes: serializeExternalMatchNotes(match),
+      };
+
+      if (existing) {
+        await prisma.match.update({ where: { id: existing.id }, data: matchData });
+        await prisma.matchFrame.deleteMany({ where: { matchId: existing.id } });
+        const frameData = buildExternalFrameData(existing.id, match);
+        if (frameData.length > 0) await prisma.matchFrame.createMany({ data: frameData });
+        matchesUpdated++;
+        continue;
+      }
+
+      const createdMatch = await prisma.match.create({
+        data: matchData,
+      });
+
+      const frameData = buildExternalFrameData(createdMatch.id, match);
+      if (frameData.length > 0) await prisma.matchFrame.createMany({ data: frameData });
+
+      matchesImported++;
+    }
+
+    if (importResult.playerName && !link.displayName) {
+      await prisma.externalPlayerLink.update({
+        where: { id: link.id },
+        data: { displayName: importResult.playerName },
+      });
+    }
+
+    await prisma.externalPlayerLink.update({
+      where: { id: link.id },
+      data: { lastSyncedAt: new Date() },
+    });
+
+    await prisma.externalImportJob.update({
+      where: { id: importJobId },
+      data: {
+        status: 'COMPLETED',
+        completedAt: new Date(),
+        matchesImported,
+        matchesSkipped,
+        statsImported: importResult.seasonStats !== null || (importResult.headToHeads?.length ?? 0) > 0,
+        logJson: JSON.parse(
+          JSON.stringify({
+            seasonStats: importResult.seasonStats,
+            headToHeads: importResult.headToHeads ?? [],
+            importedMatches: importResult.matches,
+            summary: { matchesImported, matchesUpdated, matchesSkipped },
+          }),
+        ) as Prisma.InputJsonValue,
+      },
+    });
+
+    console.log(
+      `[worker] external-import completed: ${matchesImported} imported, ${matchesUpdated} updated, ${matchesSkipped} skipped`,
+    );
+  } catch (error) {
+    await prisma.externalImportJob.update({
+      where: { id: importJobId },
+      data: {
+        status: 'FAILED',
+        completedAt: new Date(),
+        errorMessage: error instanceof Error ? error.message : String(error),
+      },
+    });
+    throw error;
+  }
+}
+
+function buildExternalFrameData(
+  matchId: string,
+  match: ExternalMatchResult,
+): Prisma.MatchFrameCreateManyInput[] {
+  return (match.frameDetails ?? []).map((frame) => ({
+    matchId,
+    frameNumber: frame.frameNumber,
+    playerScore: frame.playerScore,
+    opponentScore: frame.opponentScore,
+    highBreak: frame.playerBreaks.length > 0 ? Math.max(...frame.playerBreaks) : null,
+    winner: frame.winner,
+    notes: JSON.stringify({
+      rawScore: frame.rawScore,
+      playerBreaks: frame.playerBreaks,
+      opponentBreaks: frame.opponentBreaks,
+    }),
+  }));
+}
+
+function getDecidingFrameResult(
+  format: string | null | undefined,
+  frameDetails: ExternalFrameDetail[] | undefined,
+): 'PLAYER' | 'OPPONENT' | 'UNKNOWN' | null {
+  if (!format || !frameDetails?.length) return null;
+  const bestOf = parseInt(format.replace(/\D/g, ''), 10);
+  if (!Number.isFinite(bestOf) || frameDetails.length !== bestOf) return null;
+  return frameDetails[frameDetails.length - 1]?.winner ?? null;
+}
+
+function serializeExternalMatchNotes(match: ExternalMatchResult): string {
+  return JSON.stringify({
+    source: 'cuetracker',
+    referee: match.referee ?? null,
+    headToHeadUrl: match.headToHeadUrl ?? null,
+    playerIsFirst: match.playerIsFirst ?? null,
+    matchProgress: match.matchProgress ?? [],
+    points: {
+      for: match.pointsFor,
+      against: match.pointsAgainst,
+      avgFor: match.avgPointsFor ?? null,
+      avgAgainst: match.avgPointsAgainst ?? null,
+      avgTotal: match.avgPointsTotal ?? null,
+    },
+    breaks: {
+      player: match.playerBreaks ?? [],
+      opponent: match.opponentBreaks ?? [],
+      profile: match.breakProfile ?? null,
+    },
+  });
+}
+
 void bootstrap();
+void bootstrapExternalImport();
+
+async function bootstrapExternalImport(): Promise<void> {
+  externalImportWorker = new Worker<SyncPlayerExternalDataJob>(
+    EXTERNAL_IMPORT_QUEUE,
+    async (job) => {
+      if (job.name !== SYNC_PLAYER_EXTERNAL_DATA_JOB) return;
+      await processExternalImport(job.data);
+    },
+    { connection: redisConnection(process.env.REDIS_URL), concurrency: 1, lockDuration: 180_000 },
+  );
+
+  externalImportWorker.on('completed', (job) => console.log(`[worker] external-import completed ${job.id}`));
+  externalImportWorker.on('failed', (job, error) => console.error(`[worker] external-import failed ${job?.id}`, error));
+  externalImportWorker.on('error', (error) => console.error('[worker] external-import queue error', error));
+
+  console.log(`[worker] listening on ${EXTERNAL_IMPORT_QUEUE}`);
+}

@@ -17,6 +17,7 @@ const MORE_NAV_KEYS = [
   { key: 'calendar', href: '/calendar' },
   { key: 'ai', href: '/ai' },
   { key: 'analytics', href: '/analytics' },
+  { key: 'externalData', href: '/external-data' },
 ] as const;
 
 export function MainNav() {

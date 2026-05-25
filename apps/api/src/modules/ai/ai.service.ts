@@ -26,6 +26,7 @@ type WeeklySourceData = {
   lifestyleFactors: unknown[];
   supplementEvents: unknown[];
   previousReports: unknown[];
+  externalImports: unknown[];
 };
 
 const PROMPT_VERSION = 'weekly-summary@1';
@@ -137,7 +138,15 @@ export class AiService implements OnModuleDestroy {
 
   private async collectSourceData(profile: ProfileEntity, from: Date, to: Date) {
     const previousReportCutoff = new Date(from.getTime() - 1);
-    const [trainingSessions, matches, calendarEvents, lifestyleFactors, supplementEvents, previousReports] =
+    const [
+      trainingSessions,
+      matches,
+      calendarEvents,
+      lifestyleFactors,
+      supplementEvents,
+      previousReports,
+      externalImports,
+    ] =
       await Promise.all([
         this.prisma.trainingSession.findMany({
           where: { playerProfileId: profile.id, startedAt: { gte: from, lte: to } },
@@ -151,6 +160,7 @@ export class AiService implements OnModuleDestroy {
         }),
         this.prisma.match.findMany({
           where: { playerProfileId: profile.id, matchDate: { gte: from, lte: to } },
+          include: { frames: { orderBy: { frameNumber: 'asc' } } },
           orderBy: { matchDate: 'asc' },
         }),
         this.prisma.calendarEvent.findMany({
@@ -178,6 +188,15 @@ export class AiService implements OnModuleDestroy {
           },
           orderBy: { periodEnd: 'desc' },
           take: 1,
+        }),
+        this.prisma.externalImportJob.findMany({
+          where: {
+            status: 'COMPLETED',
+            externalLink: { playerProfileId: profile.id },
+          },
+          include: { externalLink: { select: { source: true, externalId: true, displayName: true, lastSyncedAt: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: 3,
         }),
       ]);
 
@@ -227,6 +246,16 @@ export class AiService implements OnModuleDestroy {
         breaks70: match.breaks70,
         breaks100: match.breaks100,
         result: match.result,
+        format: match.format,
+        pointsContext: match.notes,
+        frames: match.frames.map((frame) => ({
+          frameNumber: frame.frameNumber,
+          playerScore: frame.playerScore,
+          opponentScore: frame.opponentScore,
+          winner: frame.winner,
+          highBreak: frame.highBreak,
+          notes: frame.notes,
+        })),
         notes: match.notes,
       })),
       calendarEvents: calendarEvents.map((event) => ({
@@ -259,6 +288,16 @@ export class AiService implements OnModuleDestroy {
         periodEnd: report.periodEnd.toISOString(),
         title: report.title,
         contentMarkdown: report.contentMarkdown,
+      })),
+      externalImports: externalImports.map((job) => ({
+        source: job.externalLink.source,
+        externalId: job.externalLink.externalId,
+        displayName: job.externalLink.displayName,
+        lastSyncedAt: job.externalLink.lastSyncedAt?.toISOString(),
+        importedAt: job.createdAt.toISOString(),
+        matchesImported: job.matchesImported,
+        matchesSkipped: job.matchesSkipped,
+        logJson: job.logJson,
       })),
     };
   }
@@ -328,6 +367,7 @@ function countDataSources(sourceData: WeeklySourceData): AiReportDataSources {
     lifestyleFactors: sourceData.lifestyleFactors.length,
     supplementEvents: sourceData.supplementEvents.length,
     previousReports: sourceData.previousReports.length,
+    externalImports: sourceData.externalImports.length,
   };
 }
 
@@ -369,6 +409,7 @@ function toDataSources(value: Prisma.JsonValue): AiReportDataSources {
     lifestyleFactors: numberFromJson(data, 'lifestyleFactors'),
     supplementEvents: numberFromJson(data, 'supplementEvents'),
     previousReports: numberFromJson(data, 'previousReports'),
+    externalImports: numberFromJson(data, 'externalImports'),
   };
 }
 
@@ -394,7 +435,7 @@ function addDays(value: Date, days: number): Date {
 }
 
 function fromPrismaReportType(value: PrismaAiReportType): AiReportType {
-  return { WEEKLY_SUMMARY: 'weekly_summary' }[value] as AiReportType;
+  return { WEEKLY_SUMMARY: 'weekly_summary', EXTERNAL_ANALYSIS: 'external_analysis' }[value] as AiReportType;
 }
 
 function fromPrismaReportStatus(value: PrismaAiReportStatus): AiReportStatus {
