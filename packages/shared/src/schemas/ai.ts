@@ -57,3 +57,9 @@ export const GenerateWeeklyAiReportSchema = z.object({
   locale: z.enum(['ru', 'en', 'uk']).default('ru'),
 });
 export type GenerateWeeklyAiReportInput = z.infer<typeof GenerateWeeklyAiReportSchema>;
+
+export const GenerateExternalMatchReportSchema = z.object({
+  matchIds: z.array(z.string().cuid()).min(1).max(50),
+  locale: z.enum(['ru', 'en', 'uk']).default('ru'),
+});
+export type GenerateExternalMatchReportInput = z.infer<typeof GenerateExternalMatchReportSchema>;

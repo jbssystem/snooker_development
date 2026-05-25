@@ -58,8 +58,16 @@ async function generateWeeklySummary(reportId: string): Promise<void> {
   await prisma.aiReport.update({ where: { id: report.id }, data: { status: 'RUNNING', errorMessage: null } });
   try {
     const sourceData = report.sourceDataJson as SourceData;
-    const prompt = await weeklyPrompt(report.locale, report.periodStart, report.periodEnd, sourceData);
-    const contentMarkdown = await generateMarkdown(report.provider, report.model, prompt, sourceData, report.locale);
+    let contentMarkdown: string;
+
+    if (report.reportType === 'EXTERNAL_ANALYSIS') {
+      const prompt = await externalAnalysisPrompt(report.locale, sourceData);
+      contentMarkdown = await generateExternalMarkdown(report.provider, report.model, prompt, sourceData, report.locale);
+    } else {
+      const prompt = await weeklyPrompt(report.locale, report.periodStart, report.periodEnd, sourceData);
+      contentMarkdown = await generateMarkdown(report.provider, report.model, prompt, sourceData, report.locale);
+    }
+
     await prisma.aiReport.update({
       where: { id: report.id },
       data: {
@@ -89,6 +97,145 @@ async function weeklyPrompt(locale: string, periodStart: Date, periodEnd: Date, 
     .replaceAll('{{periodStart}}', sourceData.period?.from ?? periodStart.toISOString())
     .replaceAll('{{periodEnd}}', sourceData.period?.to ?? periodEnd.toISOString());
 }
+
+type ExternalSourceData = {
+  selectedMatchCount?: number;
+  player?: { firstName?: string; lastName?: string; level?: string | null; country?: string | null };
+  matches?: Array<{ tournament?: string; opponentName?: string; framesWon?: number; framesLost?: number; result?: string; highBreak?: number | null; breaks100?: number }>;
+};
+
+async function externalAnalysisPrompt(locale: string, sourceData: ExternalSourceData): Promise<string> {
+  const template = await readExternalAnalysisTemplate();
+  const playerName = [sourceData.player?.firstName, sourceData.player?.lastName].filter(Boolean).join(' ') || 'Unknown';
+  return template
+    .replaceAll('{{locale}}', locale || 'ru')
+    .replaceAll('{{playerName}}', playerName)
+    .replaceAll('{{selectedMatchCount}}', String(sourceData.selectedMatchCount ?? 0));
+}
+
+async function generateExternalMarkdown(
+  provider: string,
+  model: string,
+  prompt: string,
+  sourceData: ExternalSourceData,
+  locale: string,
+): Promise<string> {
+  const loc = toLocale(locale);
+  if (provider === 'anthropic' && process.env.AI_API_KEY) {
+    try {
+      return await callAnthropicExternal(model, prompt, sourceData);
+    } catch {
+      return localExternalAnalysis(sourceData, loc);
+    }
+  }
+  return localExternalAnalysis(sourceData, loc);
+}
+
+async function callAnthropicExternal(model: string, prompt: string, sourceData: ExternalSourceData): Promise<string> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90_000);
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    signal: controller.signal,
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': process.env.AI_API_KEY ?? '',
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 2400,
+      system:
+        'You are a world-class professional snooker coach with deep expertise in elite player development. ' +
+        'Analyse the provided match data and give specific, actionable coaching insights. ' +
+        'Never make medical claims. Phrase statistical correlations as observations only. ' +
+        'Write exclusively in the language indicated by the locale field.',
+      messages: [
+        {
+          role: 'user',
+          content: `${prompt}\n\nMatch data (JSON):\n${JSON.stringify(sourceData, null, 2)}`,
+        },
+      ],
+    }),
+  }).finally(() => clearTimeout(timeout));
+
+  if (!response.ok) throw new Error(`Anthropic request failed: ${response.status}`);
+  const body = (await response.json()) as { content?: Array<{ type?: string; text?: string }> };
+  const text = body.content?.find((item) => item.type === 'text')?.text;
+  if (!text) throw new Error('Anthropic response did not contain text');
+  return text;
+}
+
+function localExternalAnalysis(sourceData: ExternalSourceData, locale: 'ru' | 'en' | 'uk'): string {
+  const matches = sourceData.matches ?? [];
+  const wins = matches.filter((m) => m.result === 'player_win').length;
+  const losses = matches.filter((m) => m.result === 'opponent_win').length;
+  const winRate = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0;
+  const highBreak = matches.reduce((max, m) => Math.max(max, m.highBreak ?? 0), 0);
+  const centuries = matches.reduce((sum, m) => sum + (m.breaks100 ?? 0), 0);
+
+  const playerName = [sourceData.player?.firstName, sourceData.player?.lastName].filter(Boolean).join(' ') || '—';
+
+  const t = externalText[locale];
+  return [
+    `# ${t.title}: ${playerName}`,
+    '',
+    `_${t.analyzed}: ${matches.length} ${t.matches}_`,
+    '',
+    '## ' + t.form,
+    `- ${t.winLoss}: ${wins}W / ${losses}L (${winRate}%)`,
+    `- ${t.highBreak}: ${highBreak || '—'}`,
+    `- ${t.centuries}: ${centuries}`,
+    '',
+    '## ' + t.recommendation,
+    `- ${t.notEnoughData}`,
+    '',
+    '## ' + t.caveats,
+    `- ${t.localFallback}`,
+  ].join('\n');
+}
+
+const externalText = {
+  ru: {
+    title: 'Анализ внешних матчей',
+    analyzed: 'Проанализировано',
+    matches: 'матч(ей)',
+    form: 'Форма',
+    winLoss: 'Победы/Поражения',
+    highBreak: 'Наивысший брейк',
+    centuries: 'Сотни',
+    recommendation: 'Рекомендации тренера',
+    notEnoughData: 'Для полного тренерского заключения требуется API-ключ AI-провайдера.',
+    caveats: 'Примечания',
+    localFallback: 'Отчёт сформирован локальным генератором — AI-провайдер недоступен.',
+  },
+  en: {
+    title: 'External match analysis',
+    analyzed: 'Analysed',
+    matches: 'match(es)',
+    form: 'Form',
+    winLoss: 'Wins / Losses',
+    highBreak: 'High break',
+    centuries: 'Centuries',
+    recommendation: 'Coach recommendations',
+    notEnoughData: 'Full coaching insights require an AI provider API key.',
+    caveats: 'Caveats',
+    localFallback: 'Report generated by local fallback — AI provider unavailable.',
+  },
+  uk: {
+    title: 'Аналіз зовнішніх матчів',
+    analyzed: 'Проаналізовано',
+    matches: 'матч(ів)',
+    form: 'Форма',
+    winLoss: 'Перемоги/Поразки',
+    highBreak: 'Найвищий брейк',
+    centuries: 'Сотні',
+    recommendation: 'Рекомендації тренера',
+    notEnoughData: 'Для повного тренерського висновку потрібен API-ключ AI-провайдера.',
+    caveats: 'Примітки',
+    localFallback: 'Звіт сформовано локальним генератором — AI-провайдер недоступний.',
+  },
+} as const;
 
 async function generateMarkdown(
   provider: string,
@@ -159,6 +306,27 @@ async function readPromptTemplate(): Promise<string> {
     'Period: {{periodStart}} to {{periodEnd}}.',
     'Use markdown sections: Highlights, Numbers, What improved, What stayed flat or regressed, Suggested focus next week, Confidence & data caveats.',
     'Never make medical claims or supplement advice. Phrase correlations as observations only.',
+  ].join('\n');
+}
+
+async function readExternalAnalysisTemplate(): Promise<string> {
+  const candidates = [
+    path.resolve(process.cwd(), 'packages/ai-prompts/prompts/external-analysis.md'),
+    path.resolve(process.cwd(), '../../packages/ai-prompts/prompts/external-analysis.md'),
+    path.resolve(__dirname, '../../../packages/ai-prompts/prompts/external-analysis.md'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      return await readFile(candidate, 'utf8');
+    } catch {
+      continue;
+    }
+  }
+  return [
+    'You are a world-class professional snooker coach. Analyse the {{selectedMatchCount}} matches for player {{playerName}}.',
+    'Locale: {{locale}}.',
+    'Provide coaching insights covering: form and results, break-building patterns, tactical patterns, and specific recommendations.',
+    'Never make medical claims. Phrase correlations as observations only.',
   ].join('\n');
 }
 

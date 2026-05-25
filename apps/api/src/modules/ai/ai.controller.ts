@@ -2,8 +2,10 @@ import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import {
+  GenerateExternalMatchReportSchema,
   GenerateWeeklyAiReportSchema,
   type AiReport,
+  type GenerateExternalMatchReportInput,
   type GenerateWeeklyAiReportInput,
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -36,5 +38,14 @@ export class AiController {
     @Body(new ZodValidationPipe(GenerateWeeklyAiReportSchema)) body: GenerateWeeklyAiReportInput,
   ): Promise<AiReport> {
     return this.ai.generateWeeklyReport(userId, body);
+  }
+
+  @Post('generate-external')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  generateExternal(
+    @CurrentUserId() userId: string,
+    @Body(new ZodValidationPipe(GenerateExternalMatchReportSchema)) body: GenerateExternalMatchReportInput,
+  ): Promise<AiReport> {
+    return this.ai.generateExternalMatchReport(userId, body);
   }
 }

@@ -76,6 +76,7 @@ function AuthenticatedView({ token }: { token: string }) {
   const [urlInput, setUrlInput] = useState('');
   const [activeTab, setActiveTab] = useState<'matches' | 'sources'>('matches');
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
+  const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(new Set());
 
   const linksQuery = useQuery({
     queryKey: ['external-links', token],
@@ -120,8 +121,28 @@ function AuthenticatedView({ token }: { token: string }) {
     },
   });
 
+  const generateExternalAnalysis = useMutation({
+    mutationFn: () =>
+      api.ai.generateExternalMatchReport(token, {
+        matchIds: Array.from(selectedMatchIds),
+        locale: locale as 'ru' | 'en' | 'uk',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-reports', token] });
+      setSelectedMatchIds(new Set());
+    },
+  });
+
   const links = linksQuery.data ?? [];
   const matches = matchesQuery.data ?? [];
+
+  function toggleSelectAll() {
+    if (selectedMatchIds.size === matches.length && matches.length > 0) {
+      setSelectedMatchIds(new Set());
+    } else {
+      setSelectedMatchIds(new Set(matches.map((m) => m.id)));
+    }
+  }
 
   return (
     <main className="grid gap-6">
@@ -130,25 +151,40 @@ function AuthenticatedView({ token }: { token: string }) {
           <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
           <p className="mt-2 text-text-secondary">{t('subtitle')}</p>
         </div>
-        <button
-          onClick={() => generateAnalysis.mutate()}
-          disabled={generateAnalysis.isPending || matches.length === 0}
-          className="inline-flex items-center gap-2 rounded-md bg-brand-accent px-4 py-2 font-medium text-text-primary transition hover:bg-brand-primary disabled:opacity-50"
-        >
-          <AiIcon />
-          {generateAnalysis.isPending ? t('analysisPending') : t('analyzeWithAi')}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {selectedMatchIds.size > 0 ? (
+            <button
+              onClick={() => generateExternalAnalysis.mutate()}
+              disabled={generateExternalAnalysis.isPending}
+              className="inline-flex items-center gap-2 rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary transition hover:bg-brand-accent disabled:opacity-50"
+            >
+              <AiIcon />
+              {generateExternalAnalysis.isPending
+                ? t('analysisPending')
+                : t('analyzeSelected', { count: selectedMatchIds.size })}
+            </button>
+          ) : (
+            <button
+              onClick={() => generateAnalysis.mutate()}
+              disabled={generateAnalysis.isPending || matches.length === 0}
+              className="inline-flex items-center gap-2 rounded-md bg-brand-accent px-4 py-2 font-medium text-text-primary transition hover:bg-brand-primary disabled:opacity-50"
+            >
+              <AiIcon />
+              {generateAnalysis.isPending ? t('analysisPending') : t('analyzeWithAi')}
+            </button>
+          )}
+        </div>
       </header>
 
-      {generateAnalysis.isError && (
+      {(generateAnalysis.isError || generateExternalAnalysis.isError) && (
         <div className="rounded-lg border border-state-error/40 bg-state-error/10 p-4">
           <p className="text-sm text-state-error">
-            {generateAnalysis.error instanceof ApiError ? t('analysisError') : t('genericError')}
+            {t('analysisError')}
           </p>
         </div>
       )}
 
-      {generateAnalysis.isSuccess && (
+      {(generateAnalysis.isSuccess || generateExternalAnalysis.isSuccess) && (
         <div className="rounded-lg border border-brand-accent/40 bg-brand-accent/10 p-4">
           <p className="text-sm text-text-primary">
             {t('analysisQueued')}{' '}
@@ -237,6 +273,16 @@ function AuthenticatedView({ token }: { token: string }) {
           matches={matches}
           expandedMatch={expandedMatch}
           onToggle={(id) => setExpandedMatch(expandedMatch === id ? null : id)}
+          selectedMatchIds={selectedMatchIds}
+          onToggleSelect={(id) =>
+            setSelectedMatchIds((prev) => {
+              const next = new Set(prev);
+              if (next.has(id)) next.delete(id);
+              else next.add(id);
+              return next;
+            })
+          }
+          onSelectAll={toggleSelectAll}
         />
       )}
 
@@ -304,10 +350,16 @@ function MatchesTable({
   matches,
   expandedMatch,
   onToggle,
+  selectedMatchIds,
+  onToggleSelect,
+  onSelectAll,
 }: {
   matches: ImportedMatch[];
   expandedMatch: string | null;
   onToggle: (id: string) => void;
+  selectedMatchIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onSelectAll: () => void;
 }) {
   const t = useTranslations('externalData');
 
@@ -320,11 +372,24 @@ function MatchesTable({
     );
   }
 
+  const allSelected = selectedMatchIds.size === matches.length;
+  const someSelected = selectedMatchIds.size > 0 && !allSelected;
+
   return (
     <div className="overflow-x-auto rounded-lg border border-border-subtle">
       <table className="w-full text-sm">
         <thead className="bg-background-secondary text-left text-text-secondary">
           <tr>
+            <th className="w-10 px-3 py-2">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                ref={(el) => { if (el) el.indeterminate = someSelected; }}
+                onChange={onSelectAll}
+                className="h-4 w-4 cursor-pointer accent-brand-accent"
+                title={allSelected ? t('deselectAll') : t('selectAll')}
+              />
+            </th>
             <th className="px-3 py-2">{t('date')}</th>
             <th className="px-3 py-2">{t('tournament')}</th>
             <th className="px-3 py-2">{t('opponent')}</th>
@@ -339,7 +404,9 @@ function MatchesTable({
               key={match.id}
               match={match}
               isExpanded={expandedMatch === match.id}
+              isSelected={selectedMatchIds.has(match.id)}
               onToggle={() => onToggle(match.id)}
+              onToggleSelect={() => onToggleSelect(match.id)}
             />
           ))}
         </tbody>
@@ -351,11 +418,15 @@ function MatchesTable({
 function MatchRow({
   match,
   isExpanded,
+  isSelected,
   onToggle,
+  onToggleSelect,
 }: {
   match: ImportedMatch;
   isExpanded: boolean;
+  isSelected: boolean;
   onToggle: () => void;
+  onToggleSelect: () => void;
 }) {
   const t = useTranslations('externalData');
   const notes = parseJson<ExternalMatchNotes>(match.notes);
@@ -372,23 +443,41 @@ function MatchRow({
   return (
     <>
       <tr
-        onClick={onToggle}
-        className="cursor-pointer border-t border-border-subtle transition hover:bg-background-elevated"
+        className={`border-t border-border-subtle transition hover:bg-background-elevated ${isSelected ? 'bg-brand-primary/10' : ''}`}
       >
-        <td className="px-3 py-2 text-text-secondary">
+        <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onToggleSelect}
+            className="h-4 w-4 cursor-pointer accent-brand-accent"
+          />
+        </td>
+        <td
+          className="cursor-pointer px-3 py-2 text-text-secondary"
+          onClick={onToggle}
+        >
           {new Date(match.matchDate).toLocaleDateString()}
         </td>
-        <td className="px-3 py-2 text-text-primary">{match.tournament ?? '—'}</td>
-        <td className="px-3 py-2 font-medium text-text-primary">{match.opponentName}</td>
-        <td className="px-3 py-2 text-text-primary">
+        <td className="cursor-pointer px-3 py-2 text-text-primary" onClick={onToggle}>
+          {match.tournament ?? '—'}
+        </td>
+        <td className="cursor-pointer px-3 py-2 font-medium text-text-primary" onClick={onToggle}>
+          {match.opponentName}
+        </td>
+        <td className="cursor-pointer px-3 py-2 text-text-primary" onClick={onToggle}>
           {match.framesWon}–{match.framesLost}
         </td>
-        <td className={`px-3 py-2 font-semibold ${resultColor}`}>{resultLabel}</td>
-        <td className="px-3 py-2 text-text-secondary">{match.highBreak ?? '—'}</td>
+        <td className={`cursor-pointer px-3 py-2 font-semibold ${resultColor}`} onClick={onToggle}>
+          {resultLabel}
+        </td>
+        <td className="cursor-pointer px-3 py-2 text-text-secondary" onClick={onToggle}>
+          {match.highBreak ?? '—'}
+        </td>
       </tr>
       {isExpanded && (
         <tr>
-          <td colSpan={6} className="bg-background-elevated px-4 py-3">
+          <td colSpan={7} className="bg-background-elevated px-4 py-3">
             <div className="grid gap-4">
               <div className="grid gap-3 md:grid-cols-3">
                 <DetailItem label={t('round')} value={match.round} />

@@ -12,6 +12,7 @@ import {
   type AiReportDataSources,
   type AiReportStatus,
   type AiReportType,
+  type GenerateExternalMatchReportInput,
   type GenerateWeeklyAiReportInput,
   type GenerateWeeklyAiReportJob,
 } from '@snooker/shared';
@@ -83,6 +84,117 @@ export class AiService implements OnModuleDestroy {
         sourceDataJson: sourceData,
         dataSourcesJson: dataSources as unknown as Prisma.InputJsonValue,
         promptVersion: PROMPT_VERSION,
+        provider: runtime.provider,
+        model: runtime.model,
+      },
+    });
+
+    try {
+      await this.getQueue().add(
+        GENERATE_WEEKLY_AI_REPORT_JOB,
+        { reportId: report.id },
+        {
+          attempts: 2,
+          backoff: { type: 'exponential', delay: 5_000 },
+          jobId: report.id,
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+    } catch (error) {
+      const failed = await this.prisma.aiReport.update({
+        where: { id: report.id },
+        data: {
+          status: 'FAILED',
+          errorMessage: error instanceof Error ? error.message : String(error),
+          completedAt: new Date(),
+        },
+      });
+      return toAiReport(failed);
+    }
+
+    return toAiReport(report);
+  }
+
+  async generateExternalMatchReport(userId: string, input: GenerateExternalMatchReportInput): Promise<AiReport> {
+    const profile = await this.findProfileOrThrow(userId);
+    const matches = await this.prisma.match.findMany({
+      where: { id: { in: input.matchIds }, playerProfileId: profile.id, source: 'EXTERNAL' },
+      include: { frames: { orderBy: { frameNumber: 'asc' } } },
+      orderBy: { matchDate: 'asc' },
+    });
+
+    if (matches.length === 0) {
+      throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
+    }
+
+    const runtime = resolveAiRuntime(this.config);
+    const periodStart = matches[0]!.matchDate;
+    const periodEnd = matches[matches.length - 1]!.matchDate;
+
+    const rawSourceData = {
+      generatedAt: new Date().toISOString(),
+      selectedMatchCount: matches.length,
+      player: {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        level: profile.level,
+        seasonGoal: profile.seasonGoal,
+        dominantHand: profile.dominantHand,
+        country: profile.country,
+      },
+      matches: matches.map((m) => ({
+        matchDate: m.matchDate.toISOString(),
+        opponentName: m.opponentName,
+        tournament: m.tournament,
+        round: m.round,
+        format: m.format,
+        framesWon: m.framesWon,
+        framesLost: m.framesLost,
+        highBreak: m.highBreak,
+        breaks50: m.breaks50,
+        breaks70: m.breaks70,
+        breaks100: m.breaks100,
+        result: m.result,
+        decidingFrameResult: m.decidingFrameResult,
+        notes: m.notes,
+        frames: m.frames.map((f) => ({
+          frameNumber: f.frameNumber,
+          playerScore: f.playerScore,
+          opponentScore: f.opponentScore,
+          winner: f.winner,
+          highBreak: f.highBreak,
+          notes: f.notes,
+        })),
+      })),
+    };
+
+    const sourceData = toJsonValue(rawSourceData);
+    const dataSources: AiReportDataSources = {
+      trainingSessions: 0,
+      drillExecutions: 0,
+      matches: matches.length,
+      calendarEvents: 0,
+      lifestyleFactors: 0,
+      supplementEvents: 0,
+      previousReports: 0,
+      externalImports: 0,
+    };
+
+    const report = await this.prisma.aiReport.create({
+      data: {
+        playerProfileId: profile.id,
+        requestedByUserId: userId,
+        reportType: 'EXTERNAL_ANALYSIS',
+        status: 'QUEUED',
+        periodStart,
+        periodEnd,
+        locale: input.locale,
+        title: externalReportTitle(input.locale, matches.length),
+        sourceDataHash: hashJson(sourceData),
+        sourceDataJson: sourceData,
+        dataSourcesJson: dataSources as unknown as Prisma.InputJsonValue,
+        promptVersion: 'external-analysis@1',
         provider: runtime.provider,
         model: runtime.model,
       },
@@ -377,6 +489,12 @@ function reportTitle(locale: string, from: Date, to: Date): string {
   if (locale === 'en') return `Weekly summary: ${start} - ${end}`;
   if (locale === 'uk') return `Тижневий звіт: ${start} - ${end}`;
   return `Недельная сводка: ${start} - ${end}`;
+}
+
+function externalReportTitle(locale: string, count: number): string {
+  if (locale === 'en') return `External match analysis: ${count} match${count === 1 ? '' : 'es'}`;
+  if (locale === 'uk') return `Аналіз зовнішніх матчів: ${count} матч${count === 1 ? '' : 'ів'}`;
+  return `Анализ внешних матчей: ${count} матч${count === 1 ? '' : 'ей'}`;
 }
 
 function hashJson(value: unknown): string {

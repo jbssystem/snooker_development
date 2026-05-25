@@ -17,6 +17,7 @@ import type {
   ExternalPlayerLink,
   FinishDrillExecutionInput,
   FinishTrainingSessionInput,
+  GenerateExternalMatchReportInput,
   GenerateWeeklyAiReportInput,
   LoginInput,
   AddMatchFrameInput,
@@ -330,6 +331,12 @@ export const api = {
     getReport: (token: string, id: string) => request<AiReport>(`/ai/reports/${id}`, { token }),
     generateWeeklyReport: (token: string, input: GenerateWeeklyAiReportInput) =>
       request<AiReport>('/ai/reports/generate', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    generateExternalMatchReport: (token: string, input: GenerateExternalMatchReportInput) =>
+      request<AiReport>('/ai/reports/generate-external', {
         method: 'POST',
         token,
         body: JSON.stringify(input),
