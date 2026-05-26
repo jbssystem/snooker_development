@@ -326,7 +326,7 @@ function ExternalReportVisuals({ sourceData }: { sourceData: ExternalReportSourc
 
       <section>
         <ChartPanel title={t('visuals.frameMap')}>
-          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-2">
             {matches.map((match, index) => (
               <FrameMapRow key={`${match.matchDate}-${match.opponentName}-${index}`} match={match} index={index} />
             ))}
@@ -350,31 +350,32 @@ function FrameMapRow({ match, index }: { match: ExternalReportMatch; index: numb
   const t = useTranslations('ai');
   const label = `${index + 1}. ${match.opponentName ?? t('visuals.unknownOpponent')}`;
   const frames = match.frames ?? [];
+  const orderedFrames = [...frames].sort((a, b) => (a.frameNumber ?? 0) - (b.frameNumber ?? 0));
 
   return (
-    <div className="rounded-md border border-border-subtle bg-background-secondary px-2 py-1.5">
-      <div className="mb-1.5 flex items-center justify-between gap-2 text-[11px]">
-        <span className="truncate font-medium text-text-primary">{label}</span>
-        <span className="font-mono text-text-secondary">{match.framesWon ?? 0}:{match.framesLost ?? 0}</span>
-      </div>
-      <div className="flex flex-wrap gap-0.5">
-        {frames.map((frame) => {
-          const color = frame.winner === 'PLAYER' || frame.winner === 'player'
-            ? 'bg-brand-accent text-background-primary'
-            : frame.winner === 'OPPONENT' || frame.winner === 'opponent'
-              ? 'bg-state-error/80 text-text-primary'
-              : 'bg-background-elevated text-text-disabled';
-          return (
-            <span
-              key={frame.frameNumber}
-              className={`flex h-5 min-w-5 items-center justify-center rounded-sm px-1 text-[10px] font-semibold leading-none ${color}`}
-              title={`${t('visuals.frame')} ${frame.frameNumber}: ${frame.playerScore ?? 0}-${frame.opponentScore ?? 0}`}
-            >
-              {frame.frameNumber}
-            </span>
-          );
-        })}
-        {frames.length === 0 && <p className="text-xs text-text-disabled">{t('visuals.noFrames')}</p>}
+    <div className="grid items-center gap-2 rounded-md border border-border-subtle bg-background-secondary px-3 py-2 sm:grid-cols-[minmax(150px,1fr)_52px_minmax(0,2fr)]">
+      <span className="truncate text-xs font-medium text-text-primary" title={label}>{label}</span>
+      <span className="font-mono text-xs font-semibold text-text-secondary">{match.framesWon ?? 0}:{match.framesLost ?? 0}</span>
+      <div className="overflow-x-auto">
+        <div className="grid w-max grid-flow-col auto-cols-[22px] gap-1">
+          {orderedFrames.map((frame) => {
+            const color = frame.winner === 'PLAYER' || frame.winner === 'player'
+              ? 'bg-brand-accent text-background-primary'
+              : frame.winner === 'OPPONENT' || frame.winner === 'opponent'
+                ? 'bg-state-error/80 text-text-primary'
+                : 'bg-background-elevated text-text-disabled';
+            return (
+              <span
+                key={frame.frameNumber}
+                className={`flex h-5 w-[22px] items-center justify-center rounded-sm text-[10px] font-semibold leading-none ${color}`}
+                title={`${t('visuals.frame')} ${frame.frameNumber}: ${frame.playerScore ?? 0}-${frame.opponentScore ?? 0}`}
+              >
+                {frame.frameNumber}
+              </span>
+            );
+          })}
+          {orderedFrames.length === 0 && <p className="text-xs text-text-disabled">{t('visuals.noFrames')}</p>}
+        </div>
       </div>
     </div>
   );
