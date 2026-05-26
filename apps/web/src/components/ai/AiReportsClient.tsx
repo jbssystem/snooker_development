@@ -282,6 +282,19 @@ function ExternalReportVisuals({ sourceData }: { sourceData: ExternalReportSourc
         <Stat label={t('visuals.highBreak')} value={String(totals.highBreak || '—')} />
       </div>
 
+      <ChartPanel title={t('visuals.pointsTrend')}>
+        <ResponsiveContainer height={260} width="100%">
+          <LineChart data={chartRows} margin={{ bottom: 0, left: -20, right: 16, top: 8 }}>
+            <CartesianGrid stroke="#2A323D" strokeDasharray="4 4" />
+            <XAxis dataKey="label" stroke="#A8B0B8" tickLine={false} />
+            <YAxis stroke="#A8B0B8" tickLine={false} />
+            <Tooltip content={<ExternalTooltip />} />
+            <Line dataKey="avgFor" dot={{ fill: '#19A974', r: 4 }} name={t('visuals.playerAvg')} stroke="#19A974" strokeWidth={3} type="monotone" />
+            <Line dataKey="avgAgainst" dot={{ fill: '#D86F5A', r: 4 }} name={t('visuals.opponentAvg')} stroke="#D86F5A" strokeWidth={3} type="monotone" />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartPanel>
+
       <section className="grid gap-5 xl:grid-cols-2">
         <ChartPanel title={t('visuals.scoreTrend')}>
           <ResponsiveContainer height={280} width="100%">
@@ -311,22 +324,9 @@ function ExternalReportVisuals({ sourceData }: { sourceData: ExternalReportSourc
         </ChartPanel>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <ChartPanel title={t('visuals.pointsTrend')}>
-          <ResponsiveContainer height={280} width="100%">
-            <LineChart data={chartRows} margin={{ bottom: 0, left: -20, right: 16, top: 8 }}>
-              <CartesianGrid stroke="#2A323D" strokeDasharray="4 4" />
-              <XAxis dataKey="label" stroke="#A8B0B8" tickLine={false} />
-              <YAxis stroke="#A8B0B8" tickLine={false} />
-              <Tooltip content={<ExternalTooltip />} />
-              <Line dataKey="avgFor" dot={{ fill: '#19A974', r: 4 }} name={t('visuals.playerAvg')} stroke="#19A974" strokeWidth={3} type="monotone" />
-              <Line dataKey="avgAgainst" dot={{ fill: '#D86F5A', r: 4 }} name={t('visuals.opponentAvg')} stroke="#D86F5A" strokeWidth={3} type="monotone" />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartPanel>
-
+      <section>
         <ChartPanel title={t('visuals.frameMap')}>
-          <div className="grid gap-3">
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             {matches.map((match, index) => (
               <FrameMapRow key={`${match.matchDate}-${match.opponentName}-${index}`} match={match} index={index} />
             ))}
@@ -352,12 +352,12 @@ function FrameMapRow({ match, index }: { match: ExternalReportMatch; index: numb
   const frames = match.frames ?? [];
 
   return (
-    <div className="rounded-md border border-border-subtle bg-background-secondary p-3">
-      <div className="mb-2 flex items-center justify-between gap-3 text-xs">
+    <div className="rounded-md border border-border-subtle bg-background-secondary px-2 py-1.5">
+      <div className="mb-1.5 flex items-center justify-between gap-2 text-[11px]">
         <span className="truncate font-medium text-text-primary">{label}</span>
         <span className="font-mono text-text-secondary">{match.framesWon ?? 0}:{match.framesLost ?? 0}</span>
       </div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(24px,1fr))] gap-1">
+      <div className="flex flex-wrap gap-0.5">
         {frames.map((frame) => {
           const color = frame.winner === 'PLAYER' || frame.winner === 'player'
             ? 'bg-brand-accent text-background-primary'
@@ -367,7 +367,7 @@ function FrameMapRow({ match, index }: { match: ExternalReportMatch; index: numb
           return (
             <span
               key={frame.frameNumber}
-              className={`flex h-7 items-center justify-center rounded text-[11px] font-semibold ${color}`}
+              className={`flex h-5 min-w-5 items-center justify-center rounded-sm px-1 text-[10px] font-semibold leading-none ${color}`}
               title={`${t('visuals.frame')} ${frame.frameNumber}: ${frame.playerScore ?? 0}-${frame.opponentScore ?? 0}`}
             >
               {frame.frameNumber}
