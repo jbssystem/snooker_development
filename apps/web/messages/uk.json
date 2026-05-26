@@ -466,6 +466,7 @@
       "promptVersion": "Версія prompt",
       "sourceHash": "Source hash",
       "dataSources": "Джерела даних",
+      "visuals": "Візуальна картина",
       "content": "Зміст"
     },
     "sources": {
@@ -475,7 +476,26 @@
       "calendarEvents": "Події",
       "lifestyleFactors": "Стан",
       "supplementEvents": "Періоди добавок",
-      "previousReports": "Попередні звіти"
+      "previousReports": "Попередні звіти",
+      "externalImports": "Зовнішній імпорт"
+    },
+    "visuals": {
+      "subtitle": "Графіки будуються з тих самих вибраних матчів, які пішли в AI-аналіз.",
+      "matches": "Матчі",
+      "winRate": "Win rate",
+      "frames": "Фрейми",
+      "highBreak": "Найвищий брейк",
+      "scoreTrend": "Рахунок за матчами",
+      "breaksTrend": "Брейки 50+/70+/100+",
+      "pointsTrend": "Середні очки за фрейм",
+      "frameMap": "Карта фреймів",
+      "framesWon": "Фрейми гравця",
+      "framesLost": "Фрейми суперника",
+      "playerAvg": "Гравець",
+      "opponentAvg": "Суперник",
+      "unknownOpponent": "Суперник",
+      "frame": "Фрейм",
+      "noFrames": "Немає фреймів"
     },
     "status": {
       "queued": "У черзі",

@@ -466,6 +466,7 @@
       "promptVersion": "Версия prompt",
       "sourceHash": "Source hash",
       "dataSources": "Источники данных",
+      "visuals": "Визуальная картина",
       "content": "Содержание"
     },
     "sources": {
@@ -475,7 +476,26 @@
       "calendarEvents": "События",
       "lifestyleFactors": "Состояние",
       "supplementEvents": "Периоды добавок",
-      "previousReports": "Прошлые отчёты"
+      "previousReports": "Прошлые отчёты",
+      "externalImports": "Внешний импорт"
+    },
+    "visuals": {
+      "subtitle": "Графики строятся из тех же выбранных матчей, которые ушли в AI-анализ.",
+      "matches": "Матчи",
+      "winRate": "Win rate",
+      "frames": "Фреймы",
+      "highBreak": "Высший брейк",
+      "scoreTrend": "Счёт по матчам",
+      "breaksTrend": "Брейки 50+/70+/100+",
+      "pointsTrend": "Средние очки за фрейм",
+      "frameMap": "Карта фреймов",
+      "framesWon": "Фреймы игрока",
+      "framesLost": "Фреймы соперника",
+      "playerAvg": "Игрок",
+      "opponentAvg": "Соперник",
+      "unknownOpponent": "Соперник",
+      "frame": "Фрейм",
+      "noFrames": "Нет фреймов"
     },
     "status": {
       "queued": "В очереди",

@@ -466,6 +466,7 @@
       "promptVersion": "Prompt version",
       "sourceHash": "Source hash",
       "dataSources": "Data sources",
+      "visuals": "Visual picture",
       "content": "Content"
     },
     "sources": {
@@ -475,7 +476,26 @@
       "calendarEvents": "Events",
       "lifestyleFactors": "Wellness",
       "supplementEvents": "Supplement periods",
-      "previousReports": "Previous reports"
+      "previousReports": "Previous reports",
+      "externalImports": "External imports"
+    },
+    "visuals": {
+      "subtitle": "Charts are built from the same selected matches sent to AI analysis.",
+      "matches": "Matches",
+      "winRate": "Win rate",
+      "frames": "Frames",
+      "highBreak": "High break",
+      "scoreTrend": "Match score trend",
+      "breaksTrend": "Breaks 50+/70+/100+",
+      "pointsTrend": "Average points per frame",
+      "frameMap": "Frame map",
+      "framesWon": "Player frames",
+      "framesLost": "Opponent frames",
+      "playerAvg": "Player",
+      "opponentAvg": "Opponent",
+      "unknownOpponent": "Opponent",
+      "frame": "Frame",
+      "noFrames": "No frames"
     },
     "status": {
       "queued": "Queued",

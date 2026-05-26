@@ -435,6 +435,7 @@ function toAiReport(report: AiReportEntity): AiReport {
     ...(report.title ? { title: report.title } : {}),
     ...(report.contentMarkdown ? { contentMarkdown: report.contentMarkdown } : {}),
     sourceDataHash: report.sourceDataHash,
+    ...(report.reportType === 'EXTERNAL_ANALYSIS' ? { sourceData: report.sourceDataJson } : {}),
     dataSources: toDataSources(report.dataSourcesJson),
     promptVersion: report.promptVersion,
     provider: toAiProvider(report.provider),

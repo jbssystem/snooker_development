@@ -33,6 +33,7 @@ export const AiReportSchema = z.object({
   title: z.string().optional(),
   contentMarkdown: z.string().optional(),
   sourceDataHash: z.string(),
+  sourceData: z.unknown().optional(),
   dataSources: AiReportDataSourcesSchema,
   promptVersion: z.string(),
   provider: AiProviderSchema,

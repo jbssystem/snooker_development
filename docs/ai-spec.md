@@ -40,11 +40,19 @@ non-AI endpoints do not require a live Redis connection. Worker prompt loading
 tries workspace-root and compiled paths before falling back to a minimal
 safety-preserving template.
 
+External match analysis uses `POST /ai/reports/generate-external` with selected
+imported match ids. The API snapshots only those current-player external
+matches, stores them as an `external_analysis` report and exposes the same
+snapshot back as `sourceData` in the report response. The web report detail uses
+that snapshot to render score, break-building, average-points and frame-map
+charts next to the generated markdown.
+
 ## Prompts
 
 | File | Purpose | Inputs | Output format |
 | --- | --- | --- | --- |
 | `weekly-summary.md` | Weekly training summary | training sessions, drill executions, wellness flags | Markdown with fixed sections |
+| `external-analysis.md` | Selected external match analysis | selected imported match rows, frame scores and match notes | Markdown coaching report plus UI charts from `sourceData` |
 | `coach-handover.md` | Briefing for a new coach | full player history | Markdown |
 
 Adding a prompt: drop a markdown file, register it in `packages/ai-prompts/src/index.ts`,

@@ -236,6 +236,9 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   the worker completes or fails them.
 - Each report shows period, status, provider/model, prompt version, source hash
   prefix and data-source counts before the markdown content.
+- External-analysis reports render visual context before the markdown: match
+  score bars, break-building bars, average-points trend and a compact frame map
+  using the selected matches stored in report `sourceData`.
 - Wellness/supplement language remains neutral. The UI does not present AI
   content as medical advice and does not add supplement recommendations.
 

@@ -26,6 +26,10 @@ Format:
 - CueTracker sync now normalizes match rows by current-player/opponent order,
   so imported frame scores, match result, points and breaks stay correct even
   when the player appears second on the source page.
+- External-data match selection can create focused AI reports over exactly the
+  selected imported matches. External-analysis reports now expose their selected
+  match snapshot to the UI so `/ai` can render score, break, average-points and
+  frame-map charts before the text analysis.
 - Imported external matches now keep referee, format, opponent external id,
   head-to-head URL, progress, points-per-frame, player/opponent break lists
   and frame-level raw score context.
