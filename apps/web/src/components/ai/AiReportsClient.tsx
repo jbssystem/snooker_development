@@ -353,7 +353,7 @@ function FrameMapRow({ match, index }: { match: ExternalReportMatch; index: numb
   const orderedFrames = [...frames].sort((a, b) => (a.frameNumber ?? 0) - (b.frameNumber ?? 0));
 
   return (
-    <div className="grid items-center gap-2 rounded-md border border-border-subtle bg-background-secondary px-3 py-2 sm:grid-cols-[minmax(150px,1fr)_52px_minmax(0,2fr)]">
+    <div className="grid items-center gap-2 rounded-md border border-border-subtle bg-background-secondary px-3 py-2 sm:grid-cols-[minmax(96px,128px)_44px_minmax(0,1fr)]">
       <span className="truncate text-xs font-medium text-text-primary" title={label}>{label}</span>
       <span className="font-mono text-xs font-semibold text-text-secondary">{match.framesWon ?? 0}:{match.framesLost ?? 0}</span>
       <div className="overflow-x-auto">
