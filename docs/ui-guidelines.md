@@ -155,6 +155,10 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - A visible drill template can be added to the active session. The execution
   panel records single-tap outcomes: success, partial, miss or skipped; each
   tap appends a numbered attempt and updates counters.
+- The active session header is followed by a live-read panel that derives a
+  conservative next action from fatigue/focus, current drill success rate and
+  the last ten attempts. It is phrased as coaching context rather than a hard
+  prescription.
 - Drill execution detail shows the saved `tableLayoutSnapshot` through
   `TableLayoutPreview`, so the coach sees the exact scheme that was copied
   from the template when the execution was added.
@@ -169,6 +173,10 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   for sessions, minutes, attempts and success rate; Recharts panels for
   weekly training volume and attempt success trend; match-performance summary;
   drill progress rows; and recent sessions.
+- `CoachInsightPanel` renders the dashboard coach-radar: client-side computed
+  insight cards for momentum, focus drill, load rhythm and match transfer. Each
+  card shows the observed metric, confidence, period-safe wording and a direct
+  next-screen action.
 - Empty state keeps two practical exits visible: profile setup and starting a
   training session. The API returns empty aggregates when a profile does not
   exist yet, so the page can stay stable immediately after registration.
@@ -178,7 +186,8 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - `/analytics` lives in the `(app)` route group and is rendered by
   `src/components/analytics/AnalyticsClient.tsx`.
 - The page reuses the player dashboard API for MVP analytics: KPI cards,
-  training volume chart, success trend chart, drill progress and match summary.
+  coach-radar insights, training volume chart, success trend chart, drill
+  progress and match summary.
 - The layout is mobile-first; charts stack before moving into two columns on
   wide screens.
 
@@ -223,6 +232,10 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   hints so data can be entered quickly without guessing formats.
 - Wellness and supplement copy stays descriptive only. The UI records factors
   for later correlation, but does not make medical or causal claims.
+- A readiness lens appears above the calendar surface. It summarizes the last
+  seven lifestyle entries into a neutral readiness score, confidence by data
+  completeness and one next logging/training action, without supplement or
+  medical recommendations.
 
 ## AI Reports UI
 

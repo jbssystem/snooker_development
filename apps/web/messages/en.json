@@ -182,6 +182,64 @@
         "metrics": { "attempts": "Attempts", "pots": "Pots", "best_streak": "Best streak", "routine_kept": "Routine kept", "pre_shot_time_ms": "Pre-shot time", "pressure_errors": "Pressure errors" },
         "layout": { "annotations": { "clock": "20 seconds: breath, eyes, pause" } }
       }
+    },
+    "demoTemplates": {
+      "customer-straight-cue": {
+        "name": "Personal routine: 20-minute straight-cue check",
+        "description": "A personal technical checkpoint before serious potting sessions.",
+        "goal": "Confirm alignment, pause and cue delivery before long-red work.",
+        "rules": "Play three blocks of ten central-line shots. Record misses by reason, not only by result.",
+        "successCriteria": "At least 24 line hits from 30 attempts with no repeated shoulder-drop error.",
+        "tags": ["personal", "routine", "warm-up"],
+        "metrics": { "attempts": "Attempts", "line_hits": "Line hits", "cue_ball_deviation_mm": "Cue ball deviation", "routine_kept": "Routine kept" },
+        "layout": {
+          "targetZones": { "customer-target-zone": "Straight-cue test" },
+          "shotPaths": { "customer-primary-line": "Primary route" },
+          "annotations": { "customer-note": "Straight-cue test" }
+        }
+      },
+      "customer-black-recovery": {
+        "name": "Personal pattern: black-position recovery",
+        "description": "A personal recovery pattern for when the angle on black is slightly worse than planned.",
+        "goal": "Recover position without dragging the cue ball to the side cushion.",
+        "rules": "Play the black from three cue-ball starting positions and mark whether the next-red position is natural.",
+        "successCriteria": "Two successful position recoveries in each block of three shots.",
+        "tags": ["personal", "black", "recovery"],
+        "metrics": { "attempts": "Attempts", "pots": "Pots", "position_hits": "Position hits", "position_errors": "Position errors" },
+        "layout": {
+          "targetZones": { "customer-target-zone": "Black recovery corridor" },
+          "shotPaths": { "customer-primary-line": "Primary route" },
+          "annotations": { "customer-note": "Black recovery corridor" }
+        }
+      },
+      "customer-baulk-lock": {
+        "name": "Personal safety: thin red and baulk lock",
+        "description": "A personal tactical drill for removing leakage from half-ball contact.",
+        "goal": "Leave the cue ball behind the baulk colors and the object ball near the top cushion.",
+        "rules": "Play ten safeties from each side of the table. Count only positions where there is no direct pot.",
+        "successCriteria": "At least 16 safe leaves from 20 attempts and fewer than three tactical leaks.",
+        "tags": ["personal", "safety", "baulk"],
+        "metrics": { "attempts": "Attempts", "safe_leaves": "Safe leaves", "cue_ball_zone_hits": "Cue ball zone hits", "tactical_errors": "Tactical errors" },
+        "layout": {
+          "targetZones": { "customer-target-zone": "Baulk lock" },
+          "shotPaths": { "customer-primary-line": "Primary route" },
+          "annotations": { "customer-note": "Baulk lock" }
+        }
+      },
+      "customer-first-visit-30": {
+        "name": "Personal match simulation: first visit to 30+",
+        "description": "A personal match simulation for turning the first open chance into scoreboard pressure.",
+        "goal": "Make the first visit create a real lead rather than only 8-12 points.",
+        "rules": "Start from a semi-open pack. The attempt ends on a miss, poor position or tactical reset.",
+        "successCriteria": "Average 24+ points per attempt and at least one 30+ visit in the session.",
+        "tags": ["personal", "match", "break"],
+        "metrics": { "attempts": "Attempts", "break_points": "Break points", "max_run": "Best break", "decision_errors": "Decision errors", "execution_errors": "Execution errors" },
+        "layout": {
+          "targetZones": { "customer-target-zone": "First-visit conversion" },
+          "shotPaths": { "customer-primary-line": "Primary route" },
+          "annotations": { "customer-note": "First-visit conversion" }
+        }
+      }
     }
   },
   "home": {
@@ -302,6 +360,102 @@
       "highBreak": "High break"
     }
   },
+  "insights": {
+    "eyebrow": "Coach radar",
+    "title": "Insights for the next session",
+    "subtitle": "The system connects volume, drill success and match form. These are period observations, not final conclusions.",
+    "confidence": "{confidence}% confidence",
+    "open": "Open related screen",
+    "metrics": {
+      "sample": "Sample",
+      "trend": "Trend",
+      "successRate": "Success rate",
+      "drills": "Drills",
+      "openSessions": "Open",
+      "minutesPerSession": "Min/session",
+      "trainingMinutes": "Minutes",
+      "matches": "Matches",
+      "winRate": "Win rate",
+      "frames": "Frames"
+    },
+    "cards": {
+      "startSignal": {
+        "title": "The first stable signal is missing",
+        "body": "Only {attempts} attempts are recorded. After 8-10 attempts on one drill, the system can start reading direction.",
+        "action": "Run a short session with one template and record every attempt without skipping."
+      },
+      "momentumUp": {
+        "title": "Form is moving up",
+        "body": "Recent success is {delta} pp higher than the previous slice. The current level around {currentRate}% looks like usable progress.",
+        "action": "Repeat the same block once more, then add slightly more match pressure."
+      },
+      "momentumDown": {
+        "title": "Quality has dipped",
+        "body": "Recent success is {delta} pp below the previous slice. The useful question is whether this is fatigue or a technical leak.",
+        "action": "Make the next session shorter and start with a baseline cue-line drill."
+      },
+      "momentumStable": {
+        "title": "Level is stable",
+        "body": "The latest slice is holding near {currentRate}%. This is a good moment to change one condition, not the whole plan.",
+        "action": "Keep the drill the same, but add a time limit or a score-based run."
+      },
+      "drillCoverage": {
+        "title": "Drill data is still thin",
+        "body": "There are {drills} drills in history, but no single template has a reliable sample yet.",
+        "action": "Choose 2-3 baseline templates and repeat them across several sessions."
+      },
+      "focusDrill": {
+        "title": "Main growth area: {drill}",
+        "body": "Across {attempts} attempts, this drill currently has the lowest percentage. It best explains where training points are being lost.",
+        "action": "Split it into an easier version and restore difficulty after two stable runs."
+      },
+      "strengthDrill": {
+        "title": "Strong pattern: {drill}",
+        "body": "Across {attempts} attempts, this drill already looks like a base. It can warm up the session or check current form.",
+        "action": "Add a match condition to this pattern: score, timer or penalty for a miss."
+      },
+      "openSessions": {
+        "title": "Some sessions are still open",
+        "body": "There are {sessions} open sessions. That can make training look longer or weaker than it really was.",
+        "action": "Close previous sessions with post-session fatigue so analytics becomes cleaner."
+      },
+      "shortSessions": {
+        "title": "Sessions are short for strong reads",
+        "body": "Average duration is about {minutes} minutes. That is enough for logging, but not always enough for a confident pattern.",
+        "action": "Add one weekly control block of 30-40 minutes using the same drills."
+      },
+      "heavyLoad": {
+        "title": "Volume is high while quality is low",
+        "body": "The period has {minutes} minutes at {successRate}% success. This is a neutral signal to check load and context.",
+        "action": "Compare this week with factor calendar entries: sleep, stress, travel and rest days."
+      },
+      "rhythm": {
+        "title": "Training rhythm is visible",
+        "body": "The period has {sessions} sessions and {minutes} minutes. That is enough to look for repeatable training patterns.",
+        "action": "Add daily state beside key sessions to learn when quality is best."
+      },
+      "addMatches": {
+        "title": "The match link is missing",
+        "body": "Training metrics exist, but without matches the system cannot see what transfers into play.",
+        "action": "Add at least the last 2-3 matches with frames and error notes."
+      },
+      "transferGap": {
+        "title": "Training and matches are not aligned yet",
+        "body": "Drill success is {successRate}%, while win rate is {winRate}%. The skill may not fully transfer into competitive context yet.",
+        "action": "Use match-style runs next session: score, fouls and stop reasons after decision errors."
+      },
+      "matchValidation": {
+        "title": "Matches validate the training focus",
+        "body": "Win rate {winRate}% and {framesWon} frames won support the current training direction.",
+        "action": "Keep the core plan and add one harder condition to the strongest drill."
+      },
+      "matchLens": {
+        "title": "Match picture is mixed",
+        "body": "Frames {framesWon}:{framesLost} are a starting point, but errors and breaks need more detail.",
+        "action": "After the next match, record 1-3 reasons why breaks stopped, not just the final score."
+      }
+    }
+  },
   "calendar": {
     "title": "Factor calendar",
     "subtitle": "Events, wellness notes and supplement periods in one player timeline.",
@@ -311,6 +465,42 @@
     "saving": "Saving…",
     "required": "Required field",
     "sensitive": "Wellness/supplement data is sensitive",
+    "insights": {
+      "eyebrow": "Readiness lens",
+      "nextAction": "Next action",
+      "confidence": "{confidence}% confidence by completeness",
+      "metrics": {
+        "score": "Readiness",
+        "days": "Days logged"
+      },
+      "cards": {
+        "noData": {
+          "title": "No state data yet",
+          "body": "Sleep, fatigue, stress and focus entries turn the calendar into an explanation of training quality, not just an event log.",
+          "action": "Log 5-7 days in a row, even briefly: sleep, fatigue, stress and focus."
+        },
+        "lowSleep": {
+          "title": "Sleep may explain quality",
+          "body": "Across {days} logged days, average sleep is {sleep} h. This is a coaching observation, not a medical conclusion.",
+          "action": "Compare the next session with a short technical block instead of maximum load."
+        },
+        "strain": {
+          "title": "State load is elevated",
+          "body": "Averages: fatigue {fatigue}/10, stress {stress}/10, focus {focus}/10. This is a reason to read training percentages carefully.",
+          "action": "Log the training goal and actual intensity so form is not confused with day context."
+        },
+        "ready": {
+          "title": "Good window for quality work",
+          "body": "Across {days} days, focus is around {focus}/10 with moderate fatigue {fatigue}/10. This looks like a useful moment for a control block.",
+          "action": "Schedule a measurable drill session and record every attempt for a strong comparison."
+        },
+        "neutral": {
+          "title": "Background looks even",
+          "body": "The last {days} days show no sharp signal. Sleep {sleep} h, fatigue {fatigue}/10, focus {focus}/10.",
+          "action": "Keep logging state beside key sessions to build a personal pattern."
+        }
+      }
+    },
     "noScore": "No score",
     "profileRequired": {
       "title": "Player profile required",
@@ -776,6 +966,59 @@
     },
     "tableLayout": {
       "title": "Table layout"
+    },
+    "liveInsights": {
+      "eyebrow": "Live read",
+      "nextAction": "Next action",
+      "confidence": "{confidence}% confidence",
+      "metrics": {
+        "readiness": "Readiness",
+        "sample": "Attempts",
+        "successRate": "Success rate",
+        "trend": "Last 5"
+      },
+      "cards": {
+        "loadGuard": {
+          "title": "Not a max-difficulty day",
+          "body": "Fatigue {fatigue}/10 and focus {focus}/10 mean today's percentages should be read carefully.",
+          "action": "Prioritize routine quality and short runs over record volume."
+        },
+        "chooseDrill": {
+          "title": "Choose a drill to create signal",
+          "body": "The session exists, but no active drill is selected yet. The live read appears after the first attempts.",
+          "action": "Add one template and record at least five attempts without switching task."
+        },
+        "collectSignal": {
+          "title": "Signal is still building",
+          "body": "There are {attempts} attempts. A first live read needs about five attempts under the same condition.",
+          "action": "Do not change the drill until attempt five so the system compares like with like."
+        },
+        "trendUp": {
+          "title": "Recent attempts are improving",
+          "body": "The last five attempts are {delta} pp better than the previous five, with short-window success around {recentRate}%.",
+          "action": "Lock in five more attempts with the same routine, then add a match condition."
+        },
+        "trendDown": {
+          "title": "Recent quality is dropping",
+          "body": "The last five attempts are {delta} pp below the previous five. It may be time to slow down or simplify.",
+          "action": "Reset the routine: line, pause, one tempo. Then play three control attempts."
+        },
+        "resetDifficulty": {
+          "title": "Difficulty is above the current level",
+          "body": "Success rate {successRate}% means this drill is diagnosing the problem more than training stability right now.",
+          "action": "Simplify the position or shorten the distance until two stable mini-runs appear."
+        },
+        "raiseChallenge": {
+          "title": "Pressure can go up",
+          "body": "Success rate {successRate}% on this sample is confident enough to make the condition harder.",
+          "action": "Add score, timer or a position-error penalty while keeping the same cue action."
+        },
+        "stable": {
+          "title": "The working zone is found",
+          "body": "Success rate {successRate}% gives training load without a clear collapse or an overly easy task.",
+          "action": "Finish the block at the planned attempt count and record post-session fatigue."
+        }
+      }
     }
   },
   "matches": {

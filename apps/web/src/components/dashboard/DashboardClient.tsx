@@ -15,10 +15,12 @@ import {
   YAxis,
 } from 'recharts';
 import type { DashboardDrillProgress, PlayerDashboard } from '@snooker/shared';
+import { CoachInsightPanel } from '@/components/insights/CoachInsightPanel';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillName } from '@/lib/drill-localization';
+import { buildDashboardInsights } from '@/lib/player-insights';
 
 export function DashboardClient() {
   const t = useTranslations('dashboard');
@@ -81,6 +83,7 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
   const t = useTranslations('dashboard');
   const locale = useLocale();
   const hasData = dashboard.totals.sessions > 0 || dashboard.totals.attempts > 0 || dashboard.matchSummary.matches > 0;
+  const insights = buildDashboardInsights(dashboard);
 
   return (
     <>
@@ -101,6 +104,8 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
         <StatCard label={t('stats.attempts')} value={dashboard.totals.attempts} />
         <StatCard label={t('stats.successRate')} value={dashboard.totals.successRate} suffix="%" />
       </section>
+
+      {hasData && <CoachInsightPanel insights={insights} />}
 
       <section className="grid gap-6 xl:grid-cols-2">
         <ChartPanel title={t('charts.volume')}>

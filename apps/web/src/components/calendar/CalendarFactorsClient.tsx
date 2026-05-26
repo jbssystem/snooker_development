@@ -88,6 +88,17 @@ type CalendarMonthItem = CalendarSelection & {
 
 type QuickEntryForm = 'event' | 'lifestyle' | 'supplement';
 
+type ReadinessLens = {
+  actionKey: string;
+  bodyKey: string;
+  confidence: number;
+  metricKey: string;
+  metricValue: string;
+  titleKey: string;
+  tone: 'accent' | 'info' | 'warning';
+  values?: Record<string, number | string>;
+};
+
 const listPageSize = 8;
 
 const eventTypes: CalendarEventType[] = [
@@ -170,6 +181,7 @@ export function CalendarFactorsClient() {
   const events = eventsQuery.data ?? [];
   const lifestyleFactors = lifestyleQuery.data ?? [];
   const supplements = supplementsQuery.data ?? [];
+  const readinessLens = useMemo(() => buildReadinessLens(lifestyleFactors), [lifestyleFactors]);
   const monthDays = useMemo(
     () => buildCalendarMonth(calendarMonth, events, lifestyleFactors, supplements),
     [calendarMonth, events, lifestyleFactors, supplements],
@@ -211,6 +223,8 @@ export function CalendarFactorsClient() {
             {t('sensitive')}
           </p>
         </header>
+
+        <ReadinessLensPanel lens={readinessLens} t={t} />
 
         {profileMissing && (
           <section className="rounded-lg border border-state-warning/40 bg-state-warning/10 p-5 text-text-secondary">
@@ -520,6 +534,149 @@ export function CalendarFactorsClient() {
       </aside>
     </main>
   );
+}
+
+function ReadinessLensPanel({ lens, t }: { lens: ReadinessLens; t: ReturnType<typeof useTranslations> }) {
+  return (
+    <section className={`rounded-lg border bg-background-secondary p-4 sm:p-5 ${readinessToneClass(lens.tone)}`} data-testid="readiness-lens">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-brand-accent">{t('insights.eyebrow')}</p>
+          <h2 className="mt-1 text-xl font-semibold text-text-primary">
+            {t(`insights.cards.${lens.titleKey}.title`, lens.values)}
+          </h2>
+        </div>
+        <div className="text-right">
+          <p className="text-3xl font-semibold text-text-primary">{lens.metricValue}</p>
+          <p className="text-xs text-text-disabled">{t(`insights.metrics.${lens.metricKey}`)}</p>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <p className="text-sm leading-6 text-text-secondary">
+          {t(`insights.cards.${lens.bodyKey}.body`, lens.values)}
+        </p>
+        <div className="rounded-md bg-background-primary px-3 py-2 text-sm text-text-secondary">
+          <p className="text-xs uppercase text-text-disabled">{t('insights.nextAction')}</p>
+          <p className="mt-1 text-text-primary">{t(`insights.cards.${lens.actionKey}.action`, lens.values)}</p>
+          <p className="mt-2 text-xs text-text-disabled">{t('insights.confidence', { confidence: lens.confidence })}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function buildReadinessLens(lifestyleFactors: LifestyleFactor[]): ReadinessLens {
+  const recentFactors = [...lifestyleFactors]
+    .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
+    .slice(0, 7);
+
+  if (recentFactors.length === 0) {
+    return {
+      actionKey: 'noData',
+      bodyKey: 'noData',
+      confidence: 30,
+      metricKey: 'days',
+      metricValue: '0/7',
+      titleKey: 'noData',
+      tone: 'info',
+    };
+  }
+
+  const sleepAverage = averageDefined(recentFactors.map((factor) => factor.sleepHours));
+  const fatigueAverage = averageDefined(recentFactors.map((factor) => factor.fatigue));
+  const stressAverage = averageDefined(recentFactors.map((factor) => factor.stress));
+  const focusAverage = averageDefined(recentFactors.map((factor) => factor.focus));
+  const score = readinessScore(sleepAverage, fatigueAverage, stressAverage, focusAverage);
+  const filledSignals = [sleepAverage, fatigueAverage, stressAverage, focusAverage].filter((value) => value !== undefined).length;
+  const confidence = Math.min(90, Math.round(35 + recentFactors.length * 7 + filledSignals * 3));
+  const values = {
+    days: recentFactors.length,
+    fatigue: formatAverage(fatigueAverage),
+    focus: formatAverage(focusAverage),
+    sleep: formatAverage(sleepAverage),
+    stress: formatAverage(stressAverage),
+  };
+
+  if (sleepAverage !== undefined && sleepAverage < 6.5) {
+    return {
+      actionKey: 'lowSleep',
+      bodyKey: 'lowSleep',
+      confidence,
+      metricKey: 'score',
+      metricValue: `${score}/100`,
+      titleKey: 'lowSleep',
+      tone: 'warning',
+      values,
+    };
+  }
+
+  if ((stressAverage !== undefined && stressAverage >= 7) || (fatigueAverage !== undefined && fatigueAverage >= 7)) {
+    return {
+      actionKey: 'strain',
+      bodyKey: 'strain',
+      confidence,
+      metricKey: 'score',
+      metricValue: `${score}/100`,
+      titleKey: 'strain',
+      tone: 'warning',
+      values,
+    };
+  }
+
+  if (focusAverage !== undefined && focusAverage >= 7 && (fatigueAverage === undefined || fatigueAverage <= 5)) {
+    return {
+      actionKey: 'ready',
+      bodyKey: 'ready',
+      confidence,
+      metricKey: 'score',
+      metricValue: `${score}/100`,
+      titleKey: 'ready',
+      tone: 'accent',
+      values,
+    };
+  }
+
+  return {
+    actionKey: 'neutral',
+    bodyKey: 'neutral',
+    confidence,
+    metricKey: 'score',
+    metricValue: `${score}/100`,
+    titleKey: 'neutral',
+    tone: 'info',
+    values,
+  };
+}
+
+function readinessScore(
+  sleepAverage: number | undefined,
+  fatigueAverage: number | undefined,
+  stressAverage: number | undefined,
+  focusAverage: number | undefined,
+): number {
+  let score = 55;
+  if (sleepAverage !== undefined) score += (sleepAverage - 7) * 7;
+  if (focusAverage !== undefined) score += (focusAverage - 5) * 5;
+  if (fatigueAverage !== undefined) score -= (fatigueAverage - 5) * 5;
+  if (stressAverage !== undefined) score -= (stressAverage - 5) * 4;
+  return Math.max(10, Math.min(95, Math.round(score)));
+}
+
+function averageDefined(values: Array<number | undefined>): number | undefined {
+  const definedValues = values.filter((value): value is number => value !== undefined);
+  if (definedValues.length === 0) return undefined;
+  return definedValues.reduce((sum, value) => sum + value, 0) / definedValues.length;
+}
+
+function formatAverage(value: number | undefined): string {
+  if (value === undefined) return '—';
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 }).format(value);
+}
+
+function readinessToneClass(tone: ReadinessLens['tone']): string {
+  if (tone === 'accent') return 'border-brand-accent/70 shadow-glow';
+  if (tone === 'warning') return 'border-state-warning/70';
+  return 'border-border-subtle';
 }
 
 function CalendarMonthView({

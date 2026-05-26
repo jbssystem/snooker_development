@@ -42,6 +42,17 @@ const defaultValues: SessionFormValues = {
   mood: '',
 };
 
+type LiveTrainingInsight = {
+  actionKey: string;
+  bodyKey: string;
+  confidence: number;
+  metricKey: string;
+  metricValue: string;
+  titleKey: string;
+  tone: 'accent' | 'info' | 'warning';
+  values?: Record<string, number | string>;
+};
+
 export function TrainingSessionClient() {
   const t = useTranslations('training');
   const tSystemDrills = useTranslations('systemDrills');
@@ -313,7 +324,7 @@ function ActiveSessionPanel({
   setActiveExecutionId: (id: string) => void;
   setFinishFatigue: (value: string) => void;
   setSelectedDrillId: (id: string) => void;
-  t: (key: string) => string;
+  t: ReturnType<typeof useTranslations>;
   tSystemDrills: ReturnType<typeof useTranslations>;
 }) {
   return (
@@ -353,6 +364,8 @@ function ActiveSessionPanel({
           <Metric label={t('fields.focusLevel')} value={session.focusLevel} />
         </dl>
       </header>
+
+      <LiveSessionInsight insight={buildLiveTrainingInsight(session, activeExecution)} t={t} />
 
       {!session.endedAt && (
         <section className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
@@ -482,6 +495,174 @@ function ActiveSessionPanel({
       )}
     </div>
   );
+}
+
+function LiveSessionInsight({ insight, t }: { insight: LiveTrainingInsight; t: ReturnType<typeof useTranslations> }) {
+  return (
+    <section className={`rounded-lg border bg-background-secondary p-4 sm:p-5 ${liveInsightToneClass(insight.tone)}`} data-testid="live-training-insight">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-brand-accent">{t('liveInsights.eyebrow')}</p>
+          <h3 className="mt-1 text-lg font-semibold text-text-primary">
+            {t(`liveInsights.cards.${insight.titleKey}.title`, insight.values)}
+          </h3>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-semibold text-text-primary">{insight.metricValue}</p>
+          <p className="text-xs text-text-disabled">{t(`liveInsights.metrics.${insight.metricKey}`)}</p>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <p className="text-sm leading-6 text-text-secondary">
+          {t(`liveInsights.cards.${insight.bodyKey}.body`, insight.values)}
+        </p>
+        <div className="rounded-md bg-background-primary px-3 py-2 text-sm text-text-secondary">
+          <p className="text-xs uppercase text-text-disabled">{t('liveInsights.nextAction')}</p>
+          <p className="mt-1 text-text-primary">{t(`liveInsights.cards.${insight.actionKey}.action`, insight.values)}</p>
+          <p className="mt-2 text-xs text-text-disabled">{t('liveInsights.confidence', { confidence: insight.confidence })}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function buildLiveTrainingInsight(session: TrainingSession, activeExecution: DrillExecution | undefined): LiveTrainingInsight {
+  const readinessScore = sessionReadinessScore(session);
+
+  if (session.fatigueBefore !== undefined && session.fatigueBefore >= 7 && session.focusLevel !== undefined && session.focusLevel <= 5) {
+    return {
+      actionKey: 'loadGuard',
+      bodyKey: 'loadGuard',
+      confidence: 78,
+      metricKey: 'readiness',
+      metricValue: `${readinessScore}/100`,
+      titleKey: 'loadGuard',
+      tone: 'warning',
+      values: { fatigue: session.fatigueBefore, focus: session.focusLevel },
+    };
+  }
+
+  if (!activeExecution) {
+    return {
+      actionKey: 'chooseDrill',
+      bodyKey: 'chooseDrill',
+      confidence: 40,
+      metricKey: 'sample',
+      metricValue: '0',
+      titleKey: 'chooseDrill',
+      tone: 'info',
+    };
+  }
+
+  const attemptSample = activeExecution.attemptsLog.filter((attempt) => attempt.result !== 'skipped');
+  const sampleSize = attemptSample.length || activeExecution.attempts;
+  const successRate = activeExecution.attempts > 0 ? Math.round((activeExecution.successes / activeExecution.attempts) * 100) : 0;
+
+  if (sampleSize < 5) {
+    return {
+      actionKey: 'collectSignal',
+      bodyKey: 'collectSignal',
+      confidence: 45,
+      metricKey: 'sample',
+      metricValue: String(sampleSize),
+      titleKey: 'collectSignal',
+      tone: 'info',
+      values: { attempts: sampleSize },
+    };
+  }
+
+  if (attemptSample.length >= 10) {
+    const recentRate = attemptWindowRate(attemptSample.slice(-5));
+    const previousRate = attemptWindowRate(attemptSample.slice(-10, -5));
+    const delta = Math.round(recentRate - previousRate);
+
+    if (delta >= 20) {
+      return {
+        actionKey: 'trendUp',
+        bodyKey: 'trendUp',
+        confidence: 76,
+        metricKey: 'trend',
+        metricValue: `+${delta}%`,
+        titleKey: 'trendUp',
+        tone: 'accent',
+        values: { recentRate: Math.round(recentRate), delta },
+      };
+    }
+
+    if (delta <= -20) {
+      return {
+        actionKey: 'trendDown',
+        bodyKey: 'trendDown',
+        confidence: 76,
+        metricKey: 'trend',
+        metricValue: `${delta}%`,
+        titleKey: 'trendDown',
+        tone: 'warning',
+        values: { recentRate: Math.round(recentRate), delta: Math.abs(delta) },
+      };
+    }
+  }
+
+  if (successRate < 45) {
+    return {
+      actionKey: 'resetDifficulty',
+      bodyKey: 'resetDifficulty',
+      confidence: 72,
+      metricKey: 'successRate',
+      metricValue: `${successRate}%`,
+      titleKey: 'resetDifficulty',
+      tone: 'warning',
+      values: { successRate },
+    };
+  }
+
+  if (successRate >= 80 && sampleSize >= 10) {
+    return {
+      actionKey: 'raiseChallenge',
+      bodyKey: 'raiseChallenge',
+      confidence: 74,
+      metricKey: 'successRate',
+      metricValue: `${successRate}%`,
+      titleKey: 'raiseChallenge',
+      tone: 'accent',
+      values: { successRate },
+    };
+  }
+
+  return {
+    actionKey: 'stable',
+    bodyKey: 'stable',
+    confidence: 68,
+    metricKey: 'successRate',
+    metricValue: `${successRate}%`,
+    titleKey: 'stable',
+    tone: 'info',
+    values: { successRate },
+  };
+}
+
+function sessionReadinessScore(session: TrainingSession): number {
+  let score = 60;
+  if (session.fatigueBefore !== undefined) score -= (session.fatigueBefore - 5) * 6;
+  if (session.focusLevel !== undefined) score += (session.focusLevel - 5) * 6;
+  if (session.intensity !== undefined && session.intensity >= 8) score -= 6;
+  return Math.max(10, Math.min(95, Math.round(score)));
+}
+
+function attemptWindowRate(attempts: DrillExecution['attemptsLog']): number {
+  if (attempts.length === 0) return 0;
+  const score = attempts.reduce((sum, attempt) => {
+    if (attempt.result === 'success') return sum + 1;
+    if (attempt.result === 'partial') return sum + 0.5;
+    return sum;
+  }, 0);
+  return (score / attempts.length) * 100;
+}
+
+function liveInsightToneClass(tone: LiveTrainingInsight['tone']): string {
+  if (tone === 'accent') return 'border-brand-accent/70 shadow-glow';
+  if (tone === 'warning') return 'border-state-warning/70';
+  return 'border-border-subtle';
 }
 
 const inputClass =
