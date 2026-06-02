@@ -197,7 +197,7 @@ export function MatchLogClient() {
         </div>
       </aside>
 
-      <section className="min-w-0">
+      <section className="order-first min-w-0 xl:order-none">
         {profileMissing && (
           <div className="mb-5 rounded-lg border border-state-warning/40 bg-state-warning/10 p-5 text-text-secondary">
             <h2 className="text-lg font-semibold text-text-primary">{t('profileRequired.title')}</h2>

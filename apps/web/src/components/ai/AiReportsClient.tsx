@@ -152,7 +152,7 @@ export function AiReportsClient() {
         </div>
       </aside>
 
-      <section className="min-w-0 rounded-lg border border-border-subtle bg-background-secondary p-5">
+      <section className="order-first min-w-0 rounded-lg border border-border-subtle bg-background-secondary p-5 xl:order-none">
         {activeReport ? <ReportDetail report={activeReport} /> : <EmptyReport />}
       </section>
 

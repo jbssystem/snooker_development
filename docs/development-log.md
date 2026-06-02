@@ -19,6 +19,27 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### First-version focus pass — drills, training, layout (2026-06-02)
+
+**Delivered:**
+
+- Drill table editor: layout presets (empty / full rack / colours / long pot /
+  Line Up) and a reds stepper (0–15) so a coach picks a drill shape and dials
+  the ball count instead of placing each ball by hand.
+- Training: "undo attempt" button + `DELETE /drill-executions/:id/attempts/last`
+  endpoint (mis-tap correction); attempt buttons colour-coded by outcome
+  (success/partial/miss/skipped); added `state.success` colour token.
+- Layout: on mobile the working panel now comes first — the detail/active
+  section uses `order-first xl:order-none` on training, matches and AI, so the
+  primary workspace is no longer buried under the long left-hand list. The AI
+  generate-report form is `defaultOpen` for consistency with the other pages.
+- Tooling: Playwright screenshot scripts (`scripts/ui-screenshots.mjs`,
+  `scripts/ui-inspect.mjs`) for design review without the Chrome extension.
+
+**Verified:** rebuilt web/api/worker Docker images; logged in as the demo
+player via Playwright and confirmed the new editor, training controls, and the
+mobile re-ordering at desktop (1440) and mobile (390) widths.
+
 ### Review & hardening pass (2026-06-02)
 
 **Delivered:**

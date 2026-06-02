@@ -79,6 +79,11 @@ Delivered so far (under `apps/web/src/components/layout/`):
 - Quiet transitions — view swaps, selected detail panels and compact feedback
   may use the global `ui-fade-in` class (160ms fade/translate). Keep motion
   functional and respect `prefers-reduced-motion`.
+- List / detail / form pages (training, matches, AI) use a three-column
+  `xl:grid-cols-[list_detail_form]` layout. The detail/working section carries
+  `order-first xl:order-none` so on narrow screens the active workspace appears
+  before the long left-hand list instead of below it; the form accordion stays
+  last. Keep these primary forms `defaultOpen` for cross-page consistency.
 - `(app)/layout.tsx` route group — wraps authenticated pages with `Header`
   and a centered max-w-7xl container.
 - `(auth)/layout.tsx` route group — minimal centered card layout used by

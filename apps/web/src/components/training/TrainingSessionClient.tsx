@@ -203,7 +203,7 @@ export function TrainingSessionClient() {
         </div>
       </aside>
 
-      <section className="min-w-0">
+      <section className="order-first min-w-0 xl:order-none">
         {activeSession ? (
           <ActiveSessionPanel
             activeExecution={activeExecution}
