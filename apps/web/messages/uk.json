@@ -1141,7 +1141,24 @@
       "copyJson": "JSON",
       "json": "JSON layout",
       "loadJson": "Завантажити JSON",
-      "jsonError": "Некоректний JSON"
+      "jsonError": "Некоректний JSON",
+      "ballCount": "Куль: {count}",
+      "ballsGroup": "Кулі",
+      "toolsGroup": "Інструменти",
+      "presets": {
+        "title": "Заготовки",
+        "empty": "Порожній стіл",
+        "standard": "Повна піраміда",
+        "colours": "Лише кольори",
+        "longPot": "Далекий удар",
+        "lineUp": "Line Up"
+      },
+      "reds": {
+        "title": "Червоні",
+        "decrease": "Прибрати червону",
+        "increase": "Додати червону",
+        "hint": "0–15 у піраміді"
+      }
     },
     "balls": {
       "white": "Біла",

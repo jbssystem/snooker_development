@@ -1141,7 +1141,24 @@
       "copyJson": "JSON",
       "json": "JSON layout",
       "loadJson": "Load JSON",
-      "jsonError": "Invalid JSON"
+      "jsonError": "Invalid JSON",
+      "ballCount": "Balls: {count}",
+      "ballsGroup": "Balls",
+      "toolsGroup": "Tools",
+      "presets": {
+        "title": "Presets",
+        "empty": "Empty table",
+        "standard": "Full rack",
+        "colours": "Colours only",
+        "longPot": "Long pot",
+        "lineUp": "Line Up"
+      },
+      "reds": {
+        "title": "Reds",
+        "decrease": "Remove red",
+        "increase": "Add red",
+        "hint": "0–15 in a triangle"
+      }
     },
     "balls": {
       "white": "White",

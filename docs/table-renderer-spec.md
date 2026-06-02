@@ -56,6 +56,15 @@ type RendererEvents = {
 - `edit` — drag-and-drop balls, add target zones, draw shot paths.
 - `replay` — Phase 5 (PixiJS), timeline-driven.
 
+## Editor presets and ball count
+
+`DrillLayoutEditor` ships starting-point presets (`empty`, `standard`,
+`colours`, `longPot`, `lineUp`) via `createPresetLayout`, and a reds stepper
+(`withReds`, 0–15) that regenerates the red triangle while preserving colours,
+cue ball, zones and paths. This lets a coach pick a common drill shape and dial
+the number of balls instead of placing each ball by hand. Preset/red helpers
+live in `apps/web/src/components/table-renderer/layouts.ts`.
+
 ## Current limits
 
 - Target zones and shot paths are created through simple editor actions; direct

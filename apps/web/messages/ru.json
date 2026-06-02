@@ -1141,7 +1141,24 @@
       "copyJson": "JSON",
       "json": "JSON layout",
       "loadJson": "Загрузить JSON",
-      "jsonError": "Некорректный JSON"
+      "jsonError": "Некорректный JSON",
+      "ballCount": "Шаров: {count}",
+      "ballsGroup": "Шары",
+      "toolsGroup": "Инструменты",
+      "presets": {
+        "title": "Заготовки",
+        "empty": "Пустой стол",
+        "standard": "Полная пирамида",
+        "colours": "Только цвета",
+        "longPot": "Дальний удар",
+        "lineUp": "Line Up"
+      },
+      "reds": {
+        "title": "Красные",
+        "decrease": "Убрать красный",
+        "increase": "Добавить красный",
+        "hint": "0–15 в пирамиде"
+      }
     },
     "balls": {
       "white": "Белый",
