@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -90,6 +91,14 @@ export class TrainingController {
     @Body(new ZodValidationPipe(CreateDrillAttemptSchema)) body: CreateDrillAttemptInput,
   ): Promise<DrillAttempt> {
     return this.training.addAttempt(userId, id, body);
+  }
+
+  @Delete('drill-executions/:id/attempts/last')
+  removeLastAttempt(
+    @CurrentUserId() userId: string,
+    @Param('id', CuidValidationPipe) id: string,
+  ): Promise<DrillExecution> {
+    return this.training.removeLastAttempt(userId, id);
   }
 
   @Patch('drill-executions/:id/finish')

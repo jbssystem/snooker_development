@@ -943,7 +943,8 @@
     },
     "actions": {
       "finishSession": "Завершити сесію",
-      "finishDrill": "Завершити вправу"
+      "finishDrill": "Завершити вправу",
+      "undoAttempt": "Скасувати спробу"
     },
     "execution": {
       "empty": "Вправи ще не додано.",

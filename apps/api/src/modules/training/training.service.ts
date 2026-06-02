@@ -219,6 +219,35 @@ export class TrainingService {
     return mapDrillAttempt(attempt);
   }
 
+  async removeLastAttempt(userId: string, executionId: string): Promise<DrillExecution> {
+    const execution = await this.findExecutionOrThrow(userId, executionId);
+    assertOpen(execution.endedAt);
+
+    await withSerializableRetry(this.prisma, async (tx) => {
+      const lastAttempt = await tx.drillAttempt.findFirst({
+        where: { drillExecutionId: execution.id },
+        orderBy: { attemptNumber: 'desc' },
+      });
+      if (!lastAttempt) {
+        return;
+      }
+      await tx.drillAttempt.delete({ where: { id: lastAttempt.id } });
+      const executionUpdate: Prisma.DrillExecutionUpdateInput = {
+        attempts: { decrement: 1 },
+      };
+      if (lastAttempt.result === PrismaDrillAttemptResult.SUCCESS) {
+        executionUpdate.successes = { decrement: 1 };
+      }
+      await tx.drillExecution.update({
+        where: { id: execution.id },
+        data: executionUpdate,
+      });
+    });
+
+    const refreshed = await this.findExecutionOrThrow(userId, executionId);
+    return mapDrillExecution(refreshed);
+  }
+
   async finishDrill(
     userId: string,
     executionId: string,

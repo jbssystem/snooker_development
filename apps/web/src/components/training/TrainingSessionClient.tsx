@@ -135,6 +135,15 @@ export function TrainingSessionClient() {
     onError: (e) => setServerError(errorMessage(e, tErr)),
   });
 
+  const removeLastAttempt = useMutation({
+    mutationFn: (executionId: string) => api.training.removeLastAttempt(token ?? '', executionId),
+    onSuccess: () => {
+      setServerError(null);
+      queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
+    },
+    onError: (e) => setServerError(errorMessage(e, tErr)),
+  });
+
   const finishSession = useMutation({
     mutationFn: (sessionId: string) => {
       const input = parseOptionalInt(finishFatigue);
@@ -213,6 +222,8 @@ export function TrainingSessionClient() {
             drills={drillsQuery.data ?? []}
             finishDrill={(id) => finishDrill.mutate(id)}
             finishDrillPending={finishDrill.isPending}
+            removeLastAttempt={(id) => removeLastAttempt.mutate(id)}
+            removeLastAttemptPending={removeLastAttempt.isPending}
             finishFatigue={finishFatigue}
             finishSession={() => finishSession.mutate(activeSession.id)}
             finishSessionPending={finishSession.isPending}
@@ -297,6 +308,8 @@ function ActiveSessionPanel({
   drills,
   finishDrill,
   finishDrillPending,
+  removeLastAttempt,
+  removeLastAttemptPending,
   finishFatigue,
   finishSession,
   finishSessionPending,
@@ -316,6 +329,8 @@ function ActiveSessionPanel({
   drills: DrillTemplate[];
   finishDrill: (id: string) => void;
   finishDrillPending: boolean;
+  removeLastAttempt: (id: string) => void;
+  removeLastAttemptPending: boolean;
   finishFatigue: string;
   finishSession: () => void;
   finishSessionPending: boolean;
@@ -444,18 +459,28 @@ function ActiveSessionPanel({
           </div>
 
           {!activeExecution.endedAt && (
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {attemptResults.map((result) => (
-                <button
-                  key={result}
-                  className={secondaryButtonClass}
-                  disabled={addAttemptPending}
-                  onClick={() => addAttempt(result)}
-                  type="button"
-                >
-                  {t(`attemptResults.${result}`)}
-                </button>
-              ))}
+            <div className="mt-5 grid gap-3">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {attemptResults.map((result) => (
+                  <button
+                    key={result}
+                    className={attemptButtonClass(result)}
+                    disabled={addAttemptPending}
+                    onClick={() => addAttempt(result)}
+                    type="button"
+                  >
+                    {t(`attemptResults.${result}`)}
+                  </button>
+                ))}
+              </div>
+              <button
+                className={`${secondaryButtonClass} justify-self-start`}
+                disabled={removeLastAttemptPending || activeExecution.attempts === 0}
+                onClick={() => removeLastAttempt(activeExecution.id)}
+                type="button"
+              >
+                {t('actions.undoAttempt')}
+              </button>
             </div>
           )}
 
@@ -671,6 +696,17 @@ const primaryButtonClass =
   'min-h-11 rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
 const secondaryButtonClass =
   'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-60';
+
+function attemptButtonClass(result: DrillAttemptResult): string {
+  const base = 'min-h-11 rounded-md border px-3 py-2 text-sm font-medium transition disabled:opacity-60';
+  const byResult: Record<DrillAttemptResult, string> = {
+    success: 'border-state-success/60 text-state-success hover:bg-state-success/10',
+    partial: 'border-brand-accent/60 text-brand-accent hover:bg-brand-accent/10',
+    miss: 'border-state-error/60 text-state-error hover:bg-state-error/10',
+    skipped: 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary',
+  };
+  return `${base} ${byResult[result]}`;
+}
 
 function Field({
   children,

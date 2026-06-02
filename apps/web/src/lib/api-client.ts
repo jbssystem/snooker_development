@@ -256,6 +256,11 @@ export const api = {
         token,
         body: JSON.stringify(input),
       }),
+    removeLastAttempt: (token: string, executionId: string) =>
+      request<DrillExecution>(`/drill-executions/${executionId}/attempts/last`, {
+        method: 'DELETE',
+        token,
+      }),
   },
   dashboard: {
     getPlayerDashboard: (token: string) =>

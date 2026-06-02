@@ -943,7 +943,8 @@
     },
     "actions": {
       "finishSession": "Завершить сессию",
-      "finishDrill": "Завершить упражнение"
+      "finishDrill": "Завершить упражнение",
+      "undoAttempt": "Отменить попытку"
     },
     "execution": {
       "empty": "Упражнения ещё не добавлены.",

@@ -24,6 +24,7 @@ module.exports = {
           disabled: '#6F7A86',
         },
         state: {
+          success: '#3FB36B',
           error: '#D65A5A',
           warning: '#D89A3A',
           info: '#4A90E2',

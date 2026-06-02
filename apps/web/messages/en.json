@@ -943,7 +943,8 @@
     },
     "actions": {
       "finishSession": "Finish session",
-      "finishDrill": "Finish drill"
+      "finishDrill": "Finish drill",
+      "undoAttempt": "Undo attempt"
     },
     "execution": {
       "empty": "No drills have been added yet.",
