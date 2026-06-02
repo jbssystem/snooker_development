@@ -903,6 +903,11 @@
       "active": "Активна",
       "finished": "Завершена"
     },
+    "startTitle": "Почніть тренування",
+    "startSubtitle": "Створіть сесію, додайте вправи та відмічайте спроби в один тап.",
+    "newSession": {
+      "open": "Нова сесія"
+    },
     "form": {
       "title": "Нова сесія",
       "submit": "Почати сесію"
@@ -944,12 +949,17 @@
     "actions": {
       "finishSession": "Завершити сесію",
       "finishDrill": "Завершити вправу",
-      "undoAttempt": "Скасувати спробу"
+      "undoAttempt": "Скасувати спробу",
+      "close": "Закрити"
     },
     "execution": {
       "empty": "Вправи ще не додано.",
       "unnamed": "Вправа",
       "open": "Відкрита",
+      "current": "Поточна вправа",
+      "successRate": "Успішність",
+      "finishedNote": "Вправу завершено.",
+      "sessionDrills": "Вправи сесії",
       "attempts": "спроб",
       "successes": "успіхів"
     },
@@ -960,6 +970,7 @@
       "skipped": "Пропуск"
     },
     "attempts": {
+      "title": "Історія спроб",
       "number": "#",
       "result": "Результат",
       "time": "Час",

@@ -19,6 +19,25 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Training page redesign (2026-06-02)
+
+**Delivered:**
+
+- Rebuilt `/training` as a two-column layout (session rail + single working
+  column). The new-session form moved into a `Modal` (new
+  `components/layout/Modal.tsx`), removing the third column that overlapped the
+  center panel and simplifying the page for fast coach data-entry.
+- The working column now leads with the active drill: large attempt tally
+  (attempts / successes / success rate) and big colour-coded outcome buttons,
+  with attempt history + table snapshot in a collapsed accordion and session
+  meta shown as compact pills. Mobile shows the working column first.
+- i18n: added `training.newSession`, `training.startTitle/startSubtitle`,
+  `training.actions.close`, `training.execution.{current,successRate,finishedNote,sessionDrills}`,
+  `training.attempts.title` across ru/en/uk (locales verified in sync, 1007 keys).
+
+**Verified:** Playwright screenshots of desktop, mobile and the new-session
+modal on the rebuilt web image.
+
 ### First-version focus pass — drills, training, layout (2026-06-02)
 
 **Delivered:**

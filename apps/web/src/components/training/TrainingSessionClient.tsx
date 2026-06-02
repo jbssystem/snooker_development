@@ -14,6 +14,7 @@ import type {
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
+import { Modal } from '@/components/layout/Modal';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillName, localizeDrillTemplate } from '@/lib/drill-localization';
@@ -65,6 +66,7 @@ export function TrainingSessionClient() {
   const [selectedDrillId, setSelectedDrillId] = useState('');
   const [finishFatigue, setFinishFatigue] = useState('');
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showNewSession, setShowNewSession] = useState(false);
 
   const sessionsQuery = useQuery({
     queryKey: ['training-sessions'],
@@ -98,6 +100,7 @@ export function TrainingSessionClient() {
     onSuccess: (session) => {
       setServerError(null);
       form.reset(defaultValues);
+      setShowNewSession(false);
       setActiveSessionId(session.id);
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
     },
@@ -172,12 +175,20 @@ export function TrainingSessionClient() {
     );
   }
 
+  const openNewSession = () => {
+    setServerError(null);
+    setShowNewSession(true);
+  };
+
   return (
-    <main className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
+    <main className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
       <aside className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
-        <div className="mt-5 grid gap-2">
+        <button className={`${primaryButtonClass} mt-5 w-full`} onClick={openNewSession} type="button">
+          + {t('newSession.open')}
+        </button>
+        <div className="mt-4 grid gap-2">
           {sessions.map((session) => (
             <button
               key={session.id}
@@ -186,7 +197,10 @@ export function TrainingSessionClient() {
                   ? 'border-brand-accent bg-background-elevated text-text-primary'
                   : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
               }`}
-              onClick={() => setActiveSessionId(session.id)}
+              onClick={() => {
+                setActiveSessionId(session.id);
+                setActiveExecutionId(null);
+              }}
               type="button"
             >
               <span className="block truncate text-sm font-medium">{session.title}</span>
@@ -203,7 +217,7 @@ export function TrainingSessionClient() {
         </div>
       </aside>
 
-      <section className="order-first min-w-0 xl:order-none">
+      <section className="order-first min-w-0 lg:order-none">
         {activeSession ? (
           <ActiveSessionPanel
             activeExecution={activeExecution}
@@ -228,6 +242,7 @@ export function TrainingSessionClient() {
             finishSession={() => finishSession.mutate(activeSession.id)}
             finishSessionPending={finishSession.isPending}
             selectedDrillId={selectedDrillId}
+            serverError={serverError}
             session={activeSession}
             setActiveExecutionId={setActiveExecutionId}
             setFinishFatigue={setFinishFatigue}
@@ -236,65 +251,34 @@ export function TrainingSessionClient() {
             tSystemDrills={tSystemDrills}
           />
         ) : (
-          <div className="rounded-lg border border-border-subtle bg-background-secondary p-8 text-text-secondary">
-            {sessionsQuery.isLoading ? t('loading') : t('empty')}
+          <div className="grid place-items-center rounded-lg border border-dashed border-border-subtle bg-background-secondary p-10 text-center">
+            <div className="max-w-sm">
+              <h2 className="text-xl font-semibold text-text-primary">{t('startTitle')}</h2>
+              <p className="mt-2 text-sm text-text-secondary">
+                {sessionsQuery.isLoading ? t('loading') : t('startSubtitle')}
+              </p>
+              <button className={`${primaryButtonClass} mt-5`} onClick={openNewSession} type="button">
+                + {t('newSession.open')}
+              </button>
+            </div>
           </div>
         )}
       </section>
 
-      <aside className="content-start">
-        <AccordionSection defaultOpen testId="training-session-form" title={t('form.title')}>
-          <form
-            className="grid gap-4"
-            onSubmit={form.handleSubmit((values) => createSession.mutate(toCreateSessionInput(values)))}
-          >
-            <Field error={form.formState.errors.title?.message} hint={t('hints.title')} label={t('fields.title')}>
-              <input
-                autoFocus
-                className={inputClass}
-                placeholder={t('placeholders.title')}
-                {...form.register('title', { required: t('required') })}
-              />
-            </Field>
-            <Field hint={t('hints.sessionType')} label={t('fields.sessionType')}>
-              <select className={inputClass} {...form.register('sessionType')}>
-                {sessionTypes.map((type) => (
-                  <option key={type} value={type}>{t(`sessionTypes.${type}`)}</option>
-                ))}
-              </select>
-            </Field>
-            <Field hint={t('hints.goal')} label={t('fields.goal')}>
-              <textarea
-                className={`${inputClass} min-h-20`}
-                placeholder={t('placeholders.goal')}
-                {...form.register('goal')}
-              />
-            </Field>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Field hint={t('hints.score')} label={t('fields.intensity')}>
-                <input className={inputClass} max={10} min={1} type="number" {...form.register('intensity')} />
-              </Field>
-              <Field hint={t('hints.score')} label={t('fields.fatigueBefore')}>
-                <input className={inputClass} max={10} min={1} type="number" {...form.register('fatigueBefore')} />
-              </Field>
-              <Field hint={t('hints.score')} label={t('fields.focusLevel')}>
-                <input className={inputClass} max={10} min={1} type="number" {...form.register('focusLevel')} />
-              </Field>
-            </div>
-            <Field hint={t('hints.mood')} label={t('fields.mood')}>
-              <input className={inputClass} placeholder={t('placeholders.mood')} {...form.register('mood')} />
-            </Field>
-            {serverError && (
-              <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
-                {serverError}
-              </p>
-            )}
-            <button className={primaryButtonClass} disabled={createSession.isPending} type="submit">
-              {createSession.isPending ? t('saving') : t('form.submit')}
-            </button>
-          </form>
-        </AccordionSection>
-      </aside>
+      <Modal
+        closeLabel={t('actions.close')}
+        onClose={() => setShowNewSession(false)}
+        open={showNewSession}
+        title={t('form.title')}
+      >
+        <NewSessionForm
+          form={form}
+          onSubmit={(values) => createSession.mutate(toCreateSessionInput(values))}
+          pending={createSession.isPending}
+          serverError={showNewSession ? serverError : null}
+          t={t}
+        />
+      </Modal>
     </main>
   );
 }
@@ -314,6 +298,7 @@ function ActiveSessionPanel({
   finishSession,
   finishSessionPending,
   selectedDrillId,
+  serverError,
   session,
   setActiveExecutionId,
   setFinishFatigue,
@@ -335,6 +320,7 @@ function ActiveSessionPanel({
   finishSession: () => void;
   finishSessionPending: boolean;
   selectedDrillId: string;
+  serverError: string | null;
   session: TrainingSession;
   setActiveExecutionId: (id: string) => void;
   setFinishFatigue: (value: string) => void;
@@ -342,50 +328,58 @@ function ActiveSessionPanel({
   t: ReturnType<typeof useTranslations>;
   tSystemDrills: ReturnType<typeof useTranslations>;
 }) {
+  const open = !session.endedAt;
+  const executionOpen = Boolean(activeExecution && !activeExecution.endedAt);
+  const successRate =
+    activeExecution && activeExecution.attempts > 0
+      ? Math.round((activeExecution.successes / activeExecution.attempts) * 100)
+      : 0;
+
   return (
     <div className="grid gap-5">
       <header className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase text-brand-accent">{t(`sessionTypes.${session.sessionType}`)}</p>
-            <h2 className="mt-1 text-2xl font-semibold text-text-primary">{session.title}</h2>
-            <p className="mt-2 text-sm text-text-secondary">
-              {formatDate(session.startedAt)} · {session.endedAt ? t('status.finished') : t('status.active')}
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-wide text-brand-accent">{t(`sessionTypes.${session.sessionType}`)}</p>
+            <h2 className="mt-1 truncate text-2xl font-semibold text-text-primary">{session.title}</h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              {formatDate(session.startedAt)} · {open ? t('status.active') : t('status.finished')}
             </p>
           </div>
-          {!session.endedAt && (
-            <div className="flex flex-wrap items-end gap-2">
-              <Field hint={t('hints.score')} label={t('fields.fatigueAfter')}>
+          {open && (
+            <div className="flex items-end gap-2">
+              <label className="flex flex-col gap-1 text-xs text-text-secondary">
+                <span>{t('fields.fatigueAfter')}</span>
                 <input
-                  className={`${inputClass} w-24`}
+                  className={`${inputClass} h-11 w-20`}
                   max={10}
                   min={1}
                   onChange={(event) => setFinishFatigue(event.target.value)}
+                  placeholder="1–10"
                   type="number"
                   value={finishFatigue}
                 />
-              </Field>
+              </label>
               <button className={secondaryButtonClass} disabled={finishSessionPending} onClick={finishSession} type="button">
                 {t('actions.finishSession')}
               </button>
             </div>
           )}
         </div>
-        {session.goal && <p className="mt-4 text-text-secondary">{session.goal}</p>}
-        <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-4">
-          <Metric label={t('fields.intensity')} value={session.intensity} />
-          <Metric label={t('fields.fatigueBefore')} value={session.fatigueBefore} />
-          <Metric label={t('fields.fatigueAfter')} value={session.fatigueAfter} />
-          <Metric label={t('fields.focusLevel')} value={session.focusLevel} />
-        </dl>
+        {session.goal && <p className="mt-3 text-sm text-text-secondary">{session.goal}</p>}
+        <SessionMeta session={session} t={t} />
       </header>
 
-      <LiveSessionInsight insight={buildLiveTrainingInsight(session, activeExecution)} t={t} />
+      {serverError && (
+        <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
+          {serverError}
+        </p>
+      )}
 
-      {!session.endedAt && (
+      {open && (
         <section className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
-          <h3 className="text-lg font-semibold text-text-primary">{t('drillPicker.title')}</h3>
-          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <label className="text-sm font-medium text-text-secondary">{t('drillPicker.title')}</label>
+          <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <select className={inputClass} onChange={(event) => setSelectedDrillId(event.target.value)} value={selectedDrillId}>
               <option value="">{t('drillPicker.empty')}</option>
               {drills.map((drill) => (
@@ -399,54 +393,16 @@ function ActiveSessionPanel({
         </section>
       )}
 
-      <section className="grid gap-4">
-        {session.drillExecutions.map((execution) => (
-          <button
-            key={execution.id}
-            className={`rounded-lg border p-4 text-left transition ${
-              activeExecution?.id === execution.id
-                ? 'border-brand-accent bg-background-secondary'
-                : 'border-border-subtle bg-background-secondary hover:border-brand-accent'
-            }`}
-            onClick={() => setActiveExecutionId(execution.id)}
-            type="button"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold text-text-primary">
-                  {localizeDrillName(execution.drillTemplateId, execution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
-                </h3>
-                <p className="mt-1 text-sm text-text-secondary">
-                  {execution.attempts} / {execution.successes} · {execution.endedAt ? t('status.finished') : t('status.active')}
-                </p>
-              </div>
-              {!execution.endedAt && (
-                <span className="rounded-md border border-border-subtle px-3 py-1 text-sm text-text-secondary">
-                  {t('execution.open')}
-                </span>
-              )}
-            </div>
-          </button>
-        ))}
-        {session.drillExecutions.length === 0 && (
-          <p className="rounded-lg border border-border-subtle bg-background-secondary p-5 text-text-secondary">
-            {t('execution.empty')}
-          </p>
-        )}
-      </section>
-
-      {activeExecution && (
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
+      {activeExecution ? (
+        <section className="rounded-lg border border-brand-accent/50 bg-background-secondary p-4 shadow-glow sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h3 className="text-xl font-semibold text-text-primary">
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-wide text-brand-accent">{t('execution.current')}</p>
+              <h3 className="mt-1 text-xl font-semibold text-text-primary">
                 {localizeDrillName(activeExecution.drillTemplateId, activeExecution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
               </h3>
-              <p className="mt-1 text-sm text-text-secondary">
-                {activeExecution.attempts} {t('execution.attempts')} · {activeExecution.successes} {t('execution.successes')}
-              </p>
             </div>
-            {!activeExecution.endedAt && (
+            {executionOpen && (
               <button
                 className={secondaryButtonClass}
                 disabled={finishDrillPending}
@@ -458,9 +414,15 @@ function ActiveSessionPanel({
             )}
           </div>
 
-          {!activeExecution.endedAt && (
+          <dl className="mt-4 grid grid-cols-3 gap-3 text-center">
+            <Tally label={t('execution.attempts')} value={activeExecution.attempts} />
+            <Tally label={t('execution.successes')} value={activeExecution.successes} />
+            <Tally label={t('execution.successRate')} value={`${successRate}%`} />
+          </dl>
+
+          {executionOpen ? (
             <div className="mt-5 grid gap-3">
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
                 {attemptResults.map((result) => (
                   <button
                     key={result}
@@ -474,79 +436,207 @@ function ActiveSessionPanel({
                 ))}
               </div>
               <button
-                className={`${secondaryButtonClass} justify-self-start`}
+                className="justify-self-start text-sm text-text-disabled underline-offset-4 transition hover:text-text-primary hover:underline disabled:opacity-50"
                 disabled={removeLastAttemptPending || activeExecution.attempts === 0}
                 onClick={() => removeLastAttempt(activeExecution.id)}
                 type="button"
               >
-                {t('actions.undoAttempt')}
+                ↩ {t('actions.undoAttempt')}
               </button>
             </div>
+          ) : (
+            <p className="mt-4 rounded-md bg-background-primary px-3 py-2 text-sm text-text-secondary">
+              {t('execution.finishedNote')}
+            </p>
           )}
 
-          {activeExecution.tableLayoutSnapshot && (
-            <div className="mt-5">
-              <h4 className="mb-3 text-sm font-medium text-text-secondary">{t('tableLayout.title')}</h4>
-              <TableLayoutPreview layout={activeExecution.tableLayoutSnapshot} />
-            </div>
-          )}
+          <div className="mt-5">
+            <AccordionSection compact title={t('attempts.title')}>
+              {activeExecution.tableLayoutSnapshot && (
+                <div className="mb-4">
+                  <TableLayoutPreview layout={activeExecution.tableLayoutSnapshot} />
+                </div>
+              )}
+              <div className="overflow-x-auto rounded-md border border-border-subtle">
+                <table className="w-full min-w-[360px] text-left text-sm">
+                  <thead className="bg-background-primary text-text-disabled">
+                    <tr>
+                      <th className="px-3 py-2">{t('attempts.number')}</th>
+                      <th className="px-3 py-2">{t('attempts.result')}</th>
+                      <th className="px-3 py-2">{t('attempts.time')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...activeExecution.attemptsLog].reverse().map((attempt) => (
+                      <tr key={attempt.id} className="border-t border-border-subtle text-text-secondary">
+                        <td className="px-3 py-2">{attempt.attemptNumber}</td>
+                        <td className="px-3 py-2">{t(`attemptResults.${attempt.result}`)}</td>
+                        <td className="px-3 py-2">{formatDate(attempt.createdAt)}</td>
+                      </tr>
+                    ))}
+                    {activeExecution.attemptsLog.length === 0 && (
+                      <tr>
+                        <td className="px-3 py-4 text-text-secondary" colSpan={3}>{t('attempts.empty')}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </AccordionSection>
+          </div>
+        </section>
+      ) : (
+        open && (
+          <p className="rounded-lg border border-border-subtle bg-background-secondary p-5 text-sm text-text-secondary">
+            {t('execution.empty')}
+          </p>
+        )
+      )}
 
-          <div className="mt-5 overflow-x-auto rounded-md border border-border-subtle">
-            <table className="min-w-[420px] w-full text-left text-sm">
-              <thead className="bg-background-primary text-text-disabled">
-                <tr>
-                  <th className="px-3 py-2">{t('attempts.number')}</th>
-                  <th className="px-3 py-2">{t('attempts.result')}</th>
-                  <th className="px-3 py-2">{t('attempts.time')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeExecution.attemptsLog.map((attempt) => (
-                  <tr key={attempt.id} className="border-t border-border-subtle text-text-secondary">
-                    <td className="px-3 py-2">{attempt.attemptNumber}</td>
-                    <td className="px-3 py-2">{t(`attemptResults.${attempt.result}`)}</td>
-                    <td className="px-3 py-2">{formatDate(attempt.createdAt)}</td>
-                  </tr>
-                ))}
-                {activeExecution.attemptsLog.length === 0 && (
-                  <tr>
-                    <td className="px-3 py-4 text-text-secondary" colSpan={3}>{t('attempts.empty')}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+      {session.drillExecutions.length > 0 && (
+        <section>
+          <h3 className="mb-2 text-xs uppercase tracking-wide text-text-disabled">{t('execution.sessionDrills')}</h3>
+          <div className="flex flex-wrap gap-2">
+            {session.drillExecutions.map((execution) => (
+              <button
+                key={execution.id}
+                className={`rounded-md border px-3 py-2 text-left text-sm transition ${
+                  activeExecution?.id === execution.id
+                    ? 'border-brand-accent bg-background-elevated text-text-primary'
+                    : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                }`}
+                onClick={() => setActiveExecutionId(execution.id)}
+                type="button"
+              >
+                <span className="block max-w-[200px] truncate font-medium">
+                  {localizeDrillName(execution.drillTemplateId, execution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
+                </span>
+                <span className="mt-0.5 block text-xs text-text-disabled">
+                  {execution.successes}/{execution.attempts} · {execution.endedAt ? t('status.finished') : t('status.active')}
+                </span>
+              </button>
+            ))}
           </div>
         </section>
       )}
+
+      <LiveSessionInsight insight={buildLiveTrainingInsight(session, activeExecution)} t={t} />
     </div>
+  );
+}
+
+function SessionMeta({ session, t }: { session: TrainingSession; t: ReturnType<typeof useTranslations> }) {
+  const items: Array<{ label: string; value: number }> = [];
+  if (session.intensity !== undefined) items.push({ label: t('fields.intensity'), value: session.intensity });
+  if (session.fatigueBefore !== undefined) items.push({ label: t('fields.fatigueBefore'), value: session.fatigueBefore });
+  if (session.fatigueAfter !== undefined) items.push({ label: t('fields.fatigueAfter'), value: session.fatigueAfter });
+  if (session.focusLevel !== undefined) items.push({ label: t('fields.focusLevel'), value: session.focusLevel });
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {items.map((item) => (
+        <span key={item.label} className="rounded-md bg-background-primary px-2.5 py-1 text-xs text-text-secondary">
+          {item.label}: <span className="font-medium text-text-primary">{item.value}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function Tally({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-md bg-background-primary px-3 py-3">
+      <dd className="text-2xl font-semibold text-text-primary">{value}</dd>
+      <dt className="mt-1 text-xs text-text-disabled">{label}</dt>
+    </div>
+  );
+}
+
+function NewSessionForm({
+  form,
+  onSubmit,
+  pending,
+  serverError,
+  t,
+}: {
+  form: ReturnType<typeof useForm<SessionFormValues>>;
+  onSubmit: (values: SessionFormValues) => void;
+  pending: boolean;
+  serverError: string | null;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+      <Field error={form.formState.errors.title?.message} hint={t('hints.title')} label={t('fields.title')}>
+        <input
+          autoFocus
+          className={inputClass}
+          placeholder={t('placeholders.title')}
+          {...form.register('title', { required: t('required') })}
+        />
+      </Field>
+      <Field hint={t('hints.sessionType')} label={t('fields.sessionType')}>
+        <select className={inputClass} {...form.register('sessionType')}>
+          {sessionTypes.map((type) => (
+            <option key={type} value={type}>{t(`sessionTypes.${type}`)}</option>
+          ))}
+        </select>
+      </Field>
+      <Field hint={t('hints.goal')} label={t('fields.goal')}>
+        <textarea
+          className={`${inputClass} min-h-20`}
+          placeholder={t('placeholders.goal')}
+          {...form.register('goal')}
+        />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Field hint={t('hints.score')} label={t('fields.intensity')}>
+          <input className={inputClass} max={10} min={1} type="number" {...form.register('intensity')} />
+        </Field>
+        <Field hint={t('hints.score')} label={t('fields.fatigueBefore')}>
+          <input className={inputClass} max={10} min={1} type="number" {...form.register('fatigueBefore')} />
+        </Field>
+        <Field hint={t('hints.score')} label={t('fields.focusLevel')}>
+          <input className={inputClass} max={10} min={1} type="number" {...form.register('focusLevel')} />
+        </Field>
+      </div>
+      <Field hint={t('hints.mood')} label={t('fields.mood')}>
+        <input className={inputClass} placeholder={t('placeholders.mood')} {...form.register('mood')} />
+      </Field>
+      {serverError && (
+        <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
+          {serverError}
+        </p>
+      )}
+      <button className={primaryButtonClass} disabled={pending} type="submit">
+        {pending ? t('saving') : t('form.submit')}
+      </button>
+    </form>
   );
 }
 
 function LiveSessionInsight({ insight, t }: { insight: LiveTrainingInsight; t: ReturnType<typeof useTranslations> }) {
   return (
-    <section className={`rounded-lg border bg-background-secondary p-4 sm:p-5 ${liveInsightToneClass(insight.tone)}`} data-testid="live-training-insight">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+    <section className={`rounded-lg border bg-background-secondary p-4 ${liveInsightToneClass(insight.tone)}`} data-testid="live-training-insight">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-brand-accent">{t('liveInsights.eyebrow')}</p>
-          <h3 className="mt-1 text-lg font-semibold text-text-primary">
+          <h3 className="mt-1 text-base font-semibold text-text-primary">
             {t(`liveInsights.cards.${insight.titleKey}.title`, insight.values)}
           </h3>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-semibold text-text-primary">{insight.metricValue}</p>
+          <p className="text-xl font-semibold text-text-primary">{insight.metricValue}</p>
           <p className="text-xs text-text-disabled">{t(`liveInsights.metrics.${insight.metricKey}`)}</p>
         </div>
       </div>
-      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <p className="text-sm leading-6 text-text-secondary">
-          {t(`liveInsights.cards.${insight.bodyKey}.body`, insight.values)}
-        </p>
-        <div className="rounded-md bg-background-primary px-3 py-2 text-sm text-text-secondary">
-          <p className="text-xs uppercase text-text-disabled">{t('liveInsights.nextAction')}</p>
-          <p className="mt-1 text-text-primary">{t(`liveInsights.cards.${insight.actionKey}.action`, insight.values)}</p>
-          <p className="mt-2 text-xs text-text-disabled">{t('liveInsights.confidence', { confidence: insight.confidence })}</p>
-        </div>
-      </div>
+      <p className="mt-3 text-sm leading-6 text-text-secondary">
+        {t(`liveInsights.cards.${insight.bodyKey}.body`, insight.values)}
+      </p>
+      <p className="mt-3 rounded-md bg-background-primary px-3 py-2 text-sm text-text-primary">
+        <span className="text-xs uppercase text-text-disabled">{t('liveInsights.nextAction')}: </span>
+        {t(`liveInsights.cards.${insight.actionKey}.action`, insight.values)}
+      </p>
     </section>
   );
 }
@@ -698,7 +788,7 @@ const secondaryButtonClass =
   'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-60';
 
 function attemptButtonClass(result: DrillAttemptResult): string {
-  const base = 'min-h-11 rounded-md border px-3 py-2 text-sm font-medium transition disabled:opacity-60';
+  const base = 'min-h-14 rounded-md border px-3 py-2 text-base font-semibold transition disabled:opacity-60';
   const byResult: Record<DrillAttemptResult, string> = {
     success: 'border-state-success/60 text-state-success hover:bg-state-success/10',
     partial: 'border-brand-accent/60 text-brand-accent hover:bg-brand-accent/10',
@@ -726,15 +816,6 @@ function Field({
       {hint && <span className="text-xs leading-5 text-text-disabled">{hint}</span>}
       {error && <span className="text-xs text-state-error">{error}</span>}
     </label>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: number | undefined }) {
-  return (
-    <div>
-      <dt className="text-text-disabled">{label}</dt>
-      <dd className="text-text-primary">{value ?? '—'}</dd>
-    </div>
   );
 }
 

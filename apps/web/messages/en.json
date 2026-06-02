@@ -903,6 +903,11 @@
       "active": "Active",
       "finished": "Finished"
     },
+    "startTitle": "Start a session",
+    "startSubtitle": "Create a session, add drills and log attempts with one tap.",
+    "newSession": {
+      "open": "New session"
+    },
     "form": {
       "title": "New session",
       "submit": "Start session"
@@ -944,12 +949,17 @@
     "actions": {
       "finishSession": "Finish session",
       "finishDrill": "Finish drill",
-      "undoAttempt": "Undo attempt"
+      "undoAttempt": "Undo attempt",
+      "close": "Close"
     },
     "execution": {
       "empty": "No drills have been added yet.",
       "unnamed": "Drill",
       "open": "Open",
+      "current": "Current drill",
+      "successRate": "Success rate",
+      "finishedNote": "Drill finished.",
+      "sessionDrills": "Session drills",
       "attempts": "attempts",
       "successes": "successes"
     },
@@ -960,6 +970,7 @@
       "skipped": "Skipped"
     },
     "attempts": {
+      "title": "Attempt history",
       "number": "#",
       "result": "Result",
       "time": "Time",

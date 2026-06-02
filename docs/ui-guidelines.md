@@ -69,6 +69,10 @@ Delivered so far (under `apps/web/src/components/layout/`):
 - `UserMenu` — client component; reads the persisted Zustand auth store,
   shows an initials avatar dropdown with profile and sign-out actions when
   authenticated, otherwise routes to `/login`.
+- `Modal` — client component for occasional forms/dialogs (bottom-sheet on
+  mobile, centered card on >= sm). Backdrop click + Escape close, body scroll
+  lock. Used for the training "new session" form so it does not occupy a
+  permanent column.
 - `AccordionSection` — client component for long secondary forms and detail
   sections. It uses a stable card surface, keyboard-accessible button header,
   optional default-open state and a short grid-row transition for smooth
@@ -151,15 +155,22 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 
 - `/training` lives in the `(app)` route group and is rendered by
   `src/components/training/TrainingSessionClient.tsx`.
-- The left rail selects recent sessions, the center panel operates the active
-  session, and the right panel starts a new session from a default-open
-  accordion. This keeps the next data-entry action visible while preserving a
-  stable tablet workflow for recording attempts.
+- Two-column layout: a left rail of recent sessions (with a `+ New session`
+  button) and a single working column. Starting a session opens a `Modal`
+  (`components/layout/Modal.tsx`) instead of a permanent third column, which
+  removed the prior overlap into the center column and de-cluttered the page.
+- The working column leads with the active drill: drill name, a three-up tally
+  (attempts / successes / success rate) and large outcome buttons, so logging
+  attempts is the visual focus. Session meta (intensity/fatigue/focus) is shown
+  as compact pills; the attempt history (and table snapshot) lives in a
+  collapsed accordion. On mobile the working column comes first
+  (`order-first lg:order-none`).
 - Starting a session captures title, type, goal, intensity, pre-session
   fatigue, focus and mood. Finishing captures post-session fatigue.
 - A visible drill template can be added to the active session. The execution
-  panel records single-tap outcomes: success, partial, miss or skipped; each
-  tap appends a numbered attempt and updates counters.
+  panel records single-tap outcomes: success, partial, miss or skipped (colour
+  coded by outcome); each tap appends a numbered attempt and updates counters,
+  and the last attempt can be undone.
 - The active session header is followed by a live-read panel that derives a
   conservative next action from fatigue/focus, current drill success rate and
   the last ten attempts. It is phrased as coaching context rather than a hard
