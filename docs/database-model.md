@@ -140,6 +140,10 @@ Each new entity ships with:
   `safetySuccess`, optional `longPotSuccess`, optional `unforcedErrors`,
   optional `tacticalErrors`, `result`, `source`, optional `sourceUrl`,
   optional `videoUrl`, optional `notes`, `createdAt`, `updatedAt`.
+- `breaks50`/`breaks70`/`breaks100` are **cumulative** tiers (50+, 70+, 100+):
+  a century counts in all three, a 70-break counts in `breaks50` and `breaks70`.
+  Manual entry, the WST parser and the CueTracker parser all follow this so
+  counts stay comparable across sources.
 - `result` is a PostgreSQL enum mapped from lowercase API values:
   `player_win`, `opponent_win`, `draw`, `unknown`.
 - `source` is a PostgreSQL enum mapped from lowercase API values: `manual`,

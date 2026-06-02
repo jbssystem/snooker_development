@@ -19,6 +19,37 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Review & hardening pass (2026-06-02)
+
+**Delivered:**
+
+- Restored repo-wide linting: added a shared root flat ESLint config
+  (`eslint.config.mjs`) so `pnpm lint` works again across all packages (it was
+  fully broken under ESLint 9 with no config). `apps/web` now lints with the
+  ESLint CLI instead of the deprecated `next lint`.
+- Fixed cross-user data exposure: logout now calls `queryClient.clear()` so a
+  second user on the same browser cannot read the previous session's cached
+  data (some query keys are not token-scoped).
+- Fixed CueTracker break-tier counts: `breaks50`/`breaks70` were excluding
+  centuries, diverging from the WST parser and the `50+/70+/100+` UI labels.
+  They are now cumulative and consistent across all match sources.
+- Standardized the `player-profile`/`equipment-profiles` query keys in
+  `ProfileClient` to be token-scoped like every other screen, removing a
+  duplicate cache entry for the same data.
+- Removed a dead `matchesSkipped` counter path in the worker import (always 0;
+  the import upserts every match — documented inline until a skip path exists).
+- Docs updated: `architecture.md` (linting), `database-model.md` (cumulative
+  break-tier semantics).
+
+**Open items (surfaced, not yet actioned):**
+
+- External-sync UI refreshes imported matches via a fixed 5s `setTimeout`
+  instead of polling job status; should reuse the AI-report polling pattern.
+- `PATCH /matches/:id` can persist `framesWon/framesLost` that disagree with
+  saved frame rows; should recompute from frames when they exist.
+- Several `react-hooks/exhaustive-deps` and a11y (`aria-describedby` on form
+  errors) warnings remain as non-blocking lint warnings.
+
 ### Post PH-1-011 external analytics import
 
 **Delivered:**

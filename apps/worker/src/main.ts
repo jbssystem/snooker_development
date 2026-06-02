@@ -504,8 +504,11 @@ async function processExternalImport(data: SyncPlayerExternalDataJob): Promise<v
     }
 
     let matchesImported = 0;
-    let matchesSkipped = 0;
     let matchesUpdated = 0;
+    // Import currently upserts every external match (update or create), so no
+    // match is ever skipped. Kept for the import-summary contract until a
+    // change-detection skip path is added.
+    const matchesSkipped = 0;
 
     for (const match of importResult.matches) {
       const existing = await prisma.match.findFirst({

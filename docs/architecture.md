@@ -82,6 +82,15 @@ canvas components.
 
 Add a new dependency only with a one-line rationale in this section.
 
+## Linting
+
+A single flat ESLint config at the repo root (`eslint.config.mjs`) serves every
+workspace. Each package's `lint` script runs `eslint` from its own directory and
+ESLint walks up to the shared config. `typescript-eslint/recommended` applies to
+all `.ts`/`.tsx`; the `next/core-web-vitals` ruleset is scoped to `apps/web` via
+`files`. `apps/web` lints with the ESLint CLI directly (not the deprecated
+`next lint`). Run `pnpm lint` from the root.
+
 ## Environments
 
 - Local: `docker compose up -d` brings web/api/worker/postgres/redis/minio/nginx.

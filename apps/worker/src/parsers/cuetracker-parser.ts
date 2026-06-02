@@ -219,8 +219,11 @@ function parseMatches(html: string, slug: string, season: string): ExternalMatch
       player: bucketBreaks(playerBreaks),
       opponent: bucketBreaks(opponentBreaks),
     };
-    const breaks50 = playerBreaks.filter((value) => value >= 50 && value < 100).length;
-    const breaks70 = playerBreaks.filter((value) => value >= 70 && value < 100).length;
+    // Cumulative tiers (50+, 70+, 100+) — a century also counts as a 50+ and a
+    // 70+ break. Matches the WST parser and the "50+/70+/100+" UI labels so
+    // imported counts stay consistent across sources.
+    const breaks50 = playerBreaks.filter((value) => value >= 50).length;
+    const breaks70 = playerBreaks.filter((value) => value >= 70).length;
     const breaks100 = playerBreaks.filter((value) => value >= 100).length;
     const highBreak = playerBreaks.length > 0 ? Math.max(...playerBreaks) : null;
     const bestOf = framesWon === framesLost ? null : Math.max(framesWon, framesLost) * 2 - 1;

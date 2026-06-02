@@ -66,13 +66,13 @@ export function ProfileClient() {
   const equipmentForm = useForm<EquipmentFormValues>({ defaultValues: equipmentDefaults });
 
   const profileQuery = useQuery({
-    queryKey: ['player-profile'],
+    queryKey: ['player-profile', token],
     queryFn: () => api.players.getProfile(token ?? ''),
     enabled: Boolean(token),
   });
 
   const equipmentQuery = useQuery({
-    queryKey: ['equipment-profiles'],
+    queryKey: ['equipment-profiles', token],
     queryFn: () => api.players.listEquipment(token ?? ''),
     enabled: Boolean(token && profileQuery.data),
   });

@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
@@ -14,6 +15,7 @@ export function UserMenu() {
   const user = useAuthStore((s) => s.user);
   const clear = useAuthStore((s) => s.clear);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
   const containerRef = useDismissable<HTMLDivElement>(open, close);
@@ -25,6 +27,9 @@ export function UserMenu() {
       /* ignore — local clear is enough */
     }
     clear();
+    // Drop every cached query so the next user on this browser cannot see the
+    // previous session's data (some query keys are not scoped by token).
+    queryClient.clear();
     router.replace('/login');
   };
 
