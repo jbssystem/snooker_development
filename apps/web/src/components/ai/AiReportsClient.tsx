@@ -166,7 +166,7 @@ export function AiReportsClient() {
             </Link>
           </section>
         )}
-        <AccordionSection testId="ai-generate-form" title={t('generate.title')}>
+        <AccordionSection defaultOpen testId="ai-generate-form" title={t('generate.title')}>
           <form
             className="grid gap-4"
             onSubmit={form.handleSubmit((values) => generateReport.mutate(toGenerateInput(values, locale)))}

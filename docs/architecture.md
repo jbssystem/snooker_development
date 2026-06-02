@@ -79,6 +79,11 @@ canvas components.
 - In-house Zod pipe — validates shared Zod schemas at NestJS body boundaries
   without making `@snooker/shared` framework-specific.
 - `recharts` — analytics charts (swappable for ECharts later).
+- `playwright` (root devDependency) — visual QA tooling for design review.
+  `scripts/ui-screenshots.mjs` logs in with the demo account and captures key
+  pages at desktop/mobile widths into `.ui-shots/` (git-ignored);
+  `scripts/ui-inspect.mjs` captures focused element shots. Not part of the app
+  bundle or CI yet.
 
 Add a new dependency only with a one-line rationale in this section.
 

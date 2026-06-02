@@ -18,3 +18,4 @@ coverage/
 .pnpm-store/
 storage/
 uploads/
+.ui-shots/
