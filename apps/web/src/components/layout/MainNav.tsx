@@ -29,7 +29,7 @@ export function MainNav() {
   const moreActive = MORE_NAV_KEYS.some(({ href }) => pathname === href || pathname.startsWith(`${href}/`));
 
   return (
-    <nav className="order-3 -mx-3 flex w-[calc(100%+1.5rem)] gap-1 overflow-x-auto px-3 pb-1 pt-1 md:order-none md:mx-0 md:w-auto md:flex-1 md:overflow-visible md:px-0 md:pb-0">
+    <nav className="hidden flex-1 gap-1 lg:flex">
       {PRIMARY_NAV_KEYS.map(({ key, href }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
 

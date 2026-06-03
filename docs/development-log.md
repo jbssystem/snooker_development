@@ -19,6 +19,25 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Site-wide redesign — foundation + dashboard (2026-06-03)
+
+Goal: a more modern, tablet/mobile-friendly, less-cluttered, subscription-grade
+UI. Rolled out incrementally page by page on top of a shared foundation.
+
+**Delivered (foundation + dashboard):**
+
+- Design foundation: ambient brand glow + `.surface`/`.surface-hover` in
+  `globals.css`; shared primitives in `components/ui/` (`Card`, `SectionCard`,
+  `PageHeader`, `StatTile`, `EmptyState`) and a line `icons.tsx` set.
+- App-like navigation: `MobileTabBar` (fixed bottom bar on `< lg` with a "More"
+  sheet); the top `MainNav` is now `lg`-only. Container adds `pb-24 lg:pb-8`.
+- Dashboard rebuilt on the primitives: `PageHeader` with eyebrow, KPI
+  `StatTile`s with icons in a 2-col mobile grid, `SectionCard` chart/section
+  panels, `EmptyState`. Verified desktop + mobile with Playwright.
+
+**Remaining:** roll the same primitives/header across training, drills,
+matches, AI, calendar, analytics, profile (one commit per page).
+
 ### Training page redesign (2026-06-02)
 
 **Delivered:**

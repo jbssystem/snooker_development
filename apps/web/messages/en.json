@@ -272,6 +272,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "eyebrow": "Period summary",
     "subtitle": "Training volume, attempt success and recent sessions.",
     "authRequired": "Sign in to see your training dashboard.",
     "loginCta": "Sign in",

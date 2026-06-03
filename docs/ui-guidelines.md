@@ -69,6 +69,23 @@ Delivered so far (under `apps/web/src/components/layout/`):
 - `UserMenu` — client component; reads the persisted Zustand auth store,
   shows an initials avatar dropdown with profile and sign-out actions when
   authenticated, otherwise routes to `/login`.
+- Shared UI primitives live in `apps/web/src/components/ui/` and are the
+  building blocks for the redesign — use them instead of ad-hoc card markup:
+  - `Card` / `SectionCard` — elevated `.surface` (rounded-xl, inner top
+    highlight + soft drop shadow); `interactive` adds a hover lift, `accent`
+    adds the brand glow. `SectionCard` adds an eyebrow/title/action header.
+  - `PageHeader` — eyebrow + title + subtitle + actions, one per page.
+  - `StatTile` — KPI tile with label, large value, optional unit + tinted icon.
+    KPI grids are `grid-cols-2` on mobile (never one giant card per stat).
+  - `EmptyState` — centered dashed surface with icon, copy and CTAs.
+  - `icons.tsx` — line icon set (currentColor, 1.8 stroke) for nav and tiles.
+- `MobileTabBar` (`components/layout/MobileTabBar.tsx`) — fixed bottom tab bar
+  shown on `< lg` (phone + tablet portrait) with the four primary destinations
+  and a "More" sheet (`Modal`) for the rest. The top `MainNav` is hidden below
+  `lg`. The app container adds `pb-24 lg:pb-8` so content clears the bar.
+- Ambient depth: `globals.css` paints a fixed brand radial glow behind content;
+  surfaces use the `.surface` / `.surface-hover` classes for consistent
+  elevation.
 - `Modal` — client component for occasional forms/dialogs (bottom-sheet on
   mobile, centered card on >= sm). Backdrop click + Escape close, body scroll
   lock. Used for the training "new session" form so it does not occupy a

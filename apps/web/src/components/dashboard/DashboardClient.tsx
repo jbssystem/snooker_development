@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import type { ReactNode } from 'react';
 import {
   Bar,
   BarChart,
@@ -21,6 +20,17 @@ import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillName } from '@/lib/drill-localization';
 import { buildDashboardInsights } from '@/lib/player-insights';
+import {
+  Card,
+  EmptyState,
+  PageHeader,
+  SectionCard,
+  StatTile,
+  ClockIcon,
+  PercentIcon,
+  TargetIcon,
+  TrainingIcon,
+} from '@/components/ui';
 
 export function DashboardClient() {
   const t = useTranslations('dashboard');
@@ -34,11 +44,10 @@ export function DashboardClient() {
   if (!token) {
     return (
       <main className="max-w-2xl">
-        <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-3 text-text-secondary">{t('authRequired')}</p>
+        <PageHeader subtitle={t('authRequired')} title={t('title')} />
         <Link
           href="/login"
-          className="mt-6 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent"
+          className="inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent"
         >
           {t('loginCta')}
         </Link>
@@ -50,26 +59,25 @@ export function DashboardClient() {
 
   return (
     <main className="grid gap-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-          <p className="mt-2 text-text-secondary">{t('subtitle')}</p>
-        </div>
-        {dashboard && (
-          <p className="rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary">
-            {t('period', { days: dashboard.period.days })}
-          </p>
-        )}
-      </header>
+      <PageHeader
+        actions={
+          dashboard ? (
+            <span className="rounded-full border border-border-subtle bg-background-secondary px-3 py-1.5 text-sm text-text-secondary">
+              {t('period', { days: dashboard.period.days })}
+            </span>
+          ) : undefined
+        }
+        eyebrow={t('eyebrow')}
+        subtitle={t('subtitle')}
+        title={t('title')}
+      />
 
       {dashboardQuery.isLoading && (
-        <p className="rounded-lg border border-border-subtle bg-background-secondary p-5 text-text-secondary">
-          {t('loading')}
-        </p>
+        <Card className="p-5 text-text-secondary">{t('loading')}</Card>
       )}
 
       {dashboardQuery.isError && (
-        <p className="rounded-lg border border-state-error/40 bg-state-error/10 p-5 text-state-error">
+        <p className="rounded-xl border border-state-error/40 bg-state-error/10 p-5 text-state-error">
           {t('error')}
         </p>
       )}
@@ -88,28 +96,31 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
   return (
     <>
       {!hasData && (
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-          <h2 className="text-xl font-semibold text-text-primary">{t('empty.title')}</h2>
-          <p className="mt-2 text-text-secondary">{t('empty.description')}</p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/profile" className={secondaryButtonClass}>{t('empty.profileCta')}</Link>
-            <Link href="/training" className={primaryButtonClass}>{t('empty.trainingCta')}</Link>
-          </div>
-        </section>
+        <EmptyState
+          action={
+            <>
+              <Link href="/profile" className={secondaryButtonClass}>{t('empty.profileCta')}</Link>
+              <Link href="/training" className={primaryButtonClass}>{t('empty.trainingCta')}</Link>
+            </>
+          }
+          description={t('empty.description')}
+          icon={<TargetIcon />}
+          title={t('empty.title')}
+        />
       )}
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={t('stats.sessions')} value={dashboard.totals.sessions} />
-        <StatCard label={t('stats.trainingMinutes')} value={dashboard.totals.trainingMinutes} suffix={t('units.minutes')} />
-        <StatCard label={t('stats.attempts')} value={dashboard.totals.attempts} />
-        <StatCard label={t('stats.successRate')} value={dashboard.totals.successRate} suffix="%" />
+      <section className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <StatTile icon={<TrainingIcon />} label={t('stats.sessions')} value={formatNumber(dashboard.totals.sessions, locale)} />
+        <StatTile icon={<ClockIcon />} label={t('stats.trainingMinutes')} unit={t('units.minutes')} value={formatNumber(dashboard.totals.trainingMinutes, locale)} />
+        <StatTile icon={<TargetIcon />} label={t('stats.attempts')} value={formatNumber(dashboard.totals.attempts, locale)} />
+        <StatTile icon={<PercentIcon />} label={t('stats.successRate')} tone="gold" unit="%" value={formatNumber(dashboard.totals.successRate, locale)} />
       </section>
 
       {hasData && <CoachInsightPanel insights={insights} />}
 
-      <section className="grid gap-6 xl:grid-cols-2">
-        <ChartPanel title={t('charts.volume')}>
-          <ResponsiveContainer height={260} width="100%">
+      <section className="grid gap-4 sm:gap-6 xl:grid-cols-2">
+        <SectionCard eyebrow={t('eyebrow')} title={t('charts.volume')}>
+          <ResponsiveContainer height={240} width="100%">
             <BarChart data={dashboard.weeklyVolume} margin={{ bottom: 0, left: -20, right: 8, top: 8 }}>
               <CartesianGrid stroke="#2A323D" strokeDasharray="4 4" />
               <XAxis dataKey="label" stroke="#A8B0B8" tickLine={false} />
@@ -118,10 +129,10 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
               <Bar dataKey="trainingMinutes" fill="#19A974" name={t('tooltip.trainingMinutes')} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </ChartPanel>
+        </SectionCard>
 
-        <ChartPanel title={t('charts.successTrend')}>
-          <ResponsiveContainer height={260} width="100%">
+        <SectionCard eyebrow={t('eyebrow')} title={t('charts.successTrend')}>
+          <ResponsiveContainer height={240} width="100%">
             <LineChart data={dashboard.weeklyVolume} margin={{ bottom: 0, left: -20, right: 16, top: 8 }}>
               <CartesianGrid stroke="#2A323D" strokeDasharray="4 4" />
               <XAxis dataKey="label" stroke="#A8B0B8" tickLine={false} />
@@ -130,41 +141,38 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
               <Line dataKey="successRate" dot={{ fill: '#C8A45D', r: 4 }} name={t('tooltip.successRate')} stroke="#C8A45D" strokeWidth={3} type="monotone" />
             </LineChart>
           </ResponsiveContainer>
-        </ChartPanel>
+        </SectionCard>
       </section>
 
-      <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-        <h2 className="text-xl font-semibold text-text-primary">{t('matches.title')}</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-          <StatCard label={t('matches.played')} value={dashboard.matchSummary.matches} />
-          <StatCard label={t('matches.wins')} value={dashboard.matchSummary.wins} />
-          <StatCard label={t('matches.winRate')} value={dashboard.matchSummary.winRate} suffix="%" />
-          <StatCard label={t('matches.frames')} value={`${dashboard.matchSummary.framesWon}:${dashboard.matchSummary.framesLost}`} />
-          <StatCard label={t('matches.highBreak')} value={dashboard.matchSummary.highBreak ?? 0} />
-          <StatCard label={t('matches.centuries')} value={dashboard.matchSummary.breaks100} />
+      <SectionCard title={t('matches.title')}>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          <MiniStat label={t('matches.played')} value={dashboard.matchSummary.matches} />
+          <MiniStat label={t('matches.wins')} value={dashboard.matchSummary.wins} />
+          <MiniStat label={t('matches.winRate')} value={`${dashboard.matchSummary.winRate}%`} />
+          <MiniStat label={t('matches.frames')} value={`${dashboard.matchSummary.framesWon}:${dashboard.matchSummary.framesLost}`} />
+          <MiniStat label={t('matches.highBreak')} value={dashboard.matchSummary.highBreak ?? 0} />
+          <MiniStat label={t('matches.centuries')} value={dashboard.matchSummary.breaks100} />
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <div className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-          <h2 className="text-xl font-semibold text-text-primary">{t('drills.title')}</h2>
-          <div className="mt-5 grid gap-3">
+      <section className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <SectionCard title={t('drills.title')}>
+          <div className="grid gap-3">
             {dashboard.drillProgress.map((drill) => <DrillProgressRow key={drill.drillTemplateId} drill={drill} />)}
             {dashboard.drillProgress.length === 0 && <p className="text-text-secondary">{t('drills.empty')}</p>}
           </div>
-        </div>
+        </SectionCard>
 
-        <div className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-          <h2 className="text-xl font-semibold text-text-primary">{t('recent.title')}</h2>
-          <div className="mt-5 grid gap-3">
+        <SectionCard title={t('recent.title')}>
+          <div className="grid gap-3">
             {dashboard.recentSessions.map((session) => (
-              <article key={session.id} className="rounded-md border border-border-subtle bg-background-primary p-3">
+              <article key={session.id} className="rounded-lg border border-border-subtle bg-background-primary p-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-medium text-text-primary">{session.title}</h3>
+                  <div className="min-w-0">
+                    <h3 className="truncate font-medium text-text-primary">{session.title}</h3>
                     <p className="mt-1 text-xs text-text-disabled">{formatDate(session.startedAt, locale)}</p>
                   </div>
-                  <span className="rounded-md bg-background-elevated px-2 py-1 text-xs text-text-secondary">
+                  <span className="shrink-0 rounded-md bg-background-elevated px-2 py-1 text-xs text-brand-gold">
                     {session.successRate}%
                   </span>
                 </div>
@@ -175,32 +183,20 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
             ))}
             {dashboard.recentSessions.length === 0 && <p className="text-text-secondary">{t('recent.empty')}</p>}
           </div>
-        </div>
+        </SectionCard>
       </section>
     </>
   );
 }
 
-function StatCard({ label, value, suffix }: { label: string; value: number | string; suffix?: string }) {
+function MiniStat({ label, value }: { label: string; value: number | string }) {
   const locale = useLocale();
   const displayValue = typeof value === 'number' ? formatNumber(value, locale) : value;
-
   return (
-    <article className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-      <p className="text-sm text-text-secondary">{label}</p>
-      <p className="mt-3 text-3xl font-semibold text-text-primary">
-        {displayValue}{suffix ? <span className="ml-1 text-base text-text-secondary">{suffix}</span> : null}
-      </p>
-    </article>
-  );
-}
-
-function ChartPanel({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
-      <h2 className="text-xl font-semibold text-text-primary">{title}</h2>
-      <div className="mt-5">{children}</div>
-    </section>
+    <div className="rounded-lg border border-border-subtle bg-background-primary px-3 py-3">
+      <p className="text-xs uppercase tracking-wide text-text-disabled">{label}</p>
+      <p className="mt-1.5 text-xl font-semibold text-text-primary">{displayValue}</p>
+    </div>
   );
 }
 
