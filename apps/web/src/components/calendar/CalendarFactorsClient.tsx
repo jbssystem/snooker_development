@@ -16,6 +16,7 @@ import type {
   SupplementEvent,
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
+import { PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -194,12 +195,8 @@ export function CalendarFactorsClient() {
   if (!token) {
     return (
       <main className="max-w-2xl">
-        <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-3 text-text-secondary">{t('authRequired')}</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent"
-        >
+        <PageHeader subtitle={t('authRequired')} title={t('title')} />
+        <Link href="/login" className="btn-primary">
           {t('loginCta')}
         </Link>
       </main>
@@ -214,15 +211,15 @@ export function CalendarFactorsClient() {
   return (
     <main className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
       <section className="grid gap-6">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-            <p className="mt-2 text-text-secondary">{t('subtitle')}</p>
-          </div>
-          <p className="rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary">
-            {t('sensitive')}
-          </p>
-        </header>
+        <PageHeader
+          actions={
+            <span className="rounded-full border border-border-subtle bg-background-secondary px-3 py-1.5 text-sm text-text-secondary">
+              {t('sensitive')}
+            </span>
+          }
+          subtitle={t('subtitle')}
+          title={t('title')}
+        />
 
         <ReadinessLensPanel lens={readinessLens} t={t} />
 
@@ -232,16 +229,13 @@ export function CalendarFactorsClient() {
               {t('profileRequired.title')}
             </h2>
             <p className="mt-2">{t('profileRequired.description')}</p>
-            <Link
-              href="/profile"
-              className="mt-4 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent"
-            >
+            <Link href="/profile" className="btn-primary mt-4">
               {t('profileRequired.cta')}
             </Link>
           </section>
         )}
 
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+        <section className="surface rounded-xl p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-xl font-semibold text-text-primary">{t('events.title')}</h2>
             <ViewModeSwitch mode={viewMode} setMode={setViewMode} t={t} />
@@ -288,7 +282,7 @@ export function CalendarFactorsClient() {
       />
 
       <aside className="grid content-start gap-3 self-start xl:sticky xl:top-24">
-        <section className="overflow-hidden rounded-lg border border-border-subtle bg-background-secondary/90">
+        <section className="overflow-hidden surface rounded-xl/90">
           <div className="border-b border-border-subtle px-4 py-4">
             <h2 className="text-lg font-semibold text-text-primary">{t('forms.quickTitle')}</h2>
             <p className="mt-1 text-sm text-text-secondary">{t('forms.quickSubtitle')}</p>
@@ -318,7 +312,6 @@ export function CalendarFactorsClient() {
                   label={t('fields.title')}
                 >
                   <input
-                    autoFocus
                     className={inputClass}
                     placeholder={t('placeholders.title')}
                     {...eventForm.register('title', { required: t('required') })}
@@ -364,7 +357,6 @@ export function CalendarFactorsClient() {
               >
                 <Field hint={t('hints.date')} label={t('fields.date')}>
                   <input
-                    autoFocus
                     className={inputClass}
                     type="date"
                     {...lifestyleForm.register('date', { required: t('required') })}
@@ -470,7 +462,6 @@ export function CalendarFactorsClient() {
                   label={t('fields.name')}
                 >
                   <input
-                    autoFocus
                     className={inputClass}
                     placeholder={t('placeholders.name')}
                     {...supplementForm.register('name', { required: t('required') })}
@@ -1706,7 +1697,6 @@ function errorMessage(error: unknown, t: (key: string) => string): string {
 
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
-const primaryButtonClass =
-  'rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
+const primaryButtonClass = 'btn-primary';
 const monthButtonClass =
   'inline-flex min-h-9 min-w-9 items-center justify-center rounded-md border border-border-subtle px-3 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active';

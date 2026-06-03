@@ -15,6 +15,7 @@ import type {
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
+import { PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillTemplate } from '@/lib/drill-localization';
@@ -117,12 +118,8 @@ export function DrillLibraryClient() {
   if (!token) {
     return (
       <main className="max-w-2xl">
-        <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-3 text-text-secondary">{t('authRequired')}</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent"
-        >
+        <PageHeader subtitle={t('authRequired')} title={t('title')} />
+        <Link href="/login" className="btn-primary">
           {t('loginCta')}
         </Link>
       </main>
@@ -132,10 +129,7 @@ export function DrillLibraryClient() {
   return (
     <main className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_460px]">
       <section className="min-w-0">
-        <header className="mb-6">
-          <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-          <p className="mt-2 text-text-secondary">{t('subtitle')}</p>
-        </header>
+        <PageHeader subtitle={t('subtitle')} title={t('title')} />
 
         <div className="grid gap-4 md:grid-cols-2">
           {(templatesQuery.data ?? []).map((template) => (
@@ -148,7 +142,7 @@ export function DrillLibraryClient() {
             />
           ))}
           {templatesQuery.data?.length === 0 && (
-            <p className="rounded-lg border border-border-subtle bg-background-secondary p-5 text-text-secondary">
+            <p className="surface rounded-xl p-5 text-text-secondary">
               {t('empty')}
             </p>
           )}
@@ -188,7 +182,6 @@ export function DrillLibraryClient() {
           >
           <Field error={form.formState.errors.name?.message} hint={t('hints.name')} label={t('fields.name')}>
             <input
-              autoFocus
               className={inputClass}
               placeholder={t('placeholders.name')}
               {...form.register('name', { required: t('required') })}
@@ -344,7 +337,7 @@ function TemplateCard({
   const localizedTemplate = localizeDrillTemplate(template, tSystemDrills);
 
   return (
-    <article className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
+    <article className="surface rounded-xl p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-text-primary">{localizedTemplate.name}</h2>
@@ -385,8 +378,7 @@ function TemplateCard({
 
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
-const primaryButtonClass =
-  'min-h-11 rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
+const primaryButtonClass = 'btn-primary w-full justify-center';
 const secondaryButtonClass =
   'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary hover:border-brand-accent hover:text-text-primary';
 

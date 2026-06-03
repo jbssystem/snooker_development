@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { ExternalImportJob, ExternalPlayerLink } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
+import { PageHeader } from '@/components/ui';
 import { api, ApiError, type ImportedMatch } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -54,12 +55,8 @@ export function ExternalDataClient() {
   if (!token) {
     return (
       <main className="max-w-2xl">
-        <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-3 text-text-secondary">{t('authRequired')}</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent"
-        >
+        <PageHeader subtitle={t('authRequired')} title={t('title')} />
+        <Link href="/login" className="btn-primary">
           {t('loginCta')}
         </Link>
       </main>
@@ -146,35 +143,25 @@ function AuthenticatedView({ token }: { token: string }) {
 
   return (
     <main className="grid gap-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-          <p className="mt-2 text-text-secondary">{t('subtitle')}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {selectedMatchIds.size > 0 ? (
-            <button
-              onClick={() => generateExternalAnalysis.mutate()}
-              disabled={generateExternalAnalysis.isPending}
-              className="inline-flex items-center gap-2 rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary transition hover:bg-brand-accent disabled:opacity-50"
-            >
+      <PageHeader
+        actions={
+          selectedMatchIds.size > 0 ? (
+            <button className="btn-primary" disabled={generateExternalAnalysis.isPending} onClick={() => generateExternalAnalysis.mutate()}>
               <AiIcon />
               {generateExternalAnalysis.isPending
                 ? t('analysisPending')
                 : t('analyzeSelected', { count: selectedMatchIds.size })}
             </button>
           ) : (
-            <button
-              onClick={() => generateAnalysis.mutate()}
-              disabled={generateAnalysis.isPending || matches.length === 0}
-              className="inline-flex items-center gap-2 rounded-md bg-brand-accent px-4 py-2 font-medium text-text-primary transition hover:bg-brand-primary disabled:opacity-50"
-            >
+            <button className="btn-primary" disabled={generateAnalysis.isPending || matches.length === 0} onClick={() => generateAnalysis.mutate()}>
               <AiIcon />
               {generateAnalysis.isPending ? t('analysisPending') : t('analyzeWithAi')}
             </button>
-          )}
-        </div>
-      </header>
+          )
+        }
+        subtitle={t('subtitle')}
+        title={t('title')}
+      />
 
       {(generateAnalysis.isError || generateExternalAnalysis.isError) && (
         <div className="rounded-lg border border-state-error/40 bg-state-error/10 p-4">
@@ -195,7 +182,7 @@ function AuthenticatedView({ token }: { token: string }) {
         </div>
       )}
 
-      <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+      <section className="surface rounded-xl p-5">
         <h2 className="text-lg font-medium text-text-primary">{t('addSource')}</h2>
         <p className="mt-1 text-sm text-text-secondary">{t('addSourceHint')}</p>
         <form
@@ -215,7 +202,7 @@ function AuthenticatedView({ token }: { token: string }) {
           <button
             type="submit"
             disabled={createLink.isPending || !urlInput.trim()}
-            className="rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-text-primary transition hover:bg-brand-accent disabled:opacity-50"
+            className="btn-primary text-sm"
           >
             {t('connect')}
           </button>
@@ -228,7 +215,7 @@ function AuthenticatedView({ token }: { token: string }) {
       </section>
 
       {links.length > 0 && (
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+        <section className="surface rounded-xl p-5">
           <h2 className="text-lg font-medium text-text-primary">{t('connectedSources')}</h2>
           <div className="mt-3 grid gap-3">
             {links.map((link) => (
@@ -365,7 +352,7 @@ function MatchesTable({
 
   if (matches.length === 0) {
     return (
-      <div className="rounded-lg border border-border-subtle bg-background-secondary p-8 text-center">
+      <div className="surface rounded-xl p-8 text-center">
         <p className="text-text-secondary">{t('noMatches')}</p>
         <p className="mt-2 text-sm text-text-disabled">{t('noMatchesHint')}</p>
       </div>
@@ -663,7 +650,7 @@ function SyncHistoryForLink({ link, token }: { link: ExternalPlayerLink; token: 
   const sourceLabel = link.source === 'wst' ? 'WST' : 'CueTracker';
 
   return (
-    <div className="rounded-lg border border-border-subtle bg-background-secondary p-4">
+    <div className="surface rounded-xl p-4">
       <h3 className="text-sm font-medium text-text-primary">
         {sourceLabel}: {link.displayName ?? link.externalId}
       </h3>

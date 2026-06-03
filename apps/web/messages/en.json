@@ -324,6 +324,7 @@
   },
   "analytics": {
     "title": "Analytics",
+    "eyebrow": "Period trends",
     "subtitle": "Training trends, drill success and match form.",
     "authRequired": "Sign in to see player analytics.",
     "loginCta": "Sign in",

@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import type { CreateEquipmentProfileInput, UpsertPlayerProfileInput } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
+import { PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -122,12 +123,8 @@ export function ProfileClient() {
   if (!token) {
     return (
       <main className="max-w-2xl">
-        <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-3 text-text-secondary">{t('authRequired')}</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent"
-        >
+        <PageHeader subtitle={t('authRequired')} title={t('title')} />
+        <Link href="/login" className="btn-primary">
           {t('loginCta')}
         </Link>
       </main>
@@ -137,13 +134,10 @@ export function ProfileClient() {
   return (
     <main className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
       <section>
-        <header className="mb-6">
-          <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-          <p className="mt-2 text-text-secondary">{t('subtitle')}</p>
-        </header>
+        <PageHeader subtitle={t('subtitle')} title={t('title')} />
 
         <form
-          className="grid gap-4 rounded-lg border border-border-subtle bg-background-secondary p-5 sm:grid-cols-2"
+          className="grid gap-4 surface rounded-xl p-5 sm:grid-cols-2"
           onSubmit={profileForm.handleSubmit((values) =>
             saveProfile.mutate({
               firstName: values.firstName,
@@ -162,7 +156,6 @@ export function ProfileClient() {
             label={t('fields.firstName')}
           >
             <input
-              autoFocus
               className={inputClass}
               placeholder={t('placeholders.firstName')}
               {...profileForm.register('firstName', { required: t('required') })}
@@ -324,7 +317,7 @@ export function ProfileClient() {
           </form>
         </AccordionSection>
 
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+        <section className="surface rounded-xl p-5">
           <h2 className="text-lg font-semibold text-text-primary">{t('equipment.history')}</h2>
           <div className="mt-4 flex flex-col gap-3">
             {equipmentItems.length === 0 && (
@@ -365,8 +358,7 @@ export function ProfileClient() {
 
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
-const primaryButtonClass =
-  'rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
+const primaryButtonClass = 'btn-primary';
 
 function Field({
   children,

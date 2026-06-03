@@ -35,8 +35,13 @@ UI. Rolled out incrementally page by page on top of a shared foundation.
   `StatTile`s with icons in a 2-col mobile grid, `SectionCard` chart/section
   panels, `EmptyState`. Verified desktop + mobile with Playwright.
 
-**Remaining:** roll the same primitives/header across training, drills,
-matches, AI, calendar, analytics, profile (one commit per page).
+**Rollout (all pages):** `PageHeader`, `.surface` cards and `.btn-primary`
+applied across training, drills, matches, AI, calendar, analytics, profile and
+external-data; analytics rebuilt on `StatTile`/`SectionCard` like the dashboard;
+`AccordionSection` upgraded to the elevated surface. Removed `autoFocus` from
+always-visible inline forms (it made mobile browsers scroll past the page to the
+form on load); kept it only inside the training new-session modal. Verified
+desktop + mobile with Playwright.
 
 ### Training page redesign (2026-06-02)
 

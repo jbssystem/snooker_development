@@ -28,7 +28,7 @@ export function AccordionSection({
 
   return (
     <section
-      className={`overflow-hidden rounded-lg border border-border-subtle bg-background-secondary ${className}`}
+      className={`surface overflow-hidden rounded-xl ${className}`}
       data-testid={testId}
     >
       <button

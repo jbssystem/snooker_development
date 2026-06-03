@@ -19,6 +19,7 @@ import {
 import type { AiReport, GenerateWeeklyAiReportInput } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
+import { PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -103,12 +104,8 @@ export function AiReportsClient() {
   if (!token) {
     return (
       <main className="max-w-2xl">
-        <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-3 text-text-secondary">{t('authRequired')}</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent"
-        >
+        <PageHeader subtitle={t('authRequired')} title={t('title')} />
+        <Link href="/login" className="btn-primary">
           {t('loginCta')}
         </Link>
       </main>
@@ -122,7 +119,7 @@ export function AiReportsClient() {
 
   return (
     <main className="grid gap-8 xl:grid-cols-[330px_minmax(0,1fr)_360px]">
-      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+      <aside className="surface rounded-xl p-5">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
         <div className="mt-5 grid gap-2">
@@ -152,7 +149,7 @@ export function AiReportsClient() {
         </div>
       </aside>
 
-      <section className="order-first min-w-0 rounded-lg border border-border-subtle bg-background-secondary p-5 xl:order-none">
+      <section className="order-first min-w-0 surface rounded-xl p-5 xl:order-none">
         {activeReport ? <ReportDetail report={activeReport} /> : <EmptyReport />}
       </section>
 
@@ -161,7 +158,7 @@ export function AiReportsClient() {
           <section className="rounded-lg border border-state-warning/40 bg-state-warning/10 p-5 text-text-secondary">
             <h2 className="text-lg font-semibold text-text-primary">{t('profileRequired.title')}</h2>
             <p className="mt-2 text-sm">{t('profileRequired.description')}</p>
-            <Link href="/profile" className="mt-4 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent">
+            <Link href="/profile" className="btn-primary mt-4">
               {t('profileRequired.cta')}
             </Link>
           </section>
@@ -509,5 +506,4 @@ function parseJson<T>(value: string | null | undefined): T | null {
 
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
-const primaryButtonClass =
-  'rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
+const primaryButtonClass = 'btn-primary';

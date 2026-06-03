@@ -182,7 +182,7 @@ export function TrainingSessionClient() {
 
   return (
     <main className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
+      <aside className="surface rounded-xl p-4 sm:p-5">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
         <button className={`${primaryButtonClass} mt-5 w-full`} onClick={openNewSession} type="button">
@@ -337,7 +337,7 @@ function ActiveSessionPanel({
 
   return (
     <div className="grid gap-5">
-      <header className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
+      <header className="surface rounded-xl p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-wide text-brand-accent">{t(`sessionTypes.${session.sessionType}`)}</p>
@@ -377,7 +377,7 @@ function ActiveSessionPanel({
       )}
 
       {open && (
-        <section className="rounded-lg border border-border-subtle bg-background-secondary p-4 sm:p-5">
+        <section className="surface rounded-xl p-4 sm:p-5">
           <label className="text-sm font-medium text-text-secondary">{t('drillPicker.title')}</label>
           <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <select className={inputClass} onChange={(event) => setSelectedDrillId(event.target.value)} value={selectedDrillId}>
@@ -487,7 +487,7 @@ function ActiveSessionPanel({
         </section>
       ) : (
         open && (
-          <p className="rounded-lg border border-border-subtle bg-background-secondary p-5 text-sm text-text-secondary">
+          <p className="surface rounded-xl p-5 text-sm text-text-secondary">
             {t('execution.empty')}
           </p>
         )
@@ -782,8 +782,7 @@ function liveInsightToneClass(tone: LiveTrainingInsight['tone']): string {
 
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
-const primaryButtonClass =
-  'min-h-11 rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
+const primaryButtonClass = 'btn-primary';
 const secondaryButtonClass =
   'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-60';
 

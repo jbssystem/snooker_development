@@ -13,6 +13,7 @@ import type {
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
+import { PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -152,12 +153,8 @@ export function MatchLogClient() {
   if (!token) {
     return (
       <main className="max-w-2xl">
-        <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-3 text-text-secondary">{t('authRequired')}</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent"
-        >
+        <PageHeader subtitle={t('authRequired')} title={t('title')} />
+        <Link href="/login" className="btn-primary">
           {t('loginCta')}
         </Link>
       </main>
@@ -168,7 +165,7 @@ export function MatchLogClient() {
 
   return (
     <main className="grid gap-8 xl:grid-cols-[310px_minmax(0,1fr)_380px]">
-      <aside className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+      <aside className="surface rounded-xl p-5">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
         <div className="mt-5 grid gap-2">
@@ -202,7 +199,7 @@ export function MatchLogClient() {
           <div className="mb-5 rounded-lg border border-state-warning/40 bg-state-warning/10 p-5 text-text-secondary">
             <h2 className="text-lg font-semibold text-text-primary">{t('profileRequired.title')}</h2>
             <p className="mt-2">{t('profileRequired.description')}</p>
-            <Link href="/profile" className="mt-4 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent">
+            <Link href="/profile" className="btn-primary mt-4">
               {t('profileRequired.cta')}
             </Link>
           </div>
@@ -219,7 +216,7 @@ export function MatchLogClient() {
             t={t}
           />
         ) : (
-          <div className="rounded-lg border border-border-subtle bg-background-secondary p-8 text-text-secondary">
+          <div className="surface rounded-xl p-8 text-text-secondary">
             {matchesQuery.isLoading ? t('loading') : t('empty')}
           </div>
         )}
@@ -233,7 +230,6 @@ export function MatchLogClient() {
           >
             <Field error={matchForm.formState.errors.opponentName?.message} hint={t('hints.opponentName')} label={t('fields.opponentName')}>
               <input
-                autoFocus
                 className={inputClass}
                 placeholder={t('placeholders.opponentName')}
                 {...matchForm.register('opponentName', { required: t('required') })}
@@ -353,7 +349,7 @@ function MatchDetail({
 }) {
   return (
     <div className="grid gap-6">
-      <section className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+      <section className="surface rounded-xl p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold text-text-primary">{match.opponentName}</h2>
@@ -379,7 +375,7 @@ function MatchDetail({
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+        <div className="surface rounded-xl p-5">
           <h2 className="text-xl font-semibold text-text-primary">{t('frames.title')}</h2>
           <div className="mt-4 overflow-hidden rounded-md border border-border-subtle">
             <table className="w-full border-collapse text-sm">
@@ -410,7 +406,7 @@ function MatchDetail({
           </div>
         </div>
 
-        <div className="rounded-lg border border-border-subtle bg-background-secondary p-5">
+        <div className="surface rounded-xl p-5">
           <h2 className="text-xl font-semibold text-text-primary">{t('opponent.title')}</h2>
           {opponentHistory && (
             <dl className="mt-4 grid gap-3 text-sm">
@@ -610,5 +606,4 @@ function errorMessage(error: unknown, t: (key: string) => string): string {
 
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
-const primaryButtonClass =
-  'rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60';
+const primaryButtonClass = 'btn-primary';
