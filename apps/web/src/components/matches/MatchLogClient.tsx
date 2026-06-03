@@ -787,7 +787,10 @@ function MatchDetail({
               </button>
             </form>
           ) : (
+            // Remount (fresh frame) after each saved frame so the scorer can't
+            // re-submit the same break as a duplicate.
             <FrameScorer
+              key={match.frames.length}
               onSave={addFrameFromScorer}
               opponentName={opponentName}
               playerName={playerName}
