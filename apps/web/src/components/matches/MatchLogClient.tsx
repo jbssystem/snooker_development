@@ -93,6 +93,7 @@ export function MatchLogClient() {
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
 
   const profileQuery = useQuery({
     queryKey: ['player-profile', token],
@@ -135,6 +136,42 @@ export function MatchLogClient() {
     onError: (error) => setServerError(errorMessage(error, tErr)),
   });
 
+  const updateMatch = useMutation({
+    mutationFn: (input: { id: string; data: CreateMatchInput }) =>
+      api.matches.update(token ?? '', input.id, input.data),
+    onSuccess: (match) => {
+      setServerError(null);
+      setShowCreate(false);
+      setEditingMatchId(null);
+      matchForm.reset(matchDefaultValues);
+      queryClient.invalidateQueries({ queryKey: ['matches', token] });
+      queryClient.invalidateQueries({ queryKey: ['player-dashboard', token] });
+    },
+    onError: (error) => setServerError(errorMessage(error, tErr)),
+  });
+
+  const openCreate = () => {
+    setEditingMatchId(null);
+    matchForm.reset(matchDefaultValues);
+    setServerError(null);
+    setShowCreate(true);
+  };
+
+  const openEdit = (match: Match) => {
+    setEditingMatchId(match.id);
+    matchForm.reset(matchToFormValues(match));
+    setServerError(null);
+    setShowCreate(true);
+  };
+
+  const submitMatch = (values: MatchFormValues) => {
+    if (editingMatchId) {
+      updateMatch.mutate({ id: editingMatchId, data: toCreateMatchInput(values) });
+    } else {
+      createMatch.mutate(toCreateMatchInput(values));
+    }
+  };
+
   const addFrame = useMutation({
     mutationFn: (input: { matchId: string; frame: AddMatchFrameInput }) =>
       api.matches.addFrame(token ?? '', input.matchId, input.frame),
@@ -165,7 +202,7 @@ export function MatchLogClient() {
       <aside className="surface rounded-xl p-5">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
-        <button className="btn-primary mt-5 w-full" onClick={() => { setServerError(null); setShowCreate(true); }} type="button">
+        <button className="btn-primary mt-5 w-full" onClick={openCreate} type="button">
           <PlusIcon className="h-4 w-4" />
           {t('newMatch.open')}
         </button>
@@ -213,6 +250,7 @@ export function MatchLogClient() {
             frameForm={frameForm}
             locale={locale}
             match={activeMatch}
+            onEdit={() => openEdit(activeMatch)}
             opponentHistory={opponentHistory}
             t={t}
           />
@@ -223,11 +261,13 @@ export function MatchLogClient() {
         )}
       </section>
 
-      <Modal closeLabel={t('newMatch.close')} onClose={() => setShowCreate(false)} open={showCreate} title={t('form.title')}>
-        <form
-          className="grid gap-4"
-          onSubmit={matchForm.handleSubmit((values) => createMatch.mutate(toCreateMatchInput(values)))}
-        >
+      <Modal
+        closeLabel={t('newMatch.close')}
+        onClose={() => setShowCreate(false)}
+        open={showCreate}
+        title={editingMatchId ? t('newMatch.editTitle') : t('form.title')}
+      >
+        <form className="grid gap-4" onSubmit={matchForm.handleSubmit(submitMatch)}>
           <FormSection title={t('newMatch.sections.main')}>
             <Field error={matchForm.formState.errors.opponentName?.message} hint={t('hints.opponentName')} label={t('fields.opponentName')}>
               <input
@@ -322,8 +362,12 @@ export function MatchLogClient() {
               {serverError}
             </p>
           )}
-          <button className={`${primaryButtonClass} w-full justify-center`} disabled={createMatch.isPending || profileMissing} type="submit">
-            {createMatch.isPending ? t('saving') : t('form.submit')}
+          <button
+            className={`${primaryButtonClass} w-full justify-center`}
+            disabled={createMatch.isPending || updateMatch.isPending || (!editingMatchId && profileMissing)}
+            type="submit"
+          >
+            {createMatch.isPending || updateMatch.isPending ? t('saving') : t('form.submit')}
           </button>
         </form>
       </Modal>
@@ -346,6 +390,7 @@ function MatchDetail({
   frameForm,
   locale,
   match,
+  onEdit,
   opponentHistory,
   t,
 }: {
@@ -354,6 +399,7 @@ function MatchDetail({
   frameForm: ReturnType<typeof useForm<FrameFormValues>>;
   locale: string;
   match: Match;
+  onEdit: () => void;
   opponentHistory: OpponentSummary | null;
   t: (key: string, values?: Record<string, number>) => string;
 }) {
@@ -367,8 +413,17 @@ function MatchDetail({
               {formatDate(match.matchDate, locale)}{match.tournament ? ` · ${match.tournament}` : ''}
             </p>
           </div>
-          <div className="rounded-md bg-background-elevated px-3 py-2 text-lg font-semibold text-text-primary">
-            {match.framesWon}:{match.framesLost}
+          <div className="flex items-center gap-2">
+            <div className="rounded-md bg-background-elevated px-3 py-2 text-lg font-semibold text-text-primary">
+              {match.framesWon}:{match.framesLost}
+            </div>
+            <button
+              className="min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+              onClick={onEdit}
+              type="button"
+            >
+              {t('actions.edit')}
+            </button>
           </div>
         </div>
         <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -486,6 +541,41 @@ function summarizeOpponent(matches: Match[], opponentName: string): OpponentSumm
     framesWon: relevantMatches.reduce((total, match) => total + match.framesWon, 0),
     framesLost: relevantMatches.reduce((total, match) => total + match.framesLost, 0),
   };
+}
+
+function matchToFormValues(match: Match): MatchFormValues {
+  const numToStr = (value: number | undefined | null): string =>
+    value === undefined || value === null ? '' : String(value);
+  return {
+    matchDate: match.matchDate ? toDateTimeLocal(match.matchDate) : '',
+    opponentName: match.opponentName,
+    tournament: match.tournament ?? '',
+    round: match.round ?? '',
+    format: match.format ?? '',
+    country: match.country ?? '',
+    city: match.city ?? '',
+    club: match.club ?? '',
+    framesWon: numToStr(match.framesWon),
+    framesLost: numToStr(match.framesLost),
+    highBreak: numToStr(match.highBreak),
+    breaks50: numToStr(match.breaks50),
+    breaks70: numToStr(match.breaks70),
+    breaks100: numToStr(match.breaks100),
+    safetySuccess: numToStr(match.safetySuccess),
+    longPotSuccess: numToStr(match.longPotSuccess),
+    unforcedErrors: numToStr(match.unforcedErrors),
+    tacticalErrors: numToStr(match.tacticalErrors),
+    sourceUrl: match.sourceUrl ?? '',
+    videoUrl: match.videoUrl ?? '',
+    notes: match.notes ?? '',
+  };
+}
+
+function toDateTimeLocal(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function toCreateMatchInput(values: MatchFormValues): CreateMatchInput {

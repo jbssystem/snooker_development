@@ -1067,6 +1067,7 @@
     },
     "newMatch": {
       "open": "New match",
+      "editTitle": "Edit match",
       "close": "Close",
       "sections": {
         "main": "Basics",
@@ -1074,6 +1075,9 @@
         "stats": "Statistics",
         "links": "Links & notes"
       }
+    },
+    "actions": {
+      "edit": "Edit"
     },
     "fields": {
       "matchDate": "Date",
