@@ -15,7 +15,7 @@ import type {
   UserDrillVisibility,
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
-import { AccordionSection } from '@/components/layout/AccordionSection';
+import { Modal } from '@/components/layout/Modal';
 import { Field, InfoTooltip, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
@@ -92,6 +92,7 @@ export function DrillLibraryClient() {
   const [layout, setLayout] = useState<TableLayout>(() => createStandardTableLayout());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
+  const [showForm, setShowForm] = useState(false);
   const form = useForm<FormValues>({ defaultValues });
 
   const templatesQuery = useQuery({
@@ -100,7 +101,7 @@ export function DrillLibraryClient() {
     enabled: Boolean(token),
   });
 
-  const templates = templatesQuery.data ?? [];
+  const templates = useMemo(() => templatesQuery.data ?? [], [templatesQuery.data]);
   const visibilityCounts = useMemo(() => {
     const counts: Record<VisibilityFilter, number> = { all: templates.length, private: 0, system: 0, shared: 0 };
     for (const template of templates) counts[template.visibility] += 1;
@@ -114,12 +115,18 @@ export function DrillLibraryClient() {
   const resetForm = () => {
     setEditingId(null);
     setServerError(null);
+    setShowForm(false);
     form.reset(defaultValues);
     setMetrics([
       { key: 'attempts', label: t('defaultMetrics.attempts'), type: 'number', unit: '', required: true },
       { key: 'successes', label: t('defaultMetrics.successes'), type: 'number', unit: '', required: true },
     ]);
     setLayout(createStandardTableLayout());
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setShowForm(true);
   };
 
   const createTemplate = useMutation({
@@ -176,7 +183,7 @@ export function DrillLibraryClient() {
         : [{ key: '', label: '', type: 'number', unit: '', required: false }],
     );
     setLayout(source.defaultTableLayout ?? createStandardTableLayout());
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    setShowForm(true);
   };
 
   const submitTemplate = (values: FormValues) => {
@@ -200,60 +207,68 @@ export function DrillLibraryClient() {
   }
 
   return (
-    <main className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_460px]">
-      <section className="min-w-0">
-        <PageHeader subtitle={t('subtitle')} title={t('title')} />
+    <main className="min-w-0">
+      <PageHeader
+        eyebrow={templates.length > 0 ? t('countLabel', { count: templates.length }) : ''}
+        subtitle={t('subtitle')}
+        title={t('title')}
+        actions={
+          <button className="btn-primary" onClick={openCreate} type="button">
+            + {t('newDrill')}
+          </button>
+        }
+      />
 
-        {templates.length > 0 && (
-          <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label={t('filter.label')}>
-            {visibilityFilters.map((filter) => (
-              <FilterChip
-                key={filter}
-                active={visibilityFilter === filter}
-                count={visibilityCounts[filter]}
-                label={filter === 'all' ? t('filter.all') : t(`visibility.${filter}`)}
-                onClick={() => setVisibilityFilter(filter)}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {templatesQuery.isLoading &&
-            Array.from({ length: 4 }).map((_, index) => <TemplateCardSkeleton key={index} />)}
-          {!templatesQuery.isLoading &&
-            visibleTemplates.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                t={t}
-                tSystemDrills={tSystemDrills}
-                onClone={() => loadIntoForm(template, true)}
-                onDelete={() => deleteTemplate.mutate(template.id)}
-                onEdit={() => loadIntoForm(template, false)}
-              />
-            ))}
-          {!templatesQuery.isLoading && templates.length === 0 && (
-            <p className="surface rounded-xl p-5 text-text-secondary">
-              {t('empty')}
-            </p>
-          )}
-          {!templatesQuery.isLoading && templates.length > 0 && visibleTemplates.length === 0 && (
-            <p className="surface rounded-xl p-5 text-text-secondary">
-              {t('filter.noResults')}
-            </p>
-          )}
+      {templates.length > 0 && (
+        <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label={t('filter.label')}>
+          {visibilityFilters.map((filter) => (
+            <FilterChip
+              key={filter}
+              active={visibilityFilter === filter}
+              count={visibilityCounts[filter]}
+              label={filter === 'all' ? t('filter.all') : t(`visibility.${filter}`)}
+              onClick={() => setVisibilityFilter(filter)}
+            />
+          ))}
         </div>
-      </section>
+      )}
 
-      <aside className="content-start">
-        <AccordionSection
-          defaultOpen
-          subtitle={editingId ? t('form.editingSubtitle') : ''}
-          testId="drill-template-form"
-          title={editingId ? t('form.editTitle') : t('form.title')}
-        >
-          <form className="grid gap-4" onSubmit={form.handleSubmit(submitTemplate)}>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {templatesQuery.isLoading &&
+          Array.from({ length: 6 }).map((_, index) => <TemplateCardSkeleton key={index} />)}
+        {!templatesQuery.isLoading &&
+          visibleTemplates.map((template) => (
+            <TemplateCard
+              key={template.id}
+              template={template}
+              t={t}
+              tSystemDrills={tSystemDrills}
+              onClone={() => loadIntoForm(template, true)}
+              onDelete={() => deleteTemplate.mutate(template.id)}
+              onEdit={() => loadIntoForm(template, false)}
+            />
+          ))}
+        {!templatesQuery.isLoading && templates.length === 0 && (
+          <p className="surface rounded-xl p-5 text-text-secondary">
+            {t('empty')}
+          </p>
+        )}
+        {!templatesQuery.isLoading && templates.length > 0 && visibleTemplates.length === 0 && (
+          <p className="surface rounded-xl p-5 text-text-secondary">
+            {t('filter.noResults')}
+          </p>
+        )}
+      </div>
+
+      <Modal
+        className="sm:max-w-2xl"
+        closeLabel={t('close')}
+        onClose={resetForm}
+        open={showForm}
+        title={editingId ? t('form.editTitle') : t('form.title')}
+      >
+        <form className="grid gap-4" data-testid="drill-template-form" onSubmit={form.handleSubmit(submitTemplate)}>
+          {editingId && <p className="text-sm text-text-secondary">{t('form.editingSubtitle')}</p>}
           <Field error={form.formState.errors.name?.message} hint={t('hints.name')} label={t('fields.name')}>
             <input
               className={inputClass}
@@ -397,8 +412,7 @@ export function DrillLibraryClient() {
             )}
           </div>
         </form>
-        </AccordionSection>
-      </aside>
+      </Modal>
     </main>
   );
 }
