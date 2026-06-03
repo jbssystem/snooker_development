@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type {
   CreateDrillTemplateInput,
@@ -10,6 +10,7 @@ import type {
   DrillDifficulty,
   DrillMetricType,
   DrillTemplate,
+  DrillVisibility,
   TableLayout,
   UserDrillVisibility,
 } from '@snooker/shared';
@@ -62,6 +63,9 @@ const categories: DrillCategory[] = [
 const difficulties: DrillDifficulty[] = ['beginner', 'intermediate', 'advanced', 'professional'];
 const metricTypes: DrillMetricType[] = ['number', 'boolean', 'percentage', 'time_ms', 'text'];
 
+type VisibilityFilter = 'all' | DrillVisibility;
+const visibilityFilters: VisibilityFilter[] = ['all', 'private', 'system', 'shared'];
+
 const defaultValues: FormValues = {
   name: '',
   category: 'potting',
@@ -87,6 +91,7 @@ export function DrillLibraryClient() {
   ]);
   const [layout, setLayout] = useState<TableLayout>(() => createStandardTableLayout());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
   const form = useForm<FormValues>({ defaultValues });
 
   const templatesQuery = useQuery({
@@ -94,6 +99,17 @@ export function DrillLibraryClient() {
     queryFn: () => api.drills.listTemplates(token ?? ''),
     enabled: Boolean(token),
   });
+
+  const templates = templatesQuery.data ?? [];
+  const visibilityCounts = useMemo(() => {
+    const counts: Record<VisibilityFilter, number> = { all: templates.length, private: 0, system: 0, shared: 0 };
+    for (const template of templates) counts[template.visibility] += 1;
+    return counts;
+  }, [templates]);
+  const visibleTemplates = useMemo(
+    () => (visibilityFilter === 'all' ? templates : templates.filter((tpl) => tpl.visibility === visibilityFilter)),
+    [templates, visibilityFilter],
+  );
 
   const resetForm = () => {
     setEditingId(null);
@@ -188,8 +204,22 @@ export function DrillLibraryClient() {
       <section className="min-w-0">
         <PageHeader subtitle={t('subtitle')} title={t('title')} />
 
+        {templates.length > 0 && (
+          <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label={t('filter.label')}>
+            {visibilityFilters.map((filter) => (
+              <FilterChip
+                key={filter}
+                active={visibilityFilter === filter}
+                count={visibilityCounts[filter]}
+                label={filter === 'all' ? t('filter.all') : t(`visibility.${filter}`)}
+                onClick={() => setVisibilityFilter(filter)}
+              />
+            ))}
+          </div>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2">
-          {(templatesQuery.data ?? []).map((template) => (
+          {visibleTemplates.map((template) => (
             <TemplateCard
               key={template.id}
               template={template}
@@ -200,9 +230,14 @@ export function DrillLibraryClient() {
               onEdit={() => loadIntoForm(template, false)}
             />
           ))}
-          {templatesQuery.data?.length === 0 && (
+          {templates.length === 0 && (
             <p className="surface rounded-xl p-5 text-text-secondary">
               {t('empty')}
+            </p>
+          )}
+          {templates.length > 0 && visibleTemplates.length === 0 && (
+            <p className="surface rounded-xl p-5 text-text-secondary">
+              {t('filter.noResults')}
             </p>
           )}
         </div>
@@ -362,6 +397,40 @@ export function DrillLibraryClient() {
         </AccordionSection>
       </aside>
     </main>
+  );
+}
+
+function FilterChip({
+  active,
+  count,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  count: number;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
+        active
+          ? 'border-brand-accent bg-brand-accent/15 text-brand-accent shadow-[0_0_0_1px_rgba(25,169,116,0.25)]'
+          : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent/60 hover:text-text-primary'
+      }`}
+    >
+      {label}
+      <span
+        className={`rounded-full px-1.5 text-[11px] tabular-nums ${
+          active ? 'bg-brand-accent/20 text-brand-accent' : 'bg-background-elevated text-text-disabled'
+        }`}
+      >
+        {count}
+      </span>
+    </button>
   );
 }
 

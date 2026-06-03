@@ -1153,6 +1153,11 @@
       "shared": "Shared",
       "system": "Built-in"
     },
+    "filter": {
+      "all": "All",
+      "label": "Filter",
+      "noResults": "No drills in this category."
+    },
     "metrics": {
       "title": "Metrics",
       "add": "Add",
