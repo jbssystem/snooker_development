@@ -15,6 +15,9 @@ import { defineConfig, devices } from '@playwright/test';
 const WEB_PORT = 3000;
 const baseURL = `http://localhost:${WEB_PORT}`;
 
+// Where the `e2e-setup` project stores the real-login session for reuse.
+export const E2E_AUTH_FILE = '.playwright/e2e-auth.json';
+
 export default defineConfig({
   testDir: './apps/web/e2e',
   fullyParallel: true,
@@ -37,10 +40,17 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
+    // Logs in once against the real API and saves the session, so e2e tests
+    // don't each hit the rate-limited /auth/login endpoint.
+    {
+      name: 'e2e-setup',
+      testMatch: /global\.setup\.ts/,
+    },
     {
       name: 'e2e',
       testMatch: /.*\.spec\.ts/,
-      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['e2e-setup'],
+      use: { ...devices['Desktop Chrome'], storageState: E2E_AUTH_FILE },
     },
   ],
 

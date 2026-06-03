@@ -1,6 +1,6 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import { mockApi } from './mockApi';
-import { seedAuth, seedRealAuth } from './auth';
+import { seedAuth } from './auth';
 
 /**
  * Shared test base.
@@ -8,7 +8,8 @@ import { seedAuth, seedRealAuth } from './auth';
  * Behaviour depends on the Playwright project:
  *  - `smoke`: API is mocked and a fake admin session is seeded (unless the
  *    test opts out with `test.use({ auth: false })`, e.g. login/register).
- *  - `e2e`:   no mocks; logs in against the real API and seeds the token.
+ *  - `e2e`:   no mocks; the real session comes from the `e2e-setup` project
+ *    via storageState. `auth: false` tests clear it to render logged-out.
  *
  * Every test also gets a `consoleErrors` array that collects browser
  * console.error / uncaught page errors, so a test can assert the page loaded
@@ -36,7 +37,11 @@ export const test = base.extend<Options & Fixtures>({
     const isE2E = testInfo.project.name === 'e2e';
 
     if (isE2E) {
-      if (auth) await seedRealAuth(page);
+      // Session is provided by the `e2e-setup` storageState. Logged-out tests
+      // clear it so login/register render fresh.
+      if (!auth) {
+        await page.addInitScript(() => window.localStorage.removeItem('snooker.auth'));
+      }
     } else {
       await mockApi(page);
       if (auth) await seedAuth(page);
