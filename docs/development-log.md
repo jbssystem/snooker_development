@@ -35,9 +35,10 @@ Format:
 - Verified frame edit prefill, field alignment and all drill-editor interactions
   (line/zone/annotation select, drill edit) functionally via Playwright.
 
-**Open item:** pre-existing `MISSING_MESSAGE` console warnings for some system
-drill zone labels (`systemDrills.templates.*.layout.targetZones.*`) — an i18n
-gap in the drill localization map, not a regression; worth filling later.
+**Open item (resolved):** the `MISSING_MESSAGE` console warnings for system drill
+zone/path labels are fixed — `drill-localization` now checks `t.has(key)` before
+calling `t(key)`, so missing optional labels fall back silently instead of
+logging an error.
 
 ### Matches editing + input easing + tooltips everywhere (2026-06-03)
 

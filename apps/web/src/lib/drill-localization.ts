@@ -3,6 +3,7 @@ import type { DrillMetrics, DrillTemplate, TableLayout } from '@snooker/shared';
 type Translator = {
   (key: string): string;
   raw: (key: string) => unknown;
+  has?: (key: string) => boolean;
 };
 
 export function localizeDrillTemplate(template: DrillTemplate, t: Translator): DrillTemplate {
@@ -97,6 +98,9 @@ function localizeLayout(layout: TableLayout, t: Translator, key: string): TableL
 }
 
 function text(t: Translator, key: string, fallback: string): string {
+  // Short-circuit when the key is absent so next-intl does not log a
+  // MISSING_MESSAGE error for optional labels (zones, paths, metrics, …).
+  if (t.has && !t.has(key)) return fallback;
   try {
     const value = t(key);
     return value === key || value.startsWith('templates.') || value.startsWith('demoTemplates.') ? fallback : value;
@@ -106,6 +110,7 @@ function text(t: Translator, key: string, fallback: string): string {
 }
 
 function stringArray(t: Translator, key: string, fallback: string[]): string[] {
+  if (t.has && !t.has(key)) return fallback;
   try {
     const value = t.raw(key);
     return Array.isArray(value) && value.every((item) => typeof item === 'string') ? value : fallback;
