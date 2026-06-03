@@ -13,6 +13,8 @@ import { MatchesModule } from './modules/matches/matches.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
 import { AiModule } from './modules/ai/ai.module';
 import { ExternalSourcesModule } from './modules/external-sources/external-sources.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { AnnouncementsModule } from './modules/announcements/announcements.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { ExternalSourcesModule } from './modules/external-sources/external-sourc
     CalendarModule,
     AiModule,
     ExternalSourcesModule,
+    AdminModule,
+    AnnouncementsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

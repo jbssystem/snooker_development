@@ -5,11 +5,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import type { RoleType } from '@prisma/client';
 import { ErrorCodes } from '@snooker/shared';
 import { TokensService } from '../tokens.service';
 
 export interface AuthedRequest extends Request {
   userId: string;
+  roles?: RoleType[];
 }
 
 @Injectable()

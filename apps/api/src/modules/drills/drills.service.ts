@@ -129,7 +129,7 @@ function toUpdateData(input: UpdateDrillTemplateInput): Prisma.DrillTemplateUpda
   return data;
 }
 
-function toDrillTemplate(template: PrismaDrillTemplate): DrillTemplate {
+export function toDrillTemplate(template: PrismaDrillTemplate): DrillTemplate {
   return {
     id: template.id,
     name: template.name,
@@ -167,7 +167,7 @@ function fromPrismaDifficulty(difficulty: PrismaDrillDifficulty): DrillDifficult
   return reverseDifficultyMap[difficulty];
 }
 
-function toPrismaVisibility(visibility: DrillVisibility): PrismaDrillVisibility {
+export function toPrismaVisibility(visibility: DrillVisibility): PrismaDrillVisibility {
   return visibilityMap[visibility];
 }
 
