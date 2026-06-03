@@ -86,6 +86,7 @@ export function DrillLibraryClient() {
     { key: 'successes', label: t('defaultMetrics.successes'), type: 'number', unit: '', required: true },
   ]);
   const [layout, setLayout] = useState<TableLayout>(() => createStandardTableLayout());
+  const [editingId, setEditingId] = useState<string | null>(null);
   const form = useForm<FormValues>({ defaultValues });
 
   const templatesQuery = useQuery({
@@ -94,16 +95,31 @@ export function DrillLibraryClient() {
     enabled: Boolean(token),
   });
 
+  const resetForm = () => {
+    setEditingId(null);
+    setServerError(null);
+    form.reset(defaultValues);
+    setMetrics([
+      { key: 'attempts', label: t('defaultMetrics.attempts'), type: 'number', unit: '', required: true },
+      { key: 'successes', label: t('defaultMetrics.successes'), type: 'number', unit: '', required: true },
+    ]);
+    setLayout(createStandardTableLayout());
+  };
+
   const createTemplate = useMutation({
     mutationFn: (input: CreateDrillTemplateInput) => api.drills.createTemplate(token ?? '', input),
     onSuccess: () => {
-      setServerError(null);
-      form.reset(defaultValues);
-      setMetrics([
-        { key: 'attempts', label: t('defaultMetrics.attempts'), type: 'number', unit: '', required: true },
-        { key: 'successes', label: t('defaultMetrics.successes'), type: 'number', unit: '', required: true },
-      ]);
-      setLayout(createStandardTableLayout());
+      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['drill-templates'] });
+    },
+    onError: (e) => setServerError(errorMessage(e, tErr)),
+  });
+
+  const updateTemplate = useMutation({
+    mutationFn: (input: { id: string; data: CreateDrillTemplateInput }) =>
+      api.drills.updateTemplate(token ?? '', input.id, input.data),
+    onSuccess: () => {
+      resetForm();
       queryClient.invalidateQueries({ queryKey: ['drill-templates'] });
     },
     onError: (e) => setServerError(errorMessage(e, tErr)),
@@ -114,6 +130,44 @@ export function DrillLibraryClient() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['drill-templates'] }),
     onError: (e) => setServerError(errorMessage(e, tErr)),
   });
+
+  const startEdit = (template: DrillTemplate) => {
+    setEditingId(template.id);
+    setServerError(null);
+    form.reset({
+      name: template.name,
+      category: template.category,
+      difficulty: template.difficulty,
+      visibility: template.visibility === 'shared' ? 'shared' : 'private',
+      description: template.description,
+      goal: template.goal,
+      rules: template.rules,
+      successCriteria: template.successCriteria,
+      tags: template.tags.join(', '),
+    });
+    setMetrics(
+      template.metricsSchema.metrics.length > 0
+        ? template.metricsSchema.metrics.map((metric) => ({
+            key: metric.key,
+            label: metric.label,
+            type: metric.type,
+            unit: metric.unit ?? '',
+            required: metric.required ?? false,
+          }))
+        : [{ key: '', label: '', type: 'number', unit: '', required: false }],
+    );
+    setLayout(template.defaultTableLayout ?? createStandardTableLayout());
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const submitTemplate = (values: FormValues) => {
+    const data = buildTemplateInput(values, metrics, layout);
+    if (editingId) {
+      updateTemplate.mutate({ id: editingId, data });
+    } else {
+      createTemplate.mutate(data);
+    }
+  };
 
   if (!token) {
     return (
@@ -139,6 +193,7 @@ export function DrillLibraryClient() {
               t={t}
               tSystemDrills={tSystemDrills}
               onDelete={() => deleteTemplate.mutate(template.id)}
+              onEdit={() => startEdit(template)}
             />
           ))}
           {templatesQuery.data?.length === 0 && (
@@ -150,36 +205,13 @@ export function DrillLibraryClient() {
       </section>
 
       <aside className="content-start">
-        <AccordionSection defaultOpen testId="drill-template-form" title={t('form.title')}>
-          <form
-            className="grid gap-4"
-            onSubmit={form.handleSubmit((values) =>
-              createTemplate.mutate({
-                name: values.name,
-                category: values.category,
-                difficulty: values.difficulty,
-                visibility: values.visibility,
-                description: values.description,
-                goal: values.goal,
-                rules: values.rules,
-                successCriteria: values.successCriteria,
-                tags: parseTags(values.tags),
-                metricsSchema: {
-                  version: 1,
-                  metrics: metrics
-                    .filter((metric) => metric.key.trim() && metric.label.trim())
-                    .map((metric) => ({
-                      key: metric.key.trim(),
-                      label: metric.label.trim(),
-                      type: metric.type,
-                      unit: metric.unit.trim() || undefined,
-                      required: metric.required,
-                    })),
-                },
-                defaultTableLayout: layout,
-              }),
-            )}
-          >
+        <AccordionSection
+          defaultOpen
+          subtitle={editingId ? t('form.editingSubtitle') : ''}
+          testId="drill-template-form"
+          title={editingId ? t('form.editTitle') : t('form.title')}
+        >
+          <form className="grid gap-4" onSubmit={form.handleSubmit(submitTemplate)}>
           <Field error={form.formState.errors.name?.message} hint={t('hints.name')} label={t('fields.name')}>
             <input
               className={inputClass}
@@ -313,9 +345,20 @@ export function DrillLibraryClient() {
             </p>
           )}
 
-          <button className={primaryButtonClass} disabled={createTemplate.isPending} type="submit">
-            {createTemplate.isPending ? t('saving') : t('form.submit')}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button className={`${primaryButtonClass} flex-1`} disabled={createTemplate.isPending || updateTemplate.isPending} type="submit">
+              {createTemplate.isPending || updateTemplate.isPending
+                ? t('saving')
+                : editingId
+                  ? t('form.saveEdit')
+                  : t('form.submit')}
+            </button>
+            {editingId && (
+              <button className={secondaryButtonClass} onClick={resetForm} type="button">
+                {t('form.cancelEdit')}
+              </button>
+            )}
+          </div>
         </form>
         </AccordionSection>
       </aside>
@@ -328,11 +371,13 @@ function TemplateCard({
   t,
   tSystemDrills,
   onDelete,
+  onEdit,
 }: {
   template: DrillTemplate;
   t: (key: string) => string;
   tSystemDrills: ReturnType<typeof useTranslations>;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
   const localizedTemplate = localizeDrillTemplate(template, tSystemDrills);
 
@@ -346,13 +391,22 @@ function TemplateCard({
           </p>
         </div>
         {template.visibility !== 'system' && (
-          <button
-            className="rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:border-state-error hover:text-state-error"
-            onClick={onDelete}
-            type="button"
-          >
-            {t('delete')}
-          </button>
+          <div className="flex shrink-0 gap-2">
+            <button
+              className="rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:border-brand-accent hover:text-text-primary"
+              onClick={onEdit}
+              type="button"
+            >
+              {t('edit')}
+            </button>
+            <button
+              className="rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:border-state-error hover:text-state-error"
+              onClick={onDelete}
+              type="button"
+            >
+              {t('delete')}
+            </button>
+          </div>
         )}
       </div>
       <p className="mt-3 text-sm text-text-secondary">{localizedTemplate.description}</p>
@@ -409,6 +463,33 @@ function parseTags(value: string): string[] {
     .map((tag) => tag.trim())
     .filter(Boolean)
     .slice(0, 12);
+}
+
+function buildTemplateInput(values: FormValues, metrics: MetricRow[], layout: TableLayout): CreateDrillTemplateInput {
+  return {
+    name: values.name,
+    category: values.category,
+    difficulty: values.difficulty,
+    visibility: values.visibility,
+    description: values.description,
+    goal: values.goal,
+    rules: values.rules,
+    successCriteria: values.successCriteria,
+    tags: parseTags(values.tags),
+    metricsSchema: {
+      version: 1,
+      metrics: metrics
+        .filter((metric) => metric.key.trim() && metric.label.trim())
+        .map((metric) => ({
+          key: metric.key.trim(),
+          label: metric.label.trim(),
+          type: metric.type,
+          unit: metric.unit.trim() || undefined,
+          required: metric.required,
+        })),
+    },
+    defaultTableLayout: layout,
+  };
 }
 
 const EMPTY_PREVIEW_LAYOUT = createEmptyTableLayout('empty-preview');

@@ -65,11 +65,29 @@ cue ball, zones and paths. This lets a coach pick a common drill shape and dial
 the number of balls instead of placing each ball by hand. Preset/red helpers
 live in `apps/web/src/components/table-renderer/layouts.ts`.
 
+## Editor interactions (edit mode)
+
+`edit` mode is fully interactive and drives drill creation/editing:
+
+- **Balls** drag to reposition (clamped to the table).
+- **Shot lines**: select to reveal draggable endpoint handles; the arrow follows
+  live. Optional `label`.
+- **Target zones**: drag to move; selecting a circle/rectangle shows a resize
+  handle (radius / bottom-right corner). Optional `label` shown on the zone.
+- **Annotations**: free text placed on the table, draggable; text edited from the
+  selected-element panel.
+- Clicking an element selects it; clicking empty felt clears selection. The
+  editor's selected-element panel offers delete + label/text editing. New
+  zones/paths/annotations are auto-selected so they can be adjusted immediately.
+
+Callbacks: `onBallMove`, `onZoneChange`, `onPathChange`, `onAnnotationChange`,
+`onSelectionChange`. Drill templates can be edited after creation (the library
+form doubles as an edit form, pre-filled including the table layout).
+
 ## Current limits
 
-- Target zones and shot paths are created through simple editor actions; direct
-  zone resizing and freehand path drawing are planned after the MVP editor is
-  exercised with real drills.
+- Freehand multi-cushion path drawing and polygon-zone resizing remain future
+  editor polish.
 - The renderer is intentionally physics-free. Collision simulation, ghost ball,
   cushion projection and replay remain future overlays.
 

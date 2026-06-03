@@ -2,7 +2,14 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { BallColor, Point, TableLayout } from '@snooker/snooker-domain';
+import type {
+  BallColor,
+  Point,
+  ShotPath,
+  TableAnnotation,
+  TableLayout,
+  TargetZone,
+} from '@snooker/snooker-domain';
 import { TableLayoutSchema } from '@snooker/shared';
 import {
   DRILL_LAYOUT_PRESETS,
@@ -30,6 +37,7 @@ export function DrillLayoutEditor({ value, onChange }: { value: TableLayout; onC
     () => value.balls.find((ball) => ball.id === selectedId),
     [selectedId, value.balls],
   );
+  const selected = useMemo(() => findSelected(value, selectedId), [selectedId, value]);
   const reds = redCount(value);
   const ballTotal = value.balls.length;
 
@@ -62,9 +70,47 @@ export function DrillLayoutEditor({ value, onChange }: { value: TableLayout; onC
         layout={value}
         mode="edit"
         selectedIds={selectedIds}
+        onAnnotationChange={(id, next) => updateAnnotation(value, onChange, id, next)}
         onBallMove={(ballId, next) => updateBall(value, onChange, ballId, next)}
+        onPathChange={(id, next) => updatePath(value, onChange, id, next)}
         onSelectionChange={setSelectedIds}
+        onZoneChange={(id, next) => updateZone(value, onChange, id, next)}
       />
+
+      {selected && (
+        <div className="grid gap-2 rounded-md border border-brand-accent/50 bg-background-secondary p-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-wide text-brand-accent">
+              {t(`editor.selectedKinds.${selected.kind}`)}
+            </span>
+            <button
+              className="rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary transition hover:border-state-error hover:text-state-error"
+              onClick={() => { removeSelected(value, onChange, selectedIds); setSelectedIds([]); }}
+              type="button"
+            >
+              {t('editor.delete')}
+            </button>
+          </div>
+          {selected.kind === 'annotation' && (
+            <input
+              autoFocus
+              className={inputClass}
+              onChange={(event) => updateAnnotation(value, onChange, selected.id, { ...(selected.element as TableAnnotation), text: event.target.value })}
+              placeholder={t('editor.annotationText')}
+              value={(selected.element as TableAnnotation).text}
+            />
+          )}
+          {(selected.kind === 'zone' || selected.kind === 'path') && (
+            <input
+              className={inputClass}
+              onChange={(event) => updateLabel(value, onChange, selected, event.target.value)}
+              placeholder={t('editor.label')}
+              value={(selected.element as { label?: string }).label ?? ''}
+            />
+          )}
+          {selected.kind !== 'ball' && <span className="text-xs text-text-disabled">{t('editor.dragHint')}</span>}
+        </div>
+      )}
 
       <fieldset className="grid gap-2 rounded-md border border-border-subtle p-3">
         <legend className="px-1 text-xs uppercase tracking-wide text-text-disabled">{t('editor.reds.title')}</legend>
@@ -102,7 +148,7 @@ export function DrillLayoutEditor({ value, onChange }: { value: TableLayout; onC
 
       <fieldset className="grid gap-2">
         <legend className="mb-1 text-xs uppercase tracking-wide text-text-disabled">{t('editor.ballsGroup')}</legend>
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
           <label className="flex flex-col gap-1.5 text-sm text-text-secondary">
             <span>{t('editor.ballColor')}</span>
             <select className={inputClass} onChange={(event) => setBallColor(event.target.value as BallColor)} value={ballColor}>
@@ -114,20 +160,20 @@ export function DrillLayoutEditor({ value, onChange }: { value: TableLayout; onC
           <button className={`${secondaryButtonClass} self-end`} onClick={() => addBall(value, onChange, ballColor)} type="button">
             {t('editor.addBall')}
           </button>
-          <button className={`${secondaryButtonClass} self-end`} disabled={!selectedBall} onClick={() => removeSelected(value, onChange, selectedIds)} type="button">
-            {t('editor.removeSelected')}
-          </button>
         </div>
       </fieldset>
 
       <fieldset className="grid gap-2">
         <legend className="mb-1 text-xs uppercase tracking-wide text-text-disabled">{t('editor.toolsGroup')}</legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <button className={secondaryButtonClass} onClick={() => addTargetZone(value, onChange)} type="button">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <button className={secondaryButtonClass} onClick={() => addTargetZone(value, onChange, setSelectedIds)} type="button">
             {t('editor.addZone')}
           </button>
-          <button className={secondaryButtonClass} onClick={() => addShotPath(value, onChange, selectedBall)} type="button">
+          <button className={secondaryButtonClass} onClick={() => addShotPath(value, onChange, selectedBall, setSelectedIds)} type="button">
             {t('editor.addPath')}
+          </button>
+          <button className={secondaryButtonClass} onClick={() => addAnnotation(value, onChange, setSelectedIds)} type="button">
+            {t('editor.addAnnotation')}
           </button>
           <button className={secondaryButtonClass} onClick={() => exportImage(canvasRef.current)} type="button">
             {t('editor.exportImage')}
@@ -165,6 +211,25 @@ const chipButtonClass =
 const stepperButtonClass =
   'flex h-10 w-10 items-center justify-center rounded-md border border-border-subtle text-lg text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40';
 
+type Selected =
+  | { kind: 'ball'; id: string; element: TableLayout['balls'][number] }
+  | { kind: 'zone'; id: string; element: TargetZone }
+  | { kind: 'path'; id: string; element: ShotPath }
+  | { kind: 'annotation'; id: string; element: TableAnnotation };
+
+function findSelected(layout: TableLayout, id: string | undefined): Selected | null {
+  if (!id) return null;
+  const ball = layout.balls.find((item) => item.id === id);
+  if (ball) return { kind: 'ball', id, element: ball };
+  const zone = layout.targetZones.find((item) => item.id === id);
+  if (zone) return { kind: 'zone', id, element: zone };
+  const path = layout.shotPaths.find((item) => item.id === id);
+  if (path) return { kind: 'path', id, element: path };
+  const annotation = layout.annotations.find((item) => item.id === id);
+  if (annotation) return { kind: 'annotation', id, element: annotation };
+  return null;
+}
+
 function applyPreset(
   preset: DrillLayoutPreset,
   layout: TableLayout,
@@ -173,6 +238,34 @@ function applyPreset(
 ): void {
   onChange(createPresetLayout(preset, layout.id));
   setSelectedIds([]);
+}
+
+function updateZone(layout: TableLayout, onChange: (layout: TableLayout) => void, id: string, next: TargetZone): void {
+  onChange({ ...layout, targetZones: layout.targetZones.map((zone) => (zone.id === id ? next : zone)) });
+}
+
+function updatePath(layout: TableLayout, onChange: (layout: TableLayout) => void, id: string, next: ShotPath): void {
+  onChange({ ...layout, shotPaths: layout.shotPaths.map((path) => (path.id === id ? next : path)) });
+}
+
+function updateAnnotation(layout: TableLayout, onChange: (layout: TableLayout) => void, id: string, next: TableAnnotation): void {
+  onChange({ ...layout, annotations: layout.annotations.map((annotation) => (annotation.id === id ? next : annotation)) });
+}
+
+function updateLabel(layout: TableLayout, onChange: (layout: TableLayout) => void, selected: Selected, label: string): void {
+  const value = label.trim() ? label : undefined;
+  if (selected.kind === 'zone') updateZone(layout, onChange, selected.id, { ...selected.element, label: value });
+  if (selected.kind === 'path') updatePath(layout, onChange, selected.id, { ...selected.element, label: value });
+}
+
+function addAnnotation(layout: TableLayout, onChange: (layout: TableLayout) => void, setSelectedIds: (ids: string[]) => void): void {
+  const dimensions = tableDimensions(layout);
+  const id = `note-${Date.now()}`;
+  onChange({
+    ...layout,
+    annotations: [...layout.annotations, { id, text: 'Текст', at: { x: dimensions.width * 0.3, y: dimensions.height * 0.25 } }],
+  });
+  setSelectedIds([id]);
 }
 
 function updateBall(
@@ -210,32 +303,32 @@ function removeSelected(layout: TableLayout, onChange: (layout: TableLayout) => 
   });
 }
 
-function addTargetZone(layout: TableLayout, onChange: (layout: TableLayout) => void): void {
+function addTargetZone(layout: TableLayout, onChange: (layout: TableLayout) => void, setSelectedIds: (ids: string[]) => void): void {
   const dimensions = tableDimensions(layout);
+  const id = `zone-${Date.now()}`;
   onChange({
     ...layout,
     targetZones: [
       ...layout.targetZones,
-      {
-        id: `zone-${Date.now()}`,
-        type: 'circle',
-        x: dimensions.width * 0.72,
-        y: dimensions.height / 2,
-        radius: dimensions.height * 0.12,
-      },
+      { id, type: 'circle', x: dimensions.width * 0.72, y: dimensions.height / 2, radius: dimensions.height * 0.12 },
     ],
   });
+  setSelectedIds([id]);
 }
 
-function addShotPath(layout: TableLayout, onChange: (layout: TableLayout) => void, selectedBall: { x: number; y: number } | undefined): void {
+function addShotPath(
+  layout: TableLayout,
+  onChange: (layout: TableLayout) => void,
+  selectedBall: { x: number; y: number } | undefined,
+  setSelectedIds: (ids: string[]) => void,
+): void {
   const dimensions = tableDimensions(layout);
   const cueBall = layout.balls.find((ball) => ball.color === 'white');
   const from = cueBall ? { x: cueBall.x, y: cueBall.y } : { x: dimensions.width * 0.18, y: dimensions.height * 0.65 };
   const to = selectedBall ? { x: selectedBall.x, y: selectedBall.y } : { x: dimensions.width * 0.7, y: dimensions.height / 2 };
-  onChange({
-    ...layout,
-    shotPaths: [...layout.shotPaths, { id: `path-${Date.now()}`, from, to }],
-  });
+  const id = `path-${Date.now()}`;
+  onChange({ ...layout, shotPaths: [...layout.shotPaths, { id, from, to }] });
+  setSelectedIds([id]);
 }
 
 function exportImage(canvas: SnookerTableCanvasHandle | null): void {

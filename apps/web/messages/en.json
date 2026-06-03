@@ -827,9 +827,14 @@
     "required": "Required",
     "saving": "Saving…",
     "delete": "Delete",
+    "edit": "Edit",
     "form": {
       "title": "New template",
-      "submit": "Create template"
+      "editTitle": "Edit drill",
+      "editingSubtitle": "Changes are saved to this drill.",
+      "submit": "Create template",
+      "saveEdit": "Save changes",
+      "cancelEdit": "Cancel"
     },
     "fields": {
       "name": "Name",
@@ -1189,6 +1194,17 @@
       "ballCount": "Balls: {count}",
       "ballsGroup": "Balls",
       "toolsGroup": "Tools",
+      "addAnnotation": "Label",
+      "delete": "Delete",
+      "annotationText": "Label text",
+      "label": "Label (optional)",
+      "dragHint": "Drag the element and its handles on the table to adjust.",
+      "selectedKinds": {
+        "ball": "Ball",
+        "zone": "Zone",
+        "path": "Shot line",
+        "annotation": "Label"
+      },
       "presets": {
         "title": "Presets",
         "empty": "Empty table",

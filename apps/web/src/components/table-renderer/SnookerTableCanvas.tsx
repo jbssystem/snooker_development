@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import type { ForwardedRef } from 'react';
 import { forwardRef } from 'react';
-import type { Point, ShotPath, TableLayout, TargetZone } from '@snooker/snooker-domain';
+import type { Point, ShotPath, TableAnnotation, TableLayout, TargetZone } from '@snooker/snooker-domain';
 
 export type TableInteractionMode = 'view' | 'edit' | 'replay';
 
@@ -18,6 +18,8 @@ export type SnookerTableCanvasProps = {
   className?: string;
   onBallMove?: (ballId: string, next: Point) => void;
   onZoneChange?: (zoneId: string, next: TargetZone) => void;
+  onPathChange?: (pathId: string, next: ShotPath) => void;
+  onAnnotationChange?: (annotationId: string, next: TableAnnotation) => void;
   onPathCreate?: (path: ShotPath) => void;
   onLayoutSave?: (layout: TableLayout) => void;
   onSelectionChange?: (selectedIds: string[]) => void;

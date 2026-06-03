@@ -24,6 +24,7 @@ type Props = SnookerTableCanvasProps & {
 
 const PADDING_MM = 120;
 const D_RADIUS_MM = 292;
+const HANDLE = '#C8A45D';
 const BALL_COLORS: Record<BallColor, { fill: string; stroke: string }> = {
   white: { fill: '#F5F1E6', stroke: '#D8D2C4' },
   red: { fill: '#C1121F', stroke: '#7D0E16' },
@@ -41,6 +42,9 @@ export function SnookerTableCanvasImpl({
   selectedIds = [],
   className,
   onBallMove,
+  onZoneChange,
+  onPathChange,
+  onAnnotationChange,
   onSelectionChange,
   forwardedRef,
 }: Props) {
@@ -48,6 +52,7 @@ export function SnookerTableCanvasImpl({
   const stageRef = useRef<Konva.Stage | null>(null);
   const [containerWidth, setContainerWidth] = useState(720);
   const dimensions = tableDimensions(layout);
+  const editable = mode === 'edit';
   const stageSize = useMemo(() => {
     const logicalWidth = dimensions.width + PADDING_MM * 2;
     const logicalHeight = dimensions.height + PADDING_MM * 2;
@@ -86,56 +91,67 @@ export function SnookerTableCanvasImpl({
 
   return (
     <div ref={containerRef} className={className} data-testid="snooker-table-canvas">
-      <Stage ref={stageRef} height={stageSize.height} width={stageSize.width}>
+      <Stage
+        ref={stageRef}
+        height={stageSize.height}
+        width={stageSize.width}
+        onMouseDown={(event) => {
+          if (editable && event.target === event.target.getStage()) onSelectionChange?.([]);
+        }}
+      >
         <Layer>
-          <Rect
-            cornerRadius={18}
-            fill="#1F2630"
-            height={stageSize.height}
-            shadowBlur={8}
-            shadowColor="rgba(0,0,0,0.35)"
-            width={stageSize.width}
-            x={0}
-            y={0}
-          />
-          <Rect
-            cornerRadius={10}
-            fill="#0E6B4D"
-            height={tableHeight}
-            stroke="#2A323D"
-            strokeWidth={Math.max(2, 8 * stageSize.scale)}
-            width={tableWidth}
-            x={tableX}
-            y={tableY}
-          />
+          <Rect cornerRadius={18} fill="#1F2630" height={stageSize.height} shadowBlur={8} shadowColor="rgba(0,0,0,0.35)" width={stageSize.width} x={0} y={0} />
+          <Rect cornerRadius={10} fill="#0E6B4D" height={tableHeight} stroke="#2A323D" strokeWidth={Math.max(2, 8 * stageSize.scale)} width={tableWidth} x={tableX} y={tableY} />
           <TableGuides dimensions={dimensions} scale={stageSize.scale} toCanvas={toCanvas} />
           <Pockets dimensions={dimensions} scale={stageSize.scale} toCanvas={toCanvas} />
+
           {layout.targetZones.map((zone) => (
             <TargetZoneShape
               key={zone.id}
+              editable={editable}
+              scale={stageSize.scale}
               selected={selectedSet.has(zone.id)}
               toCanvas={toCanvas}
+              toDomain={toDomain}
               zone={zone}
+              onChange={(next) => onZoneChange?.(zone.id, next)}
               onSelect={() => onSelectionChange?.([zone.id])}
             />
           ))}
+
           {layout.shotPaths.map((path) => (
             <ShotPathShape
               key={path.id}
-              path={path}
+              editable={editable}
+              scale={stageSize.scale}
               selected={selectedSet.has(path.id)}
               toCanvas={toCanvas}
+              toDomain={toDomain}
+              path={path}
+              onChange={(next) => onPathChange?.(path.id, next)}
               onSelect={() => onSelectionChange?.([path.id])}
             />
           ))}
+
           {layout.annotations.map((annotation) => (
-            <AnnotationShape key={annotation.id} annotation={annotation} scale={stageSize.scale} toCanvas={toCanvas} />
+            <AnnotationShape
+              key={annotation.id}
+              annotation={annotation}
+              editable={editable}
+              scale={stageSize.scale}
+              selected={selectedSet.has(annotation.id)}
+              toCanvas={toCanvas}
+              toDomain={toDomain}
+              onChange={(next) => onAnnotationChange?.(annotation.id, next)}
+              onSelect={() => onSelectionChange?.([annotation.id])}
+            />
           ))}
+
           {layout.balls.filter((ball) => ball.visible).map((ball) => (
             <BallShape
               key={ball.id}
               ball={ball}
-              draggable={mode === 'edit'}
+              draggable={editable}
               selected={selectedSet.has(ball.id)}
               toCanvas={toCanvas}
               toDomain={toDomain}
@@ -149,21 +165,12 @@ export function SnookerTableCanvasImpl({
   );
 }
 
-function TableGuides({
-  dimensions,
-  scale,
-  toCanvas,
-}: {
-  dimensions: { width: number; height: number };
-  scale: number;
-  toCanvas: (point: Point) => Point;
-}) {
+function TableGuides({ dimensions, scale, toCanvas }: { dimensions: { width: number; height: number }; scale: number; toCanvas: (point: Point) => Point }) {
   const baulkX = dimensions.width * (736.6 / 3569);
   const centerY = dimensions.height / 2;
   const baulkTop = toCanvas({ x: baulkX, y: 0 });
   const baulkBottom = toCanvas({ x: baulkX, y: dimensions.height });
-  const dPoints = semiCirclePoints({ x: baulkX, y: centerY }, D_RADIUS_MM * (dimensions.width / 3569), 90, 270)
-    .flatMap((point) => toCanvasPair(toCanvas(point)));
+  const dPoints = semiCirclePoints({ x: baulkX, y: centerY }, D_RADIUS_MM * (dimensions.width / 3569), 90, 270).flatMap((point) => toCanvasPair(toCanvas(point)));
 
   return (
     <Group listening={false}>
@@ -173,15 +180,7 @@ function TableGuides({
   );
 }
 
-function Pockets({
-  dimensions,
-  scale,
-  toCanvas,
-}: {
-  dimensions: { width: number; height: number };
-  scale: number;
-  toCanvas: (point: Point) => Point;
-}) {
+function Pockets({ dimensions, scale, toCanvas }: { dimensions: { width: number; height: number }; scale: number; toCanvas: (point: Point) => Point }) {
   const pockets = [
     { point: { x: 0, y: 0 }, radius: POCKET_RADIUS_MM.corner },
     { point: { x: dimensions.width, y: 0 }, radius: POCKET_RADIUS_MM.corner },
@@ -200,101 +199,219 @@ function Pockets({
   );
 }
 
+function DragHandle({ x, y, onDragMove }: { x: number; y: number; onDragMove: (canvas: Point) => void }) {
+  return (
+    <Circle
+      draggable
+      fill={HANDLE}
+      radius={7}
+      stroke="#1F2630"
+      strokeWidth={2}
+      x={x}
+      y={y}
+      onDragMove={(event) => onDragMove({ x: event.target.x(), y: event.target.y() })}
+    />
+  );
+}
+
 function TargetZoneShape({
+  editable,
+  scale,
   selected,
   toCanvas,
+  toDomain,
   zone,
+  onChange,
   onSelect,
 }: {
+  editable: boolean;
+  scale: number;
   selected: boolean;
   toCanvas: (point: Point) => Point;
+  toDomain: (point: Point) => Point;
   zone: TargetZone;
+  onChange: (next: TargetZone) => void;
   onSelect: () => void;
 }) {
-  const stroke = selected ? '#C8A45D' : '#19A974';
+  const stroke = selected ? HANDLE : '#19A974';
+  const strokeWidth = selected ? 3 : 2;
+
   if (zone.type === 'circle') {
-    const point = toCanvas(zone);
+    const center = toCanvas(zone);
     const edge = toCanvas({ x: zone.x + zone.radius, y: zone.y });
+    const radius = Math.abs(edge.x - center.x);
     return (
-      <Circle
-        fill="rgba(25,169,116,0.16)"
-        radius={Math.abs(edge.x - point.x)}
-        stroke={stroke}
-        strokeWidth={selected ? 3 : 2}
-        x={point.x}
-        y={point.y}
-        onClick={onSelect}
-        onTap={onSelect}
-      />
+      <>
+        <Circle
+          draggable={editable}
+          fill="rgba(25,169,116,0.16)"
+          radius={radius}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+          x={center.x}
+          y={center.y}
+          onClick={onSelect}
+          onTap={onSelect}
+          onDragMove={(event) => {
+            const next = toDomain({ x: event.target.x(), y: event.target.y() });
+            onChange({ ...zone, x: next.x, y: next.y });
+          }}
+        />
+        {zone.label && <ZoneLabel scale={scale} text={zone.label} x={center.x} y={center.y} />}
+        {editable && selected && (
+          <DragHandle
+            x={center.x + radius}
+            y={center.y}
+            onDragMove={(canvas) => {
+              const domain = toDomain(canvas);
+              const nextRadius = Math.max(40, Math.abs(domain.x - zone.x));
+              onChange({ ...zone, radius: nextRadius });
+            }}
+          />
+        )}
+      </>
     );
   }
+
   if (zone.type === 'rectangle') {
-    const point = toCanvas(zone);
+    const topLeft = toCanvas(zone);
     const end = toCanvas({ x: zone.x + zone.width, y: zone.y + zone.height });
     return (
-      <Rect
-        fill="rgba(25,169,116,0.14)"
-        height={end.y - point.y}
-        stroke={stroke}
-        strokeWidth={selected ? 3 : 2}
-        width={end.x - point.x}
-        x={point.x}
-        y={point.y}
-        onClick={onSelect}
-        onTap={onSelect}
-      />
+      <>
+        <Rect
+          draggable={editable}
+          fill="rgba(25,169,116,0.14)"
+          height={end.y - topLeft.y}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+          width={end.x - topLeft.x}
+          x={topLeft.x}
+          y={topLeft.y}
+          onClick={onSelect}
+          onTap={onSelect}
+          onDragMove={(event) => {
+            const next = toDomain({ x: event.target.x(), y: event.target.y() });
+            onChange({ ...zone, x: next.x, y: next.y });
+          }}
+        />
+        {zone.label && <ZoneLabel scale={scale} text={zone.label} x={(topLeft.x + end.x) / 2} y={(topLeft.y + end.y) / 2} />}
+        {editable && selected && (
+          <DragHandle
+            x={end.x}
+            y={end.y}
+            onDragMove={(canvas) => {
+              const domain = toDomain(canvas);
+              onChange({ ...zone, width: Math.max(40, domain.x - zone.x), height: Math.max(40, domain.y - zone.y) });
+            }}
+          />
+        )}
+      </>
     );
   }
+
   return (
     <Line
       closed
+      draggable={editable}
       fill="rgba(25,169,116,0.14)"
       points={zone.points.flatMap((point) => toCanvasPair(toCanvas(point)))}
       stroke={stroke}
-      strokeWidth={selected ? 3 : 2}
+      strokeWidth={strokeWidth}
       onClick={onSelect}
       onTap={onSelect}
     />
+  );
+}
+
+function ZoneLabel({ text, x, y, scale }: { text: string; x: number; y: number; scale: number }) {
+  return (
+    <Text align="center" fill="#E9E6DF" fontSize={Math.max(11, 40 * scale)} listening={false} offsetX={60} text={text} width={120} x={x} y={y - Math.max(7, 22 * scale)} />
   );
 }
 
 function ShotPathShape({
-  path,
+  editable,
+  scale,
   selected,
   toCanvas,
+  toDomain,
+  path,
+  onChange,
   onSelect,
 }: {
-  path: ShotPath;
+  editable: boolean;
+  scale: number;
   selected: boolean;
   toCanvas: (point: Point) => Point;
+  toDomain: (point: Point) => Point;
+  path: ShotPath;
+  onChange: (next: ShotPath) => void;
   onSelect: () => void;
 }) {
+  const from = toCanvas(path.from);
+  const to = toCanvas(path.to);
   const points = [path.from, ...(path.cushions ?? []), path.to].flatMap((point) => toCanvasPair(toCanvas(point)));
+  const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
   return (
-    <Arrow
-      dash={[10, 8]}
-      fill={selected ? '#F5F1E6' : '#C8A45D'}
-      pointerLength={10}
-      pointerWidth={8}
-      points={points}
-      stroke={selected ? '#F5F1E6' : '#C8A45D'}
-      strokeWidth={selected ? 3 : 2}
-      onClick={onSelect}
-      onTap={onSelect}
-    />
+    <>
+      <Arrow
+        dash={[10, 8]}
+        fill={selected ? '#F5F1E6' : HANDLE}
+        hitStrokeWidth={16}
+        pointerLength={10}
+        pointerWidth={8}
+        points={points}
+        stroke={selected ? '#F5F1E6' : HANDLE}
+        strokeWidth={selected ? 3 : 2}
+        onClick={onSelect}
+        onTap={onSelect}
+      />
+      {path.label && <Text fill="#E9E6DF" fontSize={Math.max(10, 34 * scale)} listening={false} text={path.label} x={mid.x + 6} y={mid.y - 18} />}
+      {editable && selected && (
+        <>
+          <DragHandle x={from.x} y={from.y} onDragMove={(canvas) => onChange({ ...path, from: toDomain(canvas) })} />
+          <DragHandle x={to.x} y={to.y} onDragMove={(canvas) => onChange({ ...path, to: toDomain(canvas) })} />
+        </>
+      )}
+    </>
   );
 }
 
-function AnnotationShape({ annotation, scale, toCanvas }: { annotation: TableAnnotation; scale: number; toCanvas: (point: Point) => Point }) {
+function AnnotationShape({
+  annotation,
+  editable,
+  scale,
+  selected,
+  toCanvas,
+  toDomain,
+  onChange,
+  onSelect,
+}: {
+  annotation: TableAnnotation;
+  editable: boolean;
+  scale: number;
+  selected: boolean;
+  toCanvas: (point: Point) => Point;
+  toDomain: (point: Point) => Point;
+  onChange: (next: TableAnnotation) => void;
+  onSelect: () => void;
+}) {
   const point = toCanvas(annotation.at);
+  const fontSize = Math.max(12, 46 * scale);
   return (
-    <Text
-      fill="#E9E6DF"
-      fontSize={Math.max(11, 46 * scale)}
-      text={annotation.text}
+    <Group
+      draggable={editable}
       x={point.x}
       y={point.y}
-    />
+      onClick={onSelect}
+      onTap={onSelect}
+      onDragMove={(event) => onChange({ ...annotation, at: toDomain({ x: event.target.x(), y: event.target.y() }) })}
+    >
+      {selected && (
+        <Rect cornerRadius={4} fill="rgba(200,164,93,0.14)" height={fontSize + 8} stroke={HANDLE} strokeWidth={1} width={annotation.text.length * fontSize * 0.62 + 12} x={-6} y={-4} />
+      )}
+      <Text fill="#E9E6DF" fontSize={fontSize} fontStyle="600" text={annotation.text} />
+    </Group>
   );
 }
 
@@ -333,7 +450,7 @@ function BallShape({
       onDragEnd={(event: KonvaEventObject<DragEvent>) => onDragEnd(toDomain({ x: event.target.x(), y: event.target.y() }))}
       onTap={onSelect}
     >
-      {selected && <Circle fill="rgba(200,164,93,0.18)" radius={radius + 7} stroke="#C8A45D" strokeWidth={2} />}
+      {selected && <Circle fill="rgba(200,164,93,0.18)" radius={radius + 7} stroke={HANDLE} strokeWidth={2} />}
       <Circle fill={color.fill} radius={radius} stroke={color.stroke} strokeWidth={ball.color === 'white' ? 2 : 1.5} />
       <Circle fill="rgba(255,255,255,0.28)" radius={radius * 0.28} x={-radius * 0.28} y={-radius * 0.28} />
     </Group>
