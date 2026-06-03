@@ -58,21 +58,23 @@ async function generateWeeklySummary(reportId: string): Promise<void> {
   await prisma.aiReport.update({ where: { id: report.id }, data: { status: 'RUNNING', errorMessage: null } });
   try {
     const sourceData = report.sourceDataJson as SourceData;
-    let contentMarkdown: string;
+    let result: GenResult;
 
     if (report.reportType === 'EXTERNAL_ANALYSIS') {
       const prompt = await externalAnalysisPrompt(report.locale, sourceData);
-      contentMarkdown = await generateExternalMarkdown(report.provider, report.model, prompt, sourceData, report.locale);
+      result = await generateExternalMarkdown(report.provider, report.model, prompt, sourceData, report.locale);
     } else {
       const prompt = await weeklyPrompt(report.locale, report.periodStart, report.periodEnd, sourceData);
-      contentMarkdown = await generateMarkdown(report.provider, report.model, prompt, sourceData, report.locale);
+      result = await generateMarkdown(report.provider, report.model, prompt, sourceData, report.locale);
     }
 
     await prisma.aiReport.update({
       where: { id: report.id },
       data: {
         status: 'COMPLETED',
-        contentMarkdown,
+        contentMarkdown: result.text,
+        inputTokens: result.usage?.inputTokens ?? null,
+        outputTokens: result.usage?.outputTokens ?? null,
         completedAt: new Date(),
         errorMessage: null,
       },
@@ -119,19 +121,19 @@ async function generateExternalMarkdown(
   prompt: string,
   sourceData: ExternalSourceData,
   locale: string,
-): Promise<string> {
+): Promise<GenResult> {
   const loc = toLocale(locale);
   if (provider === 'anthropic' && process.env.AI_API_KEY) {
     try {
       return await callAnthropicExternal(model, prompt, sourceData);
     } catch {
-      return localExternalAnalysis(sourceData, loc);
+      return { text: localExternalAnalysis(sourceData, loc) };
     }
   }
-  return localExternalAnalysis(sourceData, loc);
+  return { text: localExternalAnalysis(sourceData, loc) };
 }
 
-async function callAnthropicExternal(model: string, prompt: string, sourceData: ExternalSourceData): Promise<string> {
+async function callAnthropicExternal(model: string, prompt: string, sourceData: ExternalSourceData): Promise<GenResult> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90_000);
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -160,10 +162,27 @@ async function callAnthropicExternal(model: string, prompt: string, sourceData: 
   }).finally(() => clearTimeout(timeout));
 
   if (!response.ok) throw new Error(`Anthropic request failed: ${response.status}`);
-  const body = (await response.json()) as { content?: Array<{ type?: string; text?: string }> };
+  const body = (await response.json()) as AnthropicResponse;
   const text = body.content?.find((item) => item.type === 'text')?.text;
   if (!text) throw new Error('Anthropic response did not contain text');
-  return text;
+  const usage = parseUsage(body);
+  return usage ? { text, usage } : { text };
+}
+
+type AnthropicResponse = {
+  content?: Array<{ type?: string; text?: string }>;
+  usage?: { input_tokens?: number; output_tokens?: number };
+};
+
+export type GenUsage = { inputTokens: number; outputTokens: number };
+export type GenResult = { text: string; usage?: GenUsage };
+
+function parseUsage(body: AnthropicResponse): GenUsage | undefined {
+  if (!body.usage) return undefined;
+  return {
+    inputTokens: body.usage.input_tokens ?? 0,
+    outputTokens: body.usage.output_tokens ?? 0,
+  };
 }
 
 function localExternalAnalysis(sourceData: ExternalSourceData, locale: 'ru' | 'en' | 'uk'): string {
@@ -243,18 +262,18 @@ async function generateMarkdown(
   prompt: string,
   sourceData: SourceData,
   locale: string,
-): Promise<string> {
+): Promise<GenResult> {
   if (provider === 'anthropic' && process.env.AI_API_KEY) {
     try {
       return await callAnthropic(model, prompt, sourceData);
     } catch {
-      return localWeeklySummary(sourceData, sourceData.period, provider, toLocale(locale));
+      return { text: localWeeklySummary(sourceData, sourceData.period, provider, toLocale(locale)) };
     }
   }
-  return localWeeklySummary(sourceData, sourceData.period, provider, toLocale(locale));
+  return { text: localWeeklySummary(sourceData, sourceData.period, provider, toLocale(locale)) };
 }
 
-async function callAnthropic(model: string, prompt: string, sourceData: SourceData): Promise<string> {
+async function callAnthropic(model: string, prompt: string, sourceData: SourceData): Promise<GenResult> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90_000);
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -282,10 +301,11 @@ async function callAnthropic(model: string, prompt: string, sourceData: SourceDa
   if (!response.ok) {
     throw new Error(`Anthropic request failed: ${response.status}`);
   }
-  const body = (await response.json()) as { content?: Array<{ type?: string; text?: string }> };
+  const body = (await response.json()) as AnthropicResponse;
   const text = body.content?.find((item) => item.type === 'text')?.text;
   if (!text) throw new Error('Anthropic response did not contain text');
-  return text;
+  const usage = parseUsage(body);
+  return usage ? { text, usage } : { text };
 }
 
 async function readPromptTemplate(): Promise<string> {
