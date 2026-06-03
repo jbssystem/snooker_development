@@ -96,7 +96,21 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## Backups (production)
 
-Daily `pg_dump` to MinIO via worker cron job (added in Phase 1 close-out).
+**Pre-deploy snapshot.** `infra/deploy.sh` runs `pg_dump` right before
+applying migrations, on every deploy. If the dump fails the deploy aborts
+before the schema is touched, so the DB is never migrated without a fresh
+backup. Dumps are gzipped to `~/snooker-backups/snooker-<timestamp>.sql.gz`
+(outside the repo, so `git clean` can't remove them) and the most recent 14
+are kept (`BACKUP_KEEP`, `BACKUP_DIR` override the defaults).
+
+Restore a dump into the running stack:
+```bash
+gunzip -c ~/snooker-backups/snooker-YYYYMMDD-HHMMSS.sql.gz \
+  | docker compose --env-file .env.deploy -f docker-compose.prod.yml \
+      exec -T postgres sh -c 'psql -U "$POSTGRES_USER" "$POSTGRES_DB"'
+```
+
+Still open: off-host copies (these dumps live on the same server as the DB).
 File backups: MinIO bucket replication. Document the schedule here once
 configured.
 

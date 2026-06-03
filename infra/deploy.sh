@@ -27,6 +27,25 @@ echo "==> building images"
 echo "==> starting datastores"
 "${COMPOSE[@]}" up -d postgres redis minio
 
+echo "==> backing up database"
+# Snapshot the DB before migrations run. Kept outside the repo so git clean
+# can never touch it. If the dump fails we abort BEFORE migrating, so we never
+# change the schema without a fresh backup. (set -o pipefail catches pg_dump
+# failures even though gzip is the last command in the pipe.)
+BACKUP_DIR="${BACKUP_DIR:-$HOME/snooker-backups}"
+BACKUP_KEEP="${BACKUP_KEEP:-14}"
+mkdir -p "$BACKUP_DIR"
+backup_file="$BACKUP_DIR/snooker-$(date +%Y%m%d-%H%M%S).sql.gz"
+if "${COMPOSE[@]}" exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' | gzip > "$backup_file"; then
+	echo "backup written: $backup_file ($(du -h "$backup_file" | cut -f1))"
+else
+	echo "database backup FAILED — aborting deploy" >&2
+	rm -f "$backup_file"
+	exit 1
+fi
+# Retention: keep the most recent $BACKUP_KEEP dumps, drop older ones.
+ls -1t "$BACKUP_DIR"/snooker-*.sql.gz 2>/dev/null | tail -n +"$((BACKUP_KEEP + 1))" | xargs -r rm -f
+
 echo "==> applying database migrations"
 "${COMPOSE[@]}" run --rm migrate
 
