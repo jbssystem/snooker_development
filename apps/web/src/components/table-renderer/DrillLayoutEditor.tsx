@@ -107,7 +107,7 @@ export function DrillLayoutEditor({
         </div>
       </fieldset>
 
-      <div className="relative">
+      <div className="relative min-w-0">
         <SnookerTableCanvas
           ref={canvasRef}
           className="overflow-hidden rounded-md border border-border-subtle"
