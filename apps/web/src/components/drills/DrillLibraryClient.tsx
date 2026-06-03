@@ -453,21 +453,22 @@ function TemplateCard({
   const isSystem = template.visibility === 'system';
 
   return (
-    <article className="surface relative flex flex-col rounded-xl p-4 sm:p-5">
-      <span className={`absolute right-4 top-4 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${visibilityBadgeClass(template.visibility)}`}>
-        {t(`visibility.${template.visibility}`)}
-      </span>
-
-      <header className="pr-24">
-        <h2 className="text-lg font-semibold leading-snug text-text-primary">{localizedTemplate.name}</h2>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+    <article
+      className={`surface surface-hover flex flex-col rounded-xl p-4 sm:p-5 ${isSystem ? 'accent-top' : ''}`}
+    >
+      <header>
+        <div className="flex flex-wrap items-center gap-1.5">
           <span className="rounded-md bg-background-elevated px-2 py-0.5 text-[11px] uppercase tracking-wide text-brand-accent">
             {t(`categories.${template.category}`)}
           </span>
-          <span className="rounded-md bg-background-elevated px-2 py-0.5 text-[11px] uppercase tracking-wide text-text-secondary">
+          <span className={`rounded-md px-2 py-0.5 text-[11px] uppercase tracking-wide ${difficultyBadgeClass(template.difficulty)}`}>
             {t(`difficulties.${template.difficulty}`)}
           </span>
+          <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${visibilityBadgeClass(template.visibility)}`}>
+            {t(`visibility.${template.visibility}`)}
+          </span>
         </div>
+        <h2 className="mt-2 text-lg font-semibold leading-snug text-text-primary">{localizedTemplate.name}</h2>
       </header>
 
       <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{localizedTemplate.description}</p>
@@ -525,6 +526,21 @@ function visibilityBadgeClass(visibility: DrillTemplate['visibility']): string {
   if (visibility === 'system') return 'border-brand-gold/40 bg-brand-gold/15 text-brand-gold';
   if (visibility === 'shared') return 'border-state-info/40 bg-state-info/15 text-state-info';
   return 'border-border-subtle bg-background-elevated text-text-secondary';
+}
+
+// Color-code difficulty so the grid is scannable at a glance: cool green for
+// entry levels warming to gold for the hardest.
+function difficultyBadgeClass(difficulty: DrillTemplate['difficulty']): string {
+  switch (difficulty) {
+    case 'beginner':
+      return 'bg-state-success/15 text-state-success';
+    case 'intermediate':
+      return 'bg-brand-accent/15 text-brand-accent';
+    case 'advanced':
+      return 'bg-state-warning/15 text-state-warning';
+    case 'professional':
+      return 'bg-brand-gold/15 text-brand-gold';
+  }
 }
 
 const inputClass =
