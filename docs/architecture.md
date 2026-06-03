@@ -84,6 +84,9 @@ canvas components.
   pages at desktop/mobile widths into `.ui-shots/` (git-ignored);
   `scripts/ui-inspect.mjs` captures focused element shots. Not part of the app
   bundle or CI yet.
+- `vitest` (`@snooker/snooker-domain` devDependency) — unit tests for the pure
+  snooker scoring engine (`src/scoring/`), per the AGENTS.md testing contract.
+  Domain-only; not bundled into any app.
 
 Add a new dependency only with a one-line rationale in this section.
 
