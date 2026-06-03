@@ -1089,6 +1089,8 @@
       "mapTitle": "Карта фрейму {number}",
       "mapEmpty": "Немає забитих куль.",
       "frameOver": "Фрейм завершено",
+      "expand": "На весь екран",
+      "collapse": "Згорнути",
       "balls": {
         "red": "Червона",
         "yellow": "Жовта",
@@ -1115,6 +1117,16 @@
     "loginCta": "Увійти",
     "empty": "Матчів поки немає.",
     "loading": "Завантаження матчів…",
+    "filter": {
+      "opponentPlaceholder": "Пошук за суперником…",
+      "clear": "Скинути",
+      "noResults": "Нічого не знайдено."
+    },
+    "pagination": {
+      "prev": "Назад",
+      "next": "Вперед",
+      "status": "{from}–{to} з {total}"
+    },
     "required": "Обов'язкове поле",
     "saving": "Збереження…",
     "profileRequired": {

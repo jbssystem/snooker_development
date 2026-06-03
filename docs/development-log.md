@@ -19,6 +19,24 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Match list filter/paging + fullscreen mobile scorer (2026-06-03)
+
+**Delivered:**
+
+- Match Log sidebar gained an opponent search box and client-side paging
+  (`MATCH_PAGE_SIZE = 8`, prev/next + `from–to of total` status). Filter resets
+  to page 1; `activeMatch` still resolves against the full list so the open
+  match stays selected even when filtered out of view.
+- Detailed `FrameScorer` gained a "Fullscreen" toggle: a single scorer instance
+  re-parented purely via `className` (`fixed inset-0 z-50`) so the in-progress
+  break survives expand/collapse. The overlay shows only the live entry —
+  ideal for ball-by-ball scoring on mobile. Verified at 390px.
+- i18n keys `scorer.expand`/`collapse`, `filter.*`, `pagination.*` in ru/en/uk.
+
+**Decisions:** filtering/paging is client-side (the list is already fetched in
+full); no API change. Fullscreen keeps the same React node to preserve scorer
+state rather than conditionally mounting in two places.
+
 ### Sparring + live frame scorer with snooker rules (2026-06-03)
 
 **Delivered:**

@@ -280,6 +280,16 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - Match stats and opponent history use a compact `StatStrip` (tiny uppercase
   labels over tabular values with hairline dividers) plus a coloured
   `ResultChip`, replacing the bordered stat-tile grid.
+- **Sidebar filter + paging**: once a player has many matches, the left list
+  offers an opponent search box and client-side paging (`MATCH_PAGE_SIZE = 8`,
+  prev/next with a `from–to of total` status). Filtering resets to page 1; the
+  active match is resolved against the full list so it stays selected even if
+  filtered out of the current page.
+- **Fullscreen scorer**: the detailed `FrameScorer` has a "Fullscreen" toggle
+  that re-parents the *same* scorer node via `className` to a
+  `fixed inset-0 z-50` overlay (never re-mounted, so the in-progress break
+  survives). The overlay shows only the live ball-by-ball entry — the intended
+  way to score on mobile.
 
 ## Calendar Factors UI
 

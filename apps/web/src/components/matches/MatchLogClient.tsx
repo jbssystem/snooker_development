@@ -84,6 +84,8 @@ const matchDefaultValues: MatchFormValues = {
   notes: '',
 };
 
+const MATCH_PAGE_SIZE = 8;
+
 const frameDefaultValues: FrameFormValues = {
   playerScore: '',
   opponentScore: '',
@@ -106,6 +108,8 @@ export function MatchLogClient() {
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [editingFrameNumber, setEditingFrameNumber] = useState<number | null>(null);
   const [mapFrame, setMapFrame] = useState<Match['frames'][number] | null>(null);
+  const [opponentFilter, setOpponentFilter] = useState('');
+  const [page, setPage] = useState(0);
   const frameEditForm = useForm<FrameFormValues>({ defaultValues: frameDefaultValues });
 
   const profileQuery = useQuery({
@@ -130,11 +134,26 @@ export function MatchLogClient() {
     [activeMatch, matches],
   );
 
+  // Opponent filter + paging keep the sidebar usable once the log grows long.
+  const filteredMatches = useMemo(() => {
+    const query = opponentFilter.trim().toLocaleLowerCase();
+    if (!query) return matches;
+    return matches.filter((match) => match.opponentName.toLocaleLowerCase().includes(query));
+  }, [matches, opponentFilter]);
+  const pageCount = Math.max(1, Math.ceil(filteredMatches.length / MATCH_PAGE_SIZE));
+  const safePage = Math.min(page, pageCount - 1);
+  const pagedMatches = filteredMatches.slice(safePage * MATCH_PAGE_SIZE, safePage * MATCH_PAGE_SIZE + MATCH_PAGE_SIZE);
+
   useEffect(() => {
     if (!activeMatchId && activeMatch) {
       setActiveMatchId(activeMatch.id);
     }
   }, [activeMatch, activeMatchId]);
+
+  // Reset to the first page whenever the filter narrows the result set.
+  useEffect(() => {
+    setPage(0);
+  }, [opponentFilter]);
 
   const createMatch = useMutation({
     mutationFn: (input: CreateMatchInput) => api.matches.create(token ?? '', input),
@@ -262,8 +281,29 @@ export function MatchLogClient() {
             {t('type.sparring')}
           </button>
         </div>
-        <div className="mt-4 grid gap-2">
-          {matches.map((match) => (
+        {matches.length > 0 && (
+          <div className="relative mt-4">
+            <input
+              className={`${inputClass} pr-8`}
+              onChange={(event) => setOpponentFilter(event.target.value)}
+              placeholder={t('filter.opponentPlaceholder')}
+              type="search"
+              value={opponentFilter}
+            />
+            {opponentFilter && (
+              <button
+                aria-label={t('filter.clear')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-disabled transition hover:text-text-primary"
+                onClick={() => setOpponentFilter('')}
+                type="button"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        )}
+        <div className="mt-3 grid gap-2">
+          {pagedMatches.map((match) => (
             <button
               key={match.id}
               className={`relative rounded-md border px-3 py-2 pr-16 text-left transition ${
@@ -288,7 +328,39 @@ export function MatchLogClient() {
               {matchesQuery.isLoading ? t('loading') : t('empty')}
             </p>
           )}
+          {matches.length > 0 && filteredMatches.length === 0 && (
+            <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
+              {t('filter.noResults')}
+            </p>
+          )}
         </div>
+        {pageCount > 1 && (
+          <div className="mt-3 flex items-center justify-between gap-2 text-xs text-text-secondary">
+            <button
+              className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+              disabled={safePage === 0}
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+              type="button"
+            >
+              {t('pagination.prev')}
+            </button>
+            <span className="tabular-nums">
+              {t('pagination.status', {
+                from: safePage * MATCH_PAGE_SIZE + 1,
+                to: Math.min((safePage + 1) * MATCH_PAGE_SIZE, filteredMatches.length),
+                total: filteredMatches.length,
+              })}
+            </span>
+            <button
+              className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+              disabled={safePage >= pageCount - 1}
+              onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+              type="button"
+            >
+              {t('pagination.next')}
+            </button>
+          </div>
+        )}
       </aside>
 
       <section className="order-first min-w-0 lg:order-none">
@@ -593,6 +665,18 @@ function SegmentedTypeToggle({
   );
 }
 
+function FullscreenIcon({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      {collapsed ? (
+        <path d="M9 9 4 4m0 0v4m0-4h4m6 5 5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m6-5 5 5m0 0v-4m0 4h-4" strokeLinecap="round" strokeLinejoin="round" />
+      ) : (
+        <path d="M4 9V4m0 0h5M4 4l6 6m10-1V4m0 0h-5m5 0-6 6M4 15v5m0 0h5m-5 0 6-6m10 6-6-6m6 6v-5m0 5h-5" strokeLinecap="round" strokeLinejoin="round" />
+      )}
+    </svg>
+  );
+}
+
 function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <fieldset className="grid gap-3 rounded-lg border border-border-subtle p-3">
@@ -637,6 +721,9 @@ function MatchDetail({
 }) {
   const progress = matchProgress(match);
   const [frameMode, setFrameMode] = useState<'quick' | 'detailed'>('quick');
+  // Fullscreen scorer: a focused, mobile-friendly overlay showing only the live
+  // ball-by-ball entry for the current frame, nothing else on the page.
+  const [scorerFullscreen, setScorerFullscreen] = useState(false);
   // Live matches auto-time each frame: measure the gap since the previous frame
   // was logged (or since the match was opened) and fill the duration for the coach.
   const liveTickRef = useRef<number>(Date.now());
@@ -847,16 +934,41 @@ function MatchDetail({
             </form>
           </div>
           <div className={frameMode === 'detailed' ? '' : 'hidden'}>
-            {/* Remount (fresh frame) after each saved frame so the scorer can't
-                re-submit the same break as a duplicate. */}
-            <FrameScorer
-              key={match.frames.length}
-              onSave={addFrameFromScorer}
-              opponentName={opponentName}
-              playerName={playerName}
-              saving={addFramePending}
-              t={t}
-            />
+            {/* One FrameScorer instance, re-parented only via className so the
+                in-progress break survives toggling fullscreen on/off. */}
+            <div
+              className={
+                scorerFullscreen
+                  ? 'fixed inset-0 z-50 flex flex-col gap-3 overflow-y-auto bg-background-primary p-4 sm:p-6'
+                  : 'grid gap-3'
+              }
+            >
+              <div className="flex items-center justify-between gap-2">
+                {scorerFullscreen && (
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-text-primary">
+                    {playerName} — {opponentName}
+                  </span>
+                )}
+                <button
+                  className="ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-md border border-border-subtle px-3 py-1.5 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+                  onClick={() => setScorerFullscreen((current) => !current)}
+                  type="button"
+                >
+                  <FullscreenIcon collapsed={scorerFullscreen} />
+                  {scorerFullscreen ? t('scorer.collapse') : t('scorer.expand')}
+                </button>
+              </div>
+              {/* Remount (fresh frame) after each saved frame so the scorer can't
+                  re-submit the same break as a duplicate. */}
+              <FrameScorer
+                key={match.frames.length}
+                onSave={addFrameFromScorer}
+                opponentName={opponentName}
+                playerName={playerName}
+                saving={addFramePending}
+                t={t}
+              />
+            </div>
           </div>
         </div>
       </AccordionSection>

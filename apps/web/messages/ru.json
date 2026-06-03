@@ -1089,6 +1089,8 @@
       "mapTitle": "Карта фрейма {number}",
       "mapEmpty": "Нет забитых шаров.",
       "frameOver": "Фрейм завершён",
+      "expand": "На весь экран",
+      "collapse": "Свернуть",
       "balls": {
         "red": "Красный",
         "yellow": "Жёлтый",
@@ -1115,6 +1117,16 @@
     "loginCta": "Войти",
     "empty": "Матчей пока нет.",
     "loading": "Загрузка матчей…",
+    "filter": {
+      "opponentPlaceholder": "Поиск по сопернику…",
+      "clear": "Сбросить",
+      "noResults": "Ничего не найдено."
+    },
+    "pagination": {
+      "prev": "Назад",
+      "next": "Вперёд",
+      "status": "{from}–{to} из {total}"
+    },
     "required": "Обязательное поле",
     "saving": "Сохранение…",
     "profileRequired": {
