@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import type { CreateEquipmentProfileInput, UpsertPlayerProfileInput } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
-import { PageHeader } from '@/components/ui';
+import { Field, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { AvatarPicker } from './AvatarPicker';
@@ -418,27 +418,6 @@ function toProfilePayload(values: ProfileFormValues): UpsertPlayerProfileInput {
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
 const primaryButtonClass = 'btn-primary';
-
-function Field({
-  children,
-  error,
-  hint,
-  label,
-}: {
-  children: React.ReactNode;
-  error?: string | undefined;
-  hint?: string | undefined;
-  label: string;
-}) {
-  return (
-    <label className="flex flex-col gap-1.5 text-sm">
-      <span className="text-text-secondary">{label}</span>
-      {children}
-      {hint && <span className="text-xs leading-5 text-text-disabled">{hint}</span>}
-      {error && <span className="text-xs text-state-error">{error}</span>}
-    </label>
-  );
-}
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (

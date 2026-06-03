@@ -1,17 +1,42 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
- * Small "?" affordance next to a label. Shows a tooltip on hover (pointer) and
- * toggles on click/Enter (touch + keyboard). Escape or blur closes it.
+ * Small "?" affordance next to a label. The tooltip is rendered in a portal with
+ * fixed positioning so it is never clipped by a card/modal `overflow` or hidden
+ * behind another stacking context. Hover (pointer), tap/Enter (touch + keyboard),
+ * Escape or blur closes it.
  */
 export function InfoTooltip({ text, label }: { text: string; label?: string }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const id = useId();
 
+  const reposition = useCallback(() => {
+    const el = buttonRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const left = Math.min(Math.max(rect.left + rect.width / 2, 124), window.innerWidth - 124);
+    setPos({ top: rect.top, left });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    reposition();
+    const onScroll = () => reposition();
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [open, reposition]);
+
   return (
-    <span className="relative inline-flex">
+    <span className="inline-flex">
       <button
         aria-describedby={open ? id : undefined}
         aria-label={label ? `${label}: подсказка` : 'Подсказка'}
@@ -27,19 +52,24 @@ export function InfoTooltip({ text, label }: { text: string; label?: string }) {
         }}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
+        ref={buttonRef}
         type="button"
       >
         ?
       </button>
-      {open && (
-        <span
-          id={id}
-          role="tooltip"
-          className="absolute bottom-full left-1/2 z-40 mb-2 w-52 -translate-x-1/2 rounded-lg border border-border-subtle bg-background-elevated px-3 py-2 text-xs font-normal leading-relaxed text-text-secondary shadow-glow"
-        >
-          {text}
-        </span>
-      )}
+      {open && pos && typeof document !== 'undefined'
+        ? createPortal(
+            <span
+              id={id}
+              role="tooltip"
+              className="pointer-events-none fixed z-[100] w-56 -translate-x-1/2 -translate-y-full rounded-lg border border-border-subtle bg-background-elevated px-3 py-2 text-xs font-normal leading-relaxed text-text-secondary shadow-glow"
+              style={{ top: pos.top - 8, left: pos.left }}
+            >
+              {text}
+            </span>,
+            document.body,
+          )
+        : null}
     </span>
   );
 }

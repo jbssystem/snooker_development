@@ -16,7 +16,7 @@ import type {
   SupplementEvent,
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
-import { PageHeader } from '@/components/ui';
+import { Field, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -1278,27 +1278,6 @@ function EmptyState({
     <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
       {loading ? loadingText : text}
     </p>
-  );
-}
-
-function Field({
-  children,
-  error,
-  hint,
-  label,
-}: {
-  children: ReactNode;
-  error?: string | undefined;
-  hint?: string | undefined;
-  label: string;
-}) {
-  return (
-    <label className="grid gap-1 text-sm text-text-secondary">
-      <span>{label}</span>
-      {children}
-      {hint && <span className="text-xs leading-5 text-text-disabled">{hint}</span>}
-      {error && <span className="text-xs text-state-error">{error}</span>}
-    </label>
   );
 }
 
