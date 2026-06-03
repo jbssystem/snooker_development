@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "pnpm --filter @snooker/shared build && next build",
+    "build": "pnpm --filter @snooker/shared build && pnpm --filter @snooker/snooker-domain build && next build",
     "start": "next start -p 3000",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
