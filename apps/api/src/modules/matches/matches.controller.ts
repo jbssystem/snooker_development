@@ -1,13 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   AddMatchFrameSchema,
   CreateMatchSchema,
+  UpdateMatchFrameSchema,
   UpdateMatchSchema,
   type AddMatchFrameInput,
   type CreateMatchInput,
   type Match,
   type MatchFrame,
+  type UpdateMatchFrameInput,
   type UpdateMatchInput,
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -57,5 +59,23 @@ export class MatchesController {
     @Body(new ZodValidationPipe(AddMatchFrameSchema)) body: AddMatchFrameInput,
   ): Promise<MatchFrame> {
     return this.matches.addFrame(userId, id, body);
+  }
+
+  @Patch(':id/frames/:frameNumber')
+  updateFrame(
+    @CurrentUserId() userId: string,
+    @Param('id', CuidValidationPipe) id: string,
+    @Param('frameNumber', ParseIntPipe) frameNumber: number,
+    @Body(new ZodValidationPipe(UpdateMatchFrameSchema)) body: UpdateMatchFrameInput,
+  ): Promise<Match> {
+    return this.matches.updateFrame(userId, id, frameNumber, body);
+  }
+
+  @Delete(':id/frames/last')
+  removeLastFrame(
+    @CurrentUserId() userId: string,
+    @Param('id', CuidValidationPipe) id: string,
+  ): Promise<Match> {
+    return this.matches.removeLastFrame(userId, id);
   }
 }

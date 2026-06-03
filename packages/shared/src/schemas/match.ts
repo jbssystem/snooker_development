@@ -158,6 +158,17 @@ export const AddMatchFrameSchema = z.object({
 });
 export type AddMatchFrameInput = z.infer<typeof AddMatchFrameSchema>;
 
+// Frame edit: scores/break/duration/notes. The winner is re-derived from the
+// scores server-side, and the frame number is fixed by the route.
+export const UpdateMatchFrameSchema = z.object({
+  playerScore: OptionalBoundedIntSchema(0, 999),
+  opponentScore: OptionalBoundedIntSchema(0, 999),
+  highBreak: OptionalBoundedIntSchema(0, 155),
+  frameDurationSec: OptionalBoundedIntSchema(1, 24 * 60 * 60),
+  notes: OptionalTextSchema,
+});
+export type UpdateMatchFrameInput = z.infer<typeof UpdateMatchFrameSchema>;
+
 function isHttpUrl(value: string): boolean {
   try {
     const url = new URL(value);

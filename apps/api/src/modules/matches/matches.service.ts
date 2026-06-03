@@ -14,6 +14,7 @@ import {
   type MatchFrame,
   type MatchResult,
   type MatchSource,
+  type UpdateMatchFrameInput,
   type UpdateMatchInput,
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
@@ -162,6 +163,50 @@ export class MatchesService {
     });
   }
 
+  async updateFrame(
+    userId: string,
+    id: string,
+    frameNumber: number,
+    input: UpdateMatchFrameInput,
+  ): Promise<Match> {
+    const match = await this.findMatchOrThrow(userId, id);
+    const frame = match.frames.find((item) => item.frameNumber === frameNumber);
+    if (!frame) {
+      throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
+    }
+
+    await withSerializableRetry(this.prisma, async (tx) => {
+      const playerScore = input.playerScore ?? null;
+      const opponentScore = input.opponentScore ?? null;
+      await tx.matchFrame.update({
+        where: { id: frame.id },
+        data: {
+          playerScore,
+          opponentScore,
+          winner: toPrismaFrameWinner(frameWinnerFromScores(playerScore, opponentScore)),
+          highBreak: input.highBreak ?? null,
+          frameDurationSec: input.frameDurationSec ?? null,
+          notes: input.notes ?? null,
+        },
+      });
+      await recalcMatchFromFrames(tx, match.id);
+    });
+
+    return toMatch(await this.findMatchOrThrow(userId, id));
+  }
+
+  async removeLastFrame(userId: string, id: string): Promise<Match> {
+    const match = await this.findMatchOrThrow(userId, id);
+    const last = match.frames.at(-1);
+    if (last) {
+      await withSerializableRetry(this.prisma, async (tx) => {
+        await tx.matchFrame.delete({ where: { id: last.id } });
+        await recalcMatchFromFrames(tx, match.id);
+      });
+    }
+    return toMatch(await this.findMatchOrThrow(userId, id));
+  }
+
   private async findProfile(userId: string): Promise<ProfileRef | null> {
     return this.prisma.playerProfile.findUnique({ where: { userId }, select: { id: true } });
   }
@@ -304,6 +349,24 @@ function frameSummary(frames: MatchFrameEntity[]): { framesWon: number; framesLo
     framesWon: frames.filter((frame) => frame.winner === 'PLAYER').length,
     framesLost: frames.filter((frame) => frame.winner === 'OPPONENT').length,
   };
+}
+
+async function recalcMatchFromFrames(tx: Prisma.TransactionClient, matchId: string): Promise<void> {
+  const frames = await tx.matchFrame.findMany({ where: { matchId }, orderBy: { frameNumber: 'asc' } });
+  const summary = frameSummary(frames);
+  await tx.match.update({
+    where: { id: matchId },
+    data: {
+      framesWon: summary.framesWon,
+      framesLost: summary.framesLost,
+      result: toPrismaMatchResult(resultFromScore(summary.framesWon, summary.framesLost)),
+    },
+  });
+}
+
+function frameWinnerFromScores(playerScore: number | null, opponentScore: number | null): FrameWinner {
+  if (playerScore === null || opponentScore === null || playerScore === opponentScore) return 'unknown';
+  return playerScore > opponentScore ? 'player' : 'opponent';
 }
 
 function resultFromScore(framesWon: number, framesLost: number): MatchResult {

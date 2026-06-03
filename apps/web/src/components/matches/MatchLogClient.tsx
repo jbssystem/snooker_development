@@ -10,6 +10,7 @@ import type {
   CreateMatchInput,
   FrameWinner,
   Match,
+  UpdateMatchFrameInput,
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
@@ -94,6 +95,8 @@ export function MatchLogClient() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
+  const [editingFrameNumber, setEditingFrameNumber] = useState<number | null>(null);
+  const frameEditForm = useForm<FrameFormValues>({ defaultValues: frameDefaultValues });
 
   const profileQuery = useQuery({
     queryKey: ['player-profile', token],
@@ -149,6 +152,34 @@ export function MatchLogClient() {
     },
     onError: (error) => setServerError(errorMessage(error, tErr)),
   });
+
+  const editFrame = useMutation({
+    mutationFn: (input: { matchId: string; frameNumber: number; data: UpdateMatchFrameInput }) =>
+      api.matches.updateFrame(token ?? '', input.matchId, input.frameNumber, input.data),
+    onSuccess: () => {
+      setServerError(null);
+      setEditingFrameNumber(null);
+      queryClient.invalidateQueries({ queryKey: ['matches', token] });
+      queryClient.invalidateQueries({ queryKey: ['player-dashboard', token] });
+    },
+    onError: (error) => setServerError(errorMessage(error, tErr)),
+  });
+
+  const removeLastFrame = useMutation({
+    mutationFn: (matchId: string) => api.matches.removeLastFrame(token ?? '', matchId),
+    onSuccess: () => {
+      setServerError(null);
+      queryClient.invalidateQueries({ queryKey: ['matches', token] });
+      queryClient.invalidateQueries({ queryKey: ['player-dashboard', token] });
+    },
+    onError: (error) => setServerError(errorMessage(error, tErr)),
+  });
+
+  const openFrameEdit = (frame: Match['frames'][number]) => {
+    setEditingFrameNumber(frame.frameNumber);
+    frameEditForm.reset(frameToFormValues(frame));
+    setServerError(null);
+  };
 
   const openCreate = () => {
     setEditingMatchId(null);
@@ -251,7 +282,10 @@ export function MatchLogClient() {
             locale={locale}
             match={activeMatch}
             onEdit={() => openEdit(activeMatch)}
+            onEditFrame={openFrameEdit}
+            onRemoveLastFrame={() => removeLastFrame.mutate(activeMatch.id)}
             opponentHistory={opponentHistory}
+            removeLastFramePending={removeLastFrame.isPending}
             t={t}
           />
         ) : (
@@ -373,6 +407,46 @@ export function MatchLogClient() {
           </button>
         </form>
       </Modal>
+
+      <Modal
+        closeLabel={t('newMatch.close')}
+        onClose={() => setEditingFrameNumber(null)}
+        open={editingFrameNumber !== null}
+        title={t('frames.editTitle', { number: editingFrameNumber ?? 0 })}
+      >
+        <form
+          className="grid gap-4"
+          onSubmit={frameEditForm.handleSubmit((values) => {
+            if (activeMatch && editingFrameNumber !== null) {
+              editFrame.mutate({ matchId: activeMatch.id, frameNumber: editingFrameNumber, data: toUpdateFrameInput(values) });
+            }
+          })}
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <Field hint={t('hints.framePoints')} label={t('frames.playerScore')}>
+              <input className={inputClass} min={0} type="number" {...frameEditForm.register('playerScore')} />
+            </Field>
+            <Field hint={t('hints.framePoints')} label={t('frames.opponentScore')}>
+              <input className={inputClass} min={0} type="number" {...frameEditForm.register('opponentScore')} />
+            </Field>
+            <Field hint={t('hints.count')} label={t('fields.highBreak')}>
+              <input className={inputClass} min={0} type="number" {...frameEditForm.register('highBreak')} />
+            </Field>
+            <Field hint={t('hints.duration')} label={t('frames.duration')}>
+              <input className={inputClass} min={1} type="number" {...frameEditForm.register('frameDurationMinutes')} />
+            </Field>
+          </div>
+          <Field hint={t('hints.notes')} label={t('fields.notes')}>
+            <input className={inputClass} placeholder={t('placeholders.frameNotes')} {...frameEditForm.register('notes')} />
+          </Field>
+          {serverError && (
+            <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">{serverError}</p>
+          )}
+          <button className={`${primaryButtonClass} w-full justify-center`} disabled={editFrame.isPending} type="submit">
+            {editFrame.isPending ? t('saving') : t('frames.saveEdit')}
+          </button>
+        </form>
+      </Modal>
     </main>
   );
 }
@@ -393,7 +467,10 @@ function MatchDetail({
   locale,
   match,
   onEdit,
+  onEditFrame,
+  onRemoveLastFrame,
   opponentHistory,
+  removeLastFramePending,
   t,
 }: {
   addFrame: (values: FrameFormValues) => void;
@@ -402,7 +479,10 @@ function MatchDetail({
   locale: string;
   match: Match;
   onEdit: () => void;
+  onEditFrame: (frame: Match['frames'][number]) => void;
+  onRemoveLastFrame: () => void;
   opponentHistory: OpponentSummary | null;
+  removeLastFramePending: boolean;
   t: (key: string, values?: Record<string, number>) => string;
 }) {
   return (
@@ -443,7 +523,19 @@ function MatchDetail({
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="surface rounded-xl p-5">
-          <h2 className="text-xl font-semibold text-text-primary">{t('frames.title')}</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-text-primary">{t('frames.title')}</h2>
+            {match.frames.length > 0 && (
+              <button
+                className="rounded-md border border-border-subtle px-3 py-1.5 text-sm text-text-secondary transition hover:border-state-error hover:text-state-error disabled:opacity-50"
+                disabled={removeLastFramePending}
+                onClick={onRemoveLastFrame}
+                type="button"
+              >
+                {t('frames.removeLast')}
+              </button>
+            )}
+          </div>
           <div className="mt-4 overflow-hidden rounded-md border border-border-subtle">
             <table className="w-full border-collapse text-sm">
               <thead className="bg-background-primary text-text-disabled">
@@ -452,20 +544,30 @@ function MatchDetail({
                   <th className="px-3 py-2 text-left">{t('frames.score')}</th>
                   <th className="px-3 py-2 text-left">{t('frames.winner')}</th>
                   <th className="px-3 py-2 text-left">{t('fields.highBreak')}</th>
+                  <th className="px-3 py-2 text-right">{t('actions.edit')}</th>
                 </tr>
               </thead>
               <tbody>
                 {match.frames.map((frame) => (
-                  <tr key={frame.id} className="border-t border-border-subtle text-text-secondary">
+                  <tr key={frame.id} className="border-t border-border-subtle text-text-secondary transition hover:bg-background-elevated/50">
                     <td className="px-3 py-2 text-text-primary">{frame.frameNumber}</td>
                     <td className="px-3 py-2">{formatFrameScore(frame.playerScore, frame.opponentScore)}</td>
                     <td className="px-3 py-2">{t(`winner.${frame.winner}`)}</td>
                     <td className="px-3 py-2">{formatOptional(frame.highBreak)}</td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        className="rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+                        onClick={() => onEditFrame(frame)}
+                        type="button"
+                      >
+                        {t('actions.edit')}
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {match.frames.length === 0 && (
                   <tr>
-                    <td className="px-3 py-4 text-text-secondary" colSpan={4}>{t('frames.empty')}</td>
+                    <td className="px-3 py-4 text-text-secondary" colSpan={5}>{t('frames.empty')}</td>
                   </tr>
                 )}
               </tbody>
@@ -613,6 +715,29 @@ function toAddFrameInput(values: FrameFormValues): AddMatchFrameInput {
   assignInt(input, 'playerScore', values.playerScore);
   assignInt(input, 'opponentScore', values.opponentScore);
   assignInt(input, 'highBreak', values.highBreak);
+  if (durationMinutes !== undefined) input.frameDurationSec = durationMinutes * 60;
+  assignText(input, 'notes', values.notes);
+  return input;
+}
+
+function frameToFormValues(frame: Match['frames'][number]): FrameFormValues {
+  const numToStr = (value: number | undefined | null): string =>
+    value === undefined || value === null ? '' : String(value);
+  return {
+    playerScore: numToStr(frame.playerScore),
+    opponentScore: numToStr(frame.opponentScore),
+    highBreak: numToStr(frame.highBreak),
+    frameDurationMinutes: frame.frameDurationSec ? String(Math.round(frame.frameDurationSec / 60)) : '',
+    notes: frame.notes ?? '',
+  };
+}
+
+function toUpdateFrameInput(values: FrameFormValues): UpdateMatchFrameInput {
+  const input: UpdateMatchFrameInput = {};
+  assignInt(input, 'playerScore', values.playerScore);
+  assignInt(input, 'opponentScore', values.opponentScore);
+  assignInt(input, 'highBreak', values.highBreak);
+  const durationMinutes = parseOptionalInt(values.frameDurationMinutes);
   if (durationMinutes !== undefined) input.frameDurationSec = durationMinutes * 60;
   assignText(input, 'notes', values.notes);
   return input;

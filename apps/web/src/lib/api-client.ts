@@ -37,6 +37,7 @@ import type {
   Tokens,
   UpdateDrillTemplateInput,
   UpdateEquipmentProfileInput,
+  UpdateMatchFrameInput,
   UpdateMatchInput,
   UpdateLifestyleFactorInput,
   UpdateSupplementEventInput,
@@ -293,6 +294,14 @@ export const api = {
         token,
         body: JSON.stringify(input),
       }),
+    updateFrame: (token: string, id: string, frameNumber: number, input: UpdateMatchFrameInput) =>
+      request<Match>(`/matches/${id}/frames/${frameNumber}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    removeLastFrame: (token: string, id: string) =>
+      request<Match>(`/matches/${id}/frames/last`, { method: 'DELETE', token }),
   },
   calendar: {
     listEvents: (token: string) => request<CalendarEvent[]>('/calendar-events', { token }),

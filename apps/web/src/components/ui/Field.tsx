@@ -17,12 +17,14 @@ export function Field({
   label: string;
 }) {
   return (
-    <label className="flex flex-col gap-1.5 text-sm">
-      <span className="flex items-center gap-1.5 text-text-secondary">
+    <label className="flex h-full flex-col gap-1.5 text-sm">
+      <span className="flex items-start gap-1.5 text-text-secondary">
         {label}
         {hint && <InfoTooltip label={label} text={hint} />}
       </span>
-      {children}
+      {/* mt-auto pushes the control to the bottom so inputs in a grid row line
+          up even when some labels wrap to two lines. */}
+      <div className="mt-auto">{children}</div>
       {error && <span className="text-xs text-state-error">{error}</span>}
     </label>
   );
