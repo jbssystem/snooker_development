@@ -17,20 +17,31 @@ const SYSTEM_PROMPT =
   'You are a computer-vision assistant for snooker coaching. ' +
   'You receive a single photo of a snooker table with balls on it, usually taken at an angle. ' +
   'Identify every ball you can see on the playing surface and estimate its position, mentally correcting for perspective. ' +
+  'Pay special attention to tightly packed groups of reds: resolve each ball individually and KEEP THEM CLUSTERED — never scatter a tight pack across the table. ' +
   'Reply with STRICT JSON only — no prose, no markdown fences.';
 
 const USER_PROMPT = [
   'Return a JSON object of the form:',
   '{"balls":[{"color":"red","x":0.0,"y":0.0}, ...]}',
   '',
-  'Rules:',
+  'Coordinate system (fractions of the playing surface between the cushions, each 0..1):',
+  '- x = position along the LONG axis: 0 = baulk cushion (cue-ball / D end), 1 = the far black-spot cushion.',
+  '- y = position across the SHORT axis: 0 = one long cushion, 1 = the opposite long cushion.',
+  '',
+  'Scale reference — use this to space balls correctly:',
+  '- One ball is about 0.015 wide along x and about 0.030 wide along y.',
+  '- Two balls that touch have centres about 0.015 apart along x (or 0.030 along y). Balls can NEVER be closer than that and can never overlap.',
+  '',
+  'Reds (most common mistake — read carefully):',
+  '- Reds are very often bunched in a TIGHT cluster: a triangular pack or a short line, usually in the middle-to-far half of the table (around x 0.6–0.95).',
+  '- When the reds are bunched together in the photo, KEEP THEM BUNCHED in the output: neighbouring reds sit right next to each other, centres only ~0.015–0.03 apart. DO NOT spread a tight group of reds across the whole table.',
+  '- Estimate the centre of every individual red you can see, even when they are touching. Count them carefully (up to 15).',
+  '',
+  'Other rules:',
   `- color is one of: ${BALL_COLORS.join(', ')}.`,
-  '- x is the position along the LONG axis of the table: 0 = baulk cushion (where the D and cue ball usually sit), 1 = the far (black-spot) cushion.',
-  '- y is the position across the SHORT axis: 0 = one long cushion, 1 = the opposite long cushion.',
-  '- x and y are fractions of the playing surface between the cushions, each between 0 and 1.',
-  '- There is at most one white (cue) ball. There can be up to 15 reds. Colours (yellow/green/brown/blue/pink/black) appear at most once each.',
+  '- At most one white (cue) ball. Each colour (yellow/green/brown/blue/pink/black) appears at most once.',
   '- Only include balls actually visible on the table. Do not invent balls.',
-  '- Output JSON only.',
+  '- Output JSON only — no prose, no markdown fences.',
 ].join('\n');
 
 /**
@@ -144,6 +155,8 @@ function buildLayout(balls: RecognizedBall[], tableSize: TableSize): TableLayout
     });
   }
 
+  separateOverlaps(positioned, dimensions, radius);
+
   return {
     id: `layout-${Date.now()}`,
     tableSize,
@@ -152,6 +165,46 @@ function buildLayout(balls: RecognizedBall[], tableSize: TableSize): TableLayout
     shotPaths: [],
     annotations: [],
   };
+}
+
+// Vision estimates of clustered balls often land slightly on top of each other.
+// Nudge any overlapping pair apart to at least one ball-diameter so the editor
+// shows a clean pack instead of stacked discs. A few relaxation passes converge
+// for the <=32 balls we ever have; positions stay clamped inside the cushions.
+function separateOverlaps(
+  balls: BallPosition[],
+  dimensions: { width: number; height: number },
+  radius: number,
+): void {
+  const minDist = BALL_DIAMETER_MM;
+  for (let pass = 0; pass < 12; pass += 1) {
+    let moved = false;
+    for (let i = 0; i < balls.length; i += 1) {
+      for (let j = i + 1; j < balls.length; j += 1) {
+        const a = balls[i]!;
+        const b = balls[j]!;
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        let dist = Math.hypot(dx, dy);
+        if (dist >= minDist) continue;
+        if (dist < 1e-6) {
+          // Exactly coincident: pick a deterministic direction to break the tie.
+          dx = Math.cos(i + j);
+          dy = Math.sin(i + j);
+          dist = 1;
+        }
+        const push = (minDist - dist) / 2;
+        const ux = dx / dist;
+        const uy = dy / dist;
+        a.x = clamp(a.x - ux * push, radius, dimensions.width - radius);
+        a.y = clamp(a.y - uy * push, radius, dimensions.height - radius);
+        b.x = clamp(b.x + ux * push, radius, dimensions.width - radius);
+        b.y = clamp(b.y + uy * push, radius, dimensions.height - radius);
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
 }
 
 function clamp(value: number, min: number, max: number): number {

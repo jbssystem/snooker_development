@@ -17,7 +17,7 @@ import type {
 import { Link } from '@/i18n/navigation';
 import { Modal } from '@/components/layout/Modal';
 import { ChevronDown } from '@/components/layout/ChevronDown';
-import { Field, InfoTooltip, PageHeader } from '@/components/ui';
+import { EmptyState, Field, InfoTooltip, PageHeader } from '@/components/ui';
 import { useDismissable } from '@/lib/use-dismissable';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
@@ -330,9 +330,16 @@ export function DrillLibraryClient() {
             />
           ))}
         {!templatesQuery.isLoading && templates.length === 0 && (
-          <p className="surface rounded-xl p-5 text-text-secondary">
-            {t('empty')}
-          </p>
+          <EmptyState
+            className="col-span-full"
+            illustration
+            title={t('empty')}
+            action={
+              <button className="btn-primary" onClick={openCreate} type="button">
+                + {t('newDrill')}
+              </button>
+            }
+          />
         )}
         {!templatesQuery.isLoading && templates.length > 0 && visibleTemplates.length === 0 && (
           <p className="surface rounded-xl p-5 text-text-secondary">

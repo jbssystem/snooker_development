@@ -104,7 +104,7 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
             </>
           }
           description={t('empty.description')}
-          icon={<TargetIcon />}
+          illustration
           title={t('empty.title')}
         />
       )}

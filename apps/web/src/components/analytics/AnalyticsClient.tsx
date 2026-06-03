@@ -26,7 +26,6 @@ import {
   PageHeader,
   SectionCard,
   StatTile,
-  AnalyticsIcon,
   ClockIcon,
   PercentIcon,
   TargetIcon,
@@ -91,7 +90,7 @@ function AnalyticsContent({ dashboard }: { dashboard: PlayerDashboard }) {
 
   return (
     <>
-      {!hasData && <EmptyState icon={<AnalyticsIcon />} title={t('empty')} />}
+      {!hasData && <EmptyState illustration title={t('empty')} />}
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatTile icon={<TrainingIcon />} label={t('stats.sessions')} value={formatNumber(dashboard.totals.sessions, locale)} />

@@ -42,7 +42,13 @@ export class DrillsService {
     if (provider !== 'anthropic' || !apiKey) {
       throw new BadRequestException({ error: { code: ErrorCodes.Drills.AiUnavailable } });
     }
-    const model = this.config.get<string>('AI_MODEL') ?? 'claude-3-5-sonnet-latest';
+    // Vision/spatial reasoning (resolving tightly packed reds) is much better on
+    // a Sonnet-class model than on the fast Haiku used for text summaries, so the
+    // recognition model is overridable independently of AI_MODEL.
+    const model =
+      this.config.get<string>('AI_VISION_MODEL') ??
+      this.config.get<string>('AI_MODEL') ??
+      'claude-sonnet-4-5';
     try {
       const layout = await recognizeTableLayout({
         apiKey,
