@@ -3,6 +3,7 @@ import {
   FrameWinner as PrismaFrameWinner,
   MatchResult as PrismaMatchResult,
   MatchSource as PrismaMatchSource,
+  MatchType as PrismaMatchType,
   Prisma,
 } from '@prisma/client';
 import {
@@ -14,9 +15,12 @@ import {
   type MatchFrame,
   type MatchResult,
   type MatchSource,
+  type MatchType,
+  type ScoreEvent,
   type UpdateMatchFrameInput,
   type UpdateMatchInput,
 } from '@snooker/shared';
+import { frameOutcome, replay, type ScoreEvent as DomainScoreEvent } from '@snooker/snooker-domain';
 import { PrismaService } from '../prisma/prisma.module';
 
 type MatchWithFrames = Prisma.MatchGetPayload<{ include: typeof matchInclude }>;
@@ -59,6 +63,7 @@ export class MatchesService {
       breaks50: input.breaks50 ?? 0,
       breaks70: input.breaks70 ?? 0,
       breaks100: input.breaks100 ?? 0,
+      matchType: toPrismaMatchType(input.matchType ?? 'match'),
       result: toPrismaMatchResult(input.result ?? resultFromScore(framesWon, framesLost)),
       source: 'MANUAL',
     };
@@ -89,6 +94,9 @@ export class MatchesService {
     const existing = await this.findMatchOrThrow(userId, id);
     const data: Prisma.MatchUpdateInput = {};
 
+    if (input.matchType !== undefined) {
+      data.matchType = toPrismaMatchType(input.matchType);
+    }
     assignDate(data, 'matchDate', input.matchDate);
     assignOptional(data, 'tournament', input.tournament);
     assignOptional(data, 'country', input.country);
@@ -133,17 +141,22 @@ export class MatchesService {
       throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
     }
 
+    // When the detailed scorer sends an event log, the engine is the source of
+    // truth for the totals — guards against any client/server drift.
+    const derived = deriveFromEvents(input.scoreEvents);
+
     return withSerializableRetry(this.prisma, async (tx) => {
       const frame = await tx.matchFrame.create({
         data: {
           matchId: match.id,
           frameNumber,
-          playerScore: input.playerScore ?? null,
-          opponentScore: input.opponentScore ?? null,
-          winner: toPrismaFrameWinner(input.winner),
-          highBreak: input.highBreak ?? null,
+          playerScore: derived?.playerScore ?? input.playerScore ?? null,
+          opponentScore: derived?.opponentScore ?? input.opponentScore ?? null,
+          winner: toPrismaFrameWinner(derived?.winner ?? input.winner),
+          highBreak: derived?.highBreak ?? input.highBreak ?? null,
           frameDurationSec: input.frameDurationSec ?? null,
           notes: input.notes ?? null,
+          scoreEvents: scoreEventsToJson(input.scoreEvents),
         },
       });
       const frames = await tx.matchFrame.findMany({
@@ -175,18 +188,21 @@ export class MatchesService {
       throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
     }
 
+    const derived = deriveFromEvents(input.scoreEvents);
+
     await withSerializableRetry(this.prisma, async (tx) => {
-      const playerScore = input.playerScore ?? null;
-      const opponentScore = input.opponentScore ?? null;
+      const playerScore = derived?.playerScore ?? input.playerScore ?? null;
+      const opponentScore = derived?.opponentScore ?? input.opponentScore ?? null;
       await tx.matchFrame.update({
         where: { id: frame.id },
         data: {
           playerScore,
           opponentScore,
-          winner: toPrismaFrameWinner(frameWinnerFromScores(playerScore, opponentScore)),
-          highBreak: input.highBreak ?? null,
+          winner: toPrismaFrameWinner(derived?.winner ?? frameWinnerFromScores(playerScore, opponentScore)),
+          highBreak: derived?.highBreak ?? input.highBreak ?? null,
           frameDurationSec: input.frameDurationSec ?? null,
           notes: input.notes ?? null,
+          scoreEvents: scoreEventsToJson(input.scoreEvents),
         },
       });
       await recalcMatchFromFrames(tx, match.id);
@@ -262,6 +278,7 @@ function toMatch(match: MatchWithFrames): Match {
     playerProfileId: match.playerProfileId,
     createdByUserId: match.createdByUserId,
     matchDate: match.matchDate.toISOString(),
+    matchType: fromPrismaMatchType(match.matchType),
     ...(match.tournament ? { tournament: match.tournament } : {}),
     ...(match.country ? { country: match.country } : {}),
     ...(match.city ? { city: match.city } : {}),
@@ -303,8 +320,37 @@ function toMatchFrame(frame: MatchFrameEntity): MatchFrame {
     ...(frame.highBreak !== null ? { highBreak: frame.highBreak } : {}),
     ...(frame.frameDurationSec !== null ? { frameDurationSec: frame.frameDurationSec } : {}),
     ...(frame.notes ? { notes: frame.notes } : {}),
+    ...(scoreEventsFromJson(frame.scoreEvents).length > 0
+      ? { scoreEvents: scoreEventsFromJson(frame.scoreEvents) }
+      : {}),
     createdAt: frame.createdAt.toISOString(),
   };
+}
+
+// Derive authoritative frame totals from a ball-by-ball event log via the
+// domain engine. Returns undefined when no log was provided.
+function deriveFromEvents(
+  events: ScoreEvent[] | undefined,
+): { playerScore: number; opponentScore: number; highBreak: number; winner: FrameWinner } | undefined {
+  if (!events || events.length === 0) return undefined;
+  // Shared (Zod) and domain ScoreEvent are mirrored; they differ only under
+  // exactOptionalPropertyTypes on the optional `freeBall` flag.
+  const outcome = frameOutcome(replay(events as DomainScoreEvent[]));
+  return {
+    playerScore: outcome.playerScore,
+    opponentScore: outcome.opponentScore,
+    highBreak: outcome.playerHighBreak,
+    winner: outcome.winner,
+  };
+}
+
+function scoreEventsToJson(events: ScoreEvent[] | undefined): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+  if (!events || events.length === 0) return Prisma.JsonNull;
+  return events as unknown as Prisma.InputJsonValue;
+}
+
+function scoreEventsFromJson(value: Prisma.JsonValue | null): ScoreEvent[] {
+  return Array.isArray(value) ? (value as unknown as ScoreEvent[]) : [];
 }
 
 function nextFrameNumber(frames: Array<{ frameNumber: number }>): number {
@@ -388,6 +434,14 @@ function fromPrismaMatchSource(source: PrismaMatchSource): MatchSource {
   return reverseMatchSourceMap[source];
 }
 
+function toPrismaMatchType(type: MatchType): PrismaMatchType {
+  return matchTypeMap[type];
+}
+
+function fromPrismaMatchType(type: PrismaMatchType): MatchType {
+  return reverseMatchTypeMap[type];
+}
+
 function toPrismaFrameWinner(winner: FrameWinner): PrismaFrameWinner {
   return frameWinnerMap[winner];
 }
@@ -415,6 +469,15 @@ const matchSourceMap: Record<MatchSource, PrismaMatchSource> = {
 const reverseMatchSourceMap = Object.fromEntries(
   Object.entries(matchSourceMap).map(([key, value]) => [value, key]),
 ) as Record<PrismaMatchSource, MatchSource>;
+
+const matchTypeMap: Record<MatchType, PrismaMatchType> = {
+  match: 'MATCH',
+  sparring: 'SPARRING',
+};
+
+const reverseMatchTypeMap = Object.fromEntries(
+  Object.entries(matchTypeMap).map(([key, value]) => [value, key]),
+) as Record<PrismaMatchType, MatchType>;
 
 const frameWinnerMap: Record<FrameWinner, PrismaFrameWinner> = {
   player: 'PLAYER',

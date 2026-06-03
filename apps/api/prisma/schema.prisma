@@ -91,6 +91,11 @@ enum FrameWinner {
   UNKNOWN  @map("unknown")
 }
 
+enum MatchType {
+  MATCH    @map("match")
+  SPARRING @map("sparring")
+}
+
 enum CalendarEventType {
   TRAINING         @map("training")
   TOURNAMENT       @map("tournament")
@@ -367,6 +372,7 @@ model Match {
   playerProfileId     String
   createdByUserId     String
   matchDate           DateTime     @default(now())
+  matchType           MatchType    @default(MATCH)
   tournament          String?
   country             String?
   city                String?
@@ -404,6 +410,7 @@ model Match {
   @@index([matchDate])
   @@index([opponentName])
   @@index([result])
+  @@index([matchType])
 }
 
 model MatchFrame {
@@ -416,6 +423,7 @@ model MatchFrame {
   highBreak        Int?
   frameDurationSec Int?
   notes            String?
+  scoreEvents      Json?
   createdAt        DateTime    @default(now())
 
   match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)

@@ -9,6 +9,43 @@ export type MatchSource = z.infer<typeof MatchSourceSchema>;
 export const FrameWinnerSchema = z.enum(['player', 'opponent', 'unknown']);
 export type FrameWinner = z.infer<typeof FrameWinnerSchema>;
 
+// A coaching record is either a competitive match or a sparring session. Both
+// share the same entity and statistics; the type only changes labels and tags.
+export const MatchTypeSchema = z.enum(['match', 'sparring']);
+export type MatchType = z.infer<typeof MatchTypeSchema>;
+
+// Replayable ball-by-ball log produced by the detailed live scorer. Mirrors the
+// `ScoreEvent` union in @snooker/snooker-domain; kept in sync deliberately so
+// shared stays framework- and domain-agnostic.
+const ScoringBallSchema = z.enum(['red', 'yellow', 'green', 'brown', 'blue', 'pink', 'black']);
+const FrameSideSchema = z.enum(['player', 'opponent']);
+
+export const ScoreEventSchema = z.discriminatedUnion('type', [
+  z.object({
+    seq: z.number().int().positive(),
+    type: z.literal('pot'),
+    player: FrameSideSchema,
+    ball: ScoringBallSchema,
+    points: z.number().int().min(0),
+    freeBall: z.boolean().optional(),
+  }),
+  z.object({
+    seq: z.number().int().positive(),
+    type: z.literal('foul'),
+    player: FrameSideSchema,
+    value: z.number().int().min(0),
+  }),
+  z.object({
+    seq: z.number().int().positive(),
+    type: z.literal('endTurn'),
+    player: FrameSideSchema,
+    kind: z.enum(['safety', 'miss', 'switch']),
+  }),
+]);
+export type ScoreEvent = z.infer<typeof ScoreEventSchema>;
+
+const ScoreEventsSchema = z.array(ScoreEventSchema).max(1000).optional();
+
 const OptionalTextSchema = z
   .string()
   .trim()
@@ -52,6 +89,7 @@ export const MatchFrameSchema = z.object({
   highBreak: z.number().int().min(0).optional(),
   frameDurationSec: z.number().int().positive().optional(),
   notes: z.string().optional(),
+  scoreEvents: z.array(ScoreEventSchema).optional(),
   createdAt: z.string().datetime(),
 });
 export type MatchFrame = z.infer<typeof MatchFrameSchema>;
@@ -61,6 +99,7 @@ export const MatchSchema = z.object({
   playerProfileId: z.string().cuid(),
   createdByUserId: z.string().cuid(),
   matchDate: z.string().datetime(),
+  matchType: MatchTypeSchema,
   tournament: z.string().optional(),
   country: z.string().optional(),
   city: z.string().optional(),
@@ -93,6 +132,7 @@ export type Match = z.infer<typeof MatchSchema>;
 
 export const CreateMatchSchema = z.object({
   matchDate: OptionalDateStringSchema,
+  matchType: MatchTypeSchema.default('match'),
   tournament: OptionalTextSchema,
   country: OptionalTextSchema,
   city: OptionalTextSchema,
@@ -121,6 +161,7 @@ export type CreateMatchInput = z.infer<typeof CreateMatchSchema>;
 
 export const UpdateMatchSchema = z.object({
   matchDate: OptionalDateStringSchema,
+  matchType: MatchTypeSchema.optional(),
   tournament: OptionalTextSchema,
   country: OptionalTextSchema,
   city: OptionalTextSchema,
@@ -155,6 +196,7 @@ export const AddMatchFrameSchema = z.object({
   highBreak: OptionalBoundedIntSchema(0, 155),
   frameDurationSec: OptionalBoundedIntSchema(1, 24 * 60 * 60),
   notes: OptionalTextSchema,
+  scoreEvents: ScoreEventsSchema,
 });
 export type AddMatchFrameInput = z.infer<typeof AddMatchFrameSchema>;
 
@@ -166,6 +208,7 @@ export const UpdateMatchFrameSchema = z.object({
   highBreak: OptionalBoundedIntSchema(0, 155),
   frameDurationSec: OptionalBoundedIntSchema(1, 24 * 60 * 60),
   notes: OptionalTextSchema,
+  scoreEvents: ScoreEventsSchema,
 });
 export type UpdateMatchFrameInput = z.infer<typeof UpdateMatchFrameSchema>;
 
