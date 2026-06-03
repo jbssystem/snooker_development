@@ -15,7 +15,12 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "seed:demo": "pnpm --filter @snooker/api seed:demo",
-    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "test:ui": "playwright test --project=smoke",
+    "test:ui:headed": "playwright test --project=smoke --headed",
+    "test:ui:debug": "playwright test --project=smoke --ui",
+    "test:ui:e2e": "playwright test --project=e2e",
+    "test:ui:report": "playwright show-report"
   },
   "pnpm": {
     "overrides": {
@@ -23,6 +28,7 @@
     }
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "playwright": "^1.60.0",
     "prettier": "^3.3.3",
     "typescript": "^5.6.3"

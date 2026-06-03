@@ -21,3 +21,8 @@ coverage/
 storage/
 uploads/
 .ui-shots/
+# Playwright UI tests
+playwright-report/
+test-results/
+blob-report/
+.playwright/
