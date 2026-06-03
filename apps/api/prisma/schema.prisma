@@ -15,6 +15,8 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   INVITED
+  PENDING_VERIFICATION
+  BLOCKED
 }
 
 enum RoleType {
@@ -143,25 +145,46 @@ enum AiReportStatus {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String
-  displayName  String
-  status       UserStatus @default(ACTIVE)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  lastLoginAt  DateTime?
+  id              String     @id @default(cuid())
+  email           String     @unique
+  passwordHash    String
+  displayName     String
+  status          UserStatus @default(ACTIVE)
+  emailVerifiedAt DateTime?
+  blockedAt       DateTime?
+  blockedReason   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  lastLoginAt     DateTime?
 
   roles                   Role[]
   refreshTokens           RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
   playerProfile           PlayerProfile?
   coachProfile            CoachProfile?
-  drillTemplates          DrillTemplate[]   @relation("CreatedDrillTemplates")
-  createdTrainingSessions TrainingSession[] @relation("CreatedTrainingSessions")
-  createdMatches          Match[]           @relation("CreatedMatches")
-  createdCalendarEvents   CalendarEvent[]   @relation("CreatedCalendarEvents")
-  createdSupplementEvents SupplementEvent[] @relation("CreatedSupplementEvents")
-  requestedAiReports      AiReport[]        @relation("RequestedAiReports")
+  drillTemplates          DrillTemplate[]         @relation("CreatedDrillTemplates")
+  createdTrainingSessions TrainingSession[]       @relation("CreatedTrainingSessions")
+  createdMatches          Match[]                 @relation("CreatedMatches")
+  createdCalendarEvents   CalendarEvent[]         @relation("CreatedCalendarEvents")
+  createdSupplementEvents SupplementEvent[]       @relation("CreatedSupplementEvents")
+  requestedAiReports      AiReport[]              @relation("RequestedAiReports")
+  authoredAnnouncements   Announcement[]          @relation("AuthoredAnnouncements")
+  dismissedAnnouncements  AnnouncementDismissal[]
+  adminAuditLogs          AdminAuditLog[]         @relation("AdminAuditActor")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model RefreshToken {
@@ -523,6 +546,8 @@ model AiReport {
   promptVersion     String
   provider          String
   model             String
+  inputTokens       Int?
+  outputTokens      Int?
   errorMessage      String?
   completedAt       DateTime?
   createdAt         DateTime       @default(now())
@@ -578,6 +603,72 @@ model ExternalImportJob {
 
   @@index([externalPlayerLinkId])
   @@index([status])
+  @@index([createdAt])
+}
+
+enum AnnouncementType {
+  RELEASE_NOTE @map("release_note")
+  ANNOUNCEMENT @map("announcement")
+  MAINTENANCE  @map("maintenance")
+}
+
+enum AnnouncementSeverity {
+  INFO     @map("info")
+  WARNING  @map("warning")
+  CRITICAL @map("critical")
+}
+
+model Announcement {
+  id              String               @id @default(cuid())
+  type            AnnouncementType     @default(ANNOUNCEMENT)
+  severity        AnnouncementSeverity @default(INFO)
+  title           String
+  bodyMarkdown    String
+  version         String?
+  isPublished     Boolean              @default(false)
+  publishedAt     DateTime?
+  startsAt        DateTime?
+  endsAt          DateTime?
+  dismissible     Boolean              @default(true)
+  createdByUserId String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  createdBy  User                    @relation("AuthoredAnnouncements", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  dismissals AnnouncementDismissal[]
+
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@index([startsAt])
+  @@index([endsAt])
+}
+
+model AnnouncementDismissal {
+  id             String   @id @default(cuid())
+  announcementId String
+  userId         String
+  dismissedAt    DateTime @default(now())
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
+  @@index([userId])
+}
+
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  actorUserId  String
+  action       String
+  targetType   String?
+  targetId     String?
+  metadataJson Json?
+  createdAt    DateTime @default(now())
+
+  actor User @relation("AdminAuditActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  @@index([actorUserId])
+  @@index([action])
   @@index([createdAt])
 }
 

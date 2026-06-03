@@ -24,6 +24,22 @@ export const RefreshSchema = z.object({
 });
 export type RefreshInput = z.infer<typeof RefreshSchema>;
 
+export const VerifyEmailSchema = z.object({
+  token: z.string().min(20),
+});
+export type VerifyEmailInput = z.infer<typeof VerifyEmailSchema>;
+
+export const ResendVerificationSchema = z.object({
+  email: EmailSchema,
+});
+export type ResendVerificationInput = z.infer<typeof ResendVerificationSchema>;
+
+export const RegisterResultSchema = z.object({
+  status: z.literal('pending_verification'),
+  email: z.string().email(),
+});
+export type RegisterResult = z.infer<typeof RegisterResultSchema>;
+
 export const TokensSchema = z.object({
   accessToken: z.string(),
   accessTokenExpiresAt: z.string(),

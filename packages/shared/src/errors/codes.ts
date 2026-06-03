@@ -9,6 +9,15 @@ export const ErrorCodes = {
     RefreshTokenInvalid: 'auth.refreshTokenInvalid',
     RefreshTokenExpired: 'auth.refreshTokenExpired',
     Unauthorized: 'auth.unauthorized',
+    Forbidden: 'auth.forbidden',
+    EmailNotVerified: 'auth.emailNotVerified',
+    AccountBlocked: 'auth.accountBlocked',
+    VerificationTokenInvalid: 'auth.verificationTokenInvalid',
+    VerificationTokenExpired: 'auth.verificationTokenExpired',
+  },
+  Admin: {
+    LastAdmin: 'admin.lastAdmin',
+    CannotBlockSelf: 'admin.cannotBlockSelf',
   },
   Validation: {
     Failed: 'validation.failed',
@@ -21,5 +30,6 @@ export const ErrorCodes = {
 
 export type ApiErrorCode =
   | (typeof ErrorCodes.Auth)[keyof typeof ErrorCodes.Auth]
+  | (typeof ErrorCodes.Admin)[keyof typeof ErrorCodes.Admin]
   | (typeof ErrorCodes.Validation)[keyof typeof ErrorCodes.Validation]
   | (typeof ErrorCodes.Generic)[keyof typeof ErrorCodes.Generic];
