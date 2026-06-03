@@ -19,19 +19,19 @@ export function StatTile({
 }) {
   const iconTone =
     tone === 'gold'
-      ? 'bg-brand-gold/15 text-brand-gold'
-      : 'bg-brand-accent/15 text-brand-accent';
+      ? 'from-brand-gold/35 to-brand-gold/5 text-brand-gold ring-brand-gold/25'
+      : 'from-brand-accent/35 to-brand-primary/5 text-brand-accent ring-brand-accent/25';
   return (
-    <Card className="p-4 sm:p-5">
+    <Card className="accent-top p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <span className="text-xs font-medium uppercase tracking-wide text-text-disabled">{label}</span>
         {icon && (
-          <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconTone}`}>
-            <span className="h-[18px] w-[18px]">{icon}</span>
+          <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ${iconTone}`}>
+            <span className="h-5 w-5">{icon}</span>
           </span>
         )}
       </div>
-      <p className="mt-3 text-2xl font-semibold tracking-tight text-text-primary sm:text-3xl">
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
         {value}
         {unit && <span className="ml-1 text-base font-normal text-text-secondary">{unit}</span>}
       </p>
