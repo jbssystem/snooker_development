@@ -90,11 +90,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="mt-2 rounded-md bg-brand-primary px-4 py-2.5 font-medium text-text-primary shadow-glow transition hover:bg-brand-accent disabled:opacity-60"
-      >
+      <button type="submit" disabled={submitting} className="btn-primary mt-2 w-full">
         {submitting ? t('submitting') : mode === 'login' ? t('login.cta') : t('register.cta')}
       </button>
     </form>
