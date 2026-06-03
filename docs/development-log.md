@@ -19,6 +19,26 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Frame edit/delete, aligned inputs, interactive drill editor (2026-06-03)
+
+**Delivered:**
+
+- Match form inputs align on one line even with two-line labels (`Field` control
+  is bottom-aligned).
+- Frame editing (`PATCH /matches/:id/frames/:frameNumber`, winner re-derived) via
+  a per-row Edit modal, and "remove last frame" (`DELETE …/frames/last`).
+- Interactive drill editor: draggable shot-line endpoints, movable + resizable
+  target zones, draggable text annotations, click-to-select with a contextual
+  selected-element panel (delete + text/label). New zones/paths/annotations
+  auto-select. Drill templates are now editable (library form doubles as an edit
+  form, pre-filled including the table layout → `PATCH /drill-templates/:id`).
+- Verified frame edit prefill, field alignment and all drill-editor interactions
+  (line/zone/annotation select, drill edit) functionally via Playwright.
+
+**Open item:** pre-existing `MISSING_MESSAGE` console warnings for some system
+drill zone labels (`systemDrills.templates.*.layout.targetZones.*`) — an i18n
+gap in the drill localization map, not a regression; worth filling later.
+
 ### Matches editing + input easing + tooltips everywhere (2026-06-03)
 
 **Delivered:**
