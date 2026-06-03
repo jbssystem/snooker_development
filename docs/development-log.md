@@ -19,6 +19,25 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Matches editing + input easing + tooltips everywhere (2026-06-03)
+
+**Delivered:**
+
+- Add-frame: no frame-number field (API auto-increments) and no winner field
+  (derived from the entered score) — fewer inputs per frame.
+- Match editing: the create modal doubles as an edit modal (Edit button on the
+  match detail) pre-filled from the match via `matchToFormValues`; submit routes
+  to `PATCH /matches/:id`.
+- Removed the Analytics nav entry (duplicated the dashboard) from desktop More
+  and the mobile More sheet. The `/analytics` route still exists, just unlinked.
+- `InfoTooltip` now renders in a body portal with fixed positioning, so tooltips
+  are never clipped by a card/modal `overflow` or hidden behind a stacking
+  context. The shared tooltip `Field` replaced the per-page local Field in
+  drills, training, profile and calendar (hints are now "?" tooltips).
+- Country is a curated ISO-2 `CountrySelect` in matches + profile (pick, don't
+  type); profile normalizes legacy non-2-char values so they stop blocking save.
+- Verified edit prefill + unclipped modal tooltip + country select via Playwright.
+
 ### Player avatar (2026-06-03)
 
 **Delivered:**
