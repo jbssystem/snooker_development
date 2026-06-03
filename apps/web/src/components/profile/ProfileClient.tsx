@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import type { CreateEquipmentProfileInput, UpsertPlayerProfileInput } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
-import { Field, PageHeader } from '@/components/ui';
+import { CountryOptions, Field, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { AvatarPicker } from './AvatarPicker';
@@ -90,7 +90,7 @@ export function ProfileClient() {
       firstName: profile.firstName,
       lastName: profile.lastName,
       dateOfBirth: toDateInput(profile.dateOfBirth),
-      country: profile.country ?? '',
+      country: profile.country && profile.country.length === 2 ? profile.country.toUpperCase() : '',
       dominantHand: profile.dominantHand ?? '',
       level: profile.level ?? '',
       seasonGoal: profile.seasonGoal ?? '',
@@ -213,12 +213,9 @@ export function ProfileClient() {
             <input className={inputClass} type="date" {...profileForm.register('dateOfBirth')} />
           </Field>
           <Field hint={t('hints.country')} label={t('fields.country')}>
-            <input
-              className={inputClass}
-              maxLength={2}
-              placeholder={t('placeholders.country')}
-              {...profileForm.register('country')}
-            />
+            <select className={inputClass} {...profileForm.register('country')}>
+              <CountryOptions placeholder={t('placeholders.country')} />
+            </select>
           </Field>
           <Field hint={t('hints.dominantHand')} label={t('fields.dominantHand')}>
             <select className={inputClass} {...profileForm.register('dominantHand')}>

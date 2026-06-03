@@ -14,7 +14,7 @@ import type {
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
 import { Modal } from '@/components/layout/Modal';
-import { Field, PageHeader, PlusIcon } from '@/components/ui';
+import { CountryOptions, Field, PageHeader, PlusIcon } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -303,7 +303,9 @@ export function MatchLogClient() {
             </Field>
             <div className="grid grid-cols-3 gap-2">
               <Field hint={t('hints.country')} label={t('fields.country')}>
-                <input className={inputClass} placeholder={t('placeholders.country')} {...matchForm.register('country')} />
+                <select className={inputClass} {...matchForm.register('country')}>
+                  <CountryOptions placeholder={t('placeholders.country')} />
+                </select>
               </Field>
               <Field hint={t('hints.city')} label={t('fields.city')}>
                 <input className={inputClass} placeholder={t('placeholders.city')} {...matchForm.register('city')} />
