@@ -131,20 +131,73 @@ server {
 }
 ```
 
-## Production deploy (template)
+## Production target
 
-Per organization SSH-deploy convention (see user notes):
-1. `git archive --format=tar.gz -o tmp.tar.gz HEAD`
-2. `scp` to server target dir.
-3. `tar -xzf` into the server target dir.
-4. Ensure server `.env` exists, based on `.env.production.example`, with real
-	secrets and `PUBLIC_APP_URL=https://snooker.appshub.pl`.
-5. `docker compose -f docker-compose.prod.yml build`.
-6. `docker compose -f docker-compose.prod.yml up -d postgres redis minio`.
-7. `docker compose -f docker-compose.prod.yml run --rm migrate`.
-8. `docker compose -f docker-compose.prod.yml up -d`.
-9. Check `curl -f http://127.0.0.1:3300/health` from the server and then
-	`https://snooker.appshub.pl/ru/login` externally after TLS is configured.
+There is a single production host and we deploy only there for the
+foreseeable future:
+
+- Host: `81.16.28.222`, SSH on port `22022`, login `vadim` (in the `docker`
+  group, so Docker needs no sudo).
+- Repo checkout: `/var/www/snooker_development`, Compose project `snooker`.
+- App nginx is bound to `127.0.0.1:3311`; a host nginx terminates TLS for
+  `https://snooker.appshub.pl` and proxies to it.
+- Secrets live in `/var/www/snooker_development/.env.deploy` (NOT `.env`,
+  which holds dev placeholders). `.env.deploy` is gitignored and must never be
+  committed. All Compose commands pass `--env-file .env.deploy`.
+
+## Autodeploy (push to main → server rebuild)
+
+The server auto-deploys whenever `main` is updated, via a once-a-minute
+poller in `vadim`'s crontab — no GitHub Actions runner or inbound ports.
+
+Pieces:
+- `infra/deploy.sh` — builds images, runs migrations and restarts the stack
+  with `--env-file .env.deploy`, then health-checks `/health`. Versioned in
+  the repo, so changing the deploy steps ships with a normal commit.
+- `infra/autodeploy-poll.sh` — versioned source of the poller. A copy is
+  installed outside the repo at `/home/vadim/snooker-autodeploy.sh` so a
+  `git reset --hard` mid-deploy can't rewrite the running script. It fetches
+  `origin/main`; if HEAD differs it resets the working tree and runs
+  `infra/deploy.sh`. A `flock` guard makes overlapping ticks a no-op.
+- The server authenticates to the private repo with a read-only **deploy
+  key** at `~/.ssh/snooker_deploy` (git remote uses the SSH URL).
+
+One-time server setup (already done; documented for rebuilds):
+```bash
+# read-only deploy key, add the .pub to GitHub repo → Settings → Deploy keys
+ssh-keygen -t ed25519 -f ~/.ssh/snooker_deploy -N "" -C "snooker-autodeploy"
+ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+cd /var/www/snooker_development
+git init -q
+git remote add origin git@github.com:jbssystem/snooker_development.git
+export GIT_SSH_COMMAND="ssh -i ~/.ssh/snooker_deploy -o IdentitiesOnly=yes"
+git fetch origin main
+git checkout -f -B main origin/main      # overwrites tracked files; .env* kept
+git clean -fd -e .env -e .env.deploy
+
+cp infra/autodeploy-poll.sh ~/snooker-autodeploy.sh
+chmod +x ~/snooker-autodeploy.sh
+( crontab -l 2>/dev/null; \
+  echo "* * * * * /home/vadim/snooker-autodeploy.sh >> /home/vadim/snooker-autodeploy.log 2>&1" ) | crontab -
+```
+
+Logs: `/home/vadim/snooker-autodeploy.log`. Force a deploy immediately
+instead of waiting for the next minute: `~/snooker-autodeploy.sh`. Deploy a
+specific state by pushing it to `main`.
+
+## Manual deploy (fallback)
+
+From the server checkout, run the same script the poller uses:
+```bash
+cd /var/www/snooker_development
+git fetch origin main && git reset --hard origin/main
+bash infra/deploy.sh
+```
+
+The older archive-based flow (`git archive` → `scp` → `tar` →
+`docker compose ... build/up`) still works if git access is unavailable, but
+the autodeploy path above is the supported one.
 
 Do not commit `docker-compose.override.yml`; it lives on the server and
 controls port bindings behind the host nginx.

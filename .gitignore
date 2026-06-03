@@ -8,6 +8,8 @@ coverage/
 .env
 .env.local
 .env.*.local
+# Server-side production secrets file (never commit; protects it from git clean)
+.env.deploy
 .DS_Store
 *.log
 .vscode/
