@@ -226,87 +226,77 @@ export function DrillLayoutEditor({
         </div>
       )}
 
-      <fieldset className="grid gap-2 rounded-md border border-border-subtle p-3">
-        <legend className="px-1 text-xs uppercase tracking-wide text-text-disabled">{t('editor.reds.title')}</legend>
-        <div className="flex items-center gap-3">
-          <button
-            aria-label={t('editor.reds.decrease')}
-            className={stepperButtonClass}
-            disabled={reds <= 0}
-            onClick={() => onChange(withReds(value, reds - 1))}
-            type="button"
-          >
-            −
-          </button>
-          <input
-            aria-label={t('editor.reds.title')}
-            className="w-16 rounded-md border border-border-subtle bg-background-secondary px-2 py-2 text-center text-text-primary focus:border-border-active focus:outline-none"
-            max={MAX_REDS}
-            min={0}
-            onChange={(event) => onChange(withReds(value, Number.parseInt(event.target.value, 10) || 0))}
-            type="number"
-            value={reds}
-          />
-          <button
-            aria-label={t('editor.reds.increase')}
-            className={stepperButtonClass}
-            disabled={reds >= MAX_REDS}
-            onClick={() => onChange(withReds(value, reds + 1))}
-            type="button"
-          >
-            +
-          </button>
-          <span className="text-xs text-text-disabled">{t('editor.reds.hint')}</span>
+      {/* Compact toolbar: reds, ball picker and add-tools share one wrapping row
+          so the editor stays short and the table is the focus. */}
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] uppercase tracking-wide text-text-disabled">{t('editor.reds.title')}</span>
+          <div className="flex items-center gap-1">
+            <button aria-label={t('editor.reds.decrease')} className={stepperButtonClass} disabled={reds <= 0} onClick={() => onChange(withReds(value, reds - 1))} type="button">
+              −
+            </button>
+            <input
+              aria-label={t('editor.reds.title')}
+              className="w-11 rounded-md border border-border-subtle bg-background-secondary px-1 py-1.5 text-center text-text-primary focus:border-border-active focus:outline-none"
+              max={MAX_REDS}
+              min={0}
+              onChange={(event) => onChange(withReds(value, Number.parseInt(event.target.value, 10) || 0))}
+              type="number"
+              value={reds}
+            />
+            <button aria-label={t('editor.reds.increase')} className={stepperButtonClass} disabled={reds >= MAX_REDS} onClick={() => onChange(withReds(value, reds + 1))} type="button">
+              +
+            </button>
+          </div>
         </div>
-      </fieldset>
 
-      <fieldset className="grid gap-2">
-        <legend className="mb-1 text-xs uppercase tracking-wide text-text-disabled">{t('editor.ballsGroup')}</legend>
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-          <label className="flex flex-col gap-1.5 text-sm text-text-secondary">
-            <span>{t('editor.ballColor')}</span>
-            <select className={inputClass} onChange={(event) => setBallColor(event.target.value as BallColor)} value={ballColor}>
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] uppercase tracking-wide text-text-disabled">{t('editor.ballsGroup')}</span>
+          <div className="flex items-center gap-1.5">
+            <select aria-label={t('editor.ballColor')} className={compactInputClass} onChange={(event) => setBallColor(event.target.value as BallColor)} value={ballColor}>
               {BALL_COLORS.map((color) => (
                 <option key={color} value={color}>{t(`balls.${color}`)}</option>
               ))}
             </select>
-          </label>
-          <button className={`${secondaryButtonClass} self-end`} onClick={() => addBall(value, onChange, ballColor)} type="button">
-            {t('editor.addBall')}
-          </button>
+            <button className={compactButtonClass} onClick={() => addBall(value, onChange, ballColor)} type="button">
+              + {t('editor.addBall')}
+            </button>
+          </div>
         </div>
-      </fieldset>
 
-      <fieldset className="grid gap-2">
-        <legend className="mb-1 text-xs uppercase tracking-wide text-text-disabled">{t('editor.toolsGroup')}</legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <button className={secondaryButtonClass} onClick={() => addTargetZone(value, onChange, setSelectedIds)} type="button">
-            {t('editor.addZone')}
-          </button>
-          <button className={secondaryButtonClass} onClick={() => addShotPath(value, onChange, selectedBall, setSelectedIds)} type="button">
-            {t('editor.addPath')}
-          </button>
-          <button className={secondaryButtonClass} onClick={() => addAnnotation(value, onChange, setSelectedIds)} type="button">
-            {t('editor.addAnnotation')}
-          </button>
-          <button className={secondaryButtonClass} onClick={() => exportImage(canvasRef.current)} type="button">
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] uppercase tracking-wide text-text-disabled">{t('editor.toolsGroup')}</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button className={compactButtonClass} onClick={() => addTargetZone(value, onChange, setSelectedIds)} type="button">
+              {t('editor.addZone')}
+            </button>
+            <button className={compactButtonClass} onClick={() => addShotPath(value, onChange, selectedBall, setSelectedIds)} type="button">
+              {t('editor.addPath')}
+            </button>
+            <button className={compactButtonClass} onClick={() => addAnnotation(value, onChange, setSelectedIds)} type="button">
+              {t('editor.addAnnotation')}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <details className="rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary">
+        <summary className="cursor-pointer text-text-primary">{t('editor.json')}</summary>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <button className={compactButtonClass} onClick={() => exportImage(canvasRef.current)} type="button">
             {t('editor.exportImage')}
           </button>
-          <button className={secondaryButtonClass} onClick={() => setJsonDraft(JSON.stringify(value, null, 2))} type="button">
+          <button className={compactButtonClass} onClick={() => setJsonDraft(JSON.stringify(value, null, 2))} type="button">
             {t('editor.copyJson')}
           </button>
         </div>
-      </fieldset>
-
-      <details className="rounded-md border border-border-subtle p-3 text-sm text-text-secondary">
-        <summary className="cursor-pointer text-text-primary">{t('editor.json')}</summary>
         <textarea
           className={`${inputClass} mt-3 min-h-28 font-mono text-xs`}
           onChange={(event) => setJsonDraft(event.target.value)}
           value={jsonDraft}
         />
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button className={secondaryButtonClass} onClick={() => loadJson(jsonDraft, onChange, setJsonError)} type="button">
+          <button className={compactButtonClass} onClick={() => loadJson(jsonDraft, onChange, setJsonError)} type="button">
             {t('editor.loadJson')}
           </button>
           {jsonError && <span className="text-state-error">{t('editor.jsonError')}</span>}
@@ -318,8 +308,10 @@ export function DrillLayoutEditor({
 
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-secondary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
-const secondaryButtonClass =
-  'rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-50';
+const compactButtonClass =
+  'rounded-md border border-border-subtle px-2.5 py-1.5 text-xs text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-50';
+const compactInputClass =
+  'rounded-md border border-border-subtle bg-background-secondary px-2 py-1.5 text-sm text-text-primary focus:border-border-active focus:outline-none';
 const chipButtonClass =
   'rounded-full border border-border-subtle px-3 py-1.5 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary';
 function toggleButtonClass(active: boolean): string {
@@ -330,7 +322,7 @@ function toggleButtonClass(active: boolean): string {
   }`;
 }
 const stepperButtonClass =
-  'flex h-10 w-10 items-center justify-center rounded-md border border-border-subtle text-lg text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40';
+  'flex h-8 w-8 items-center justify-center rounded-md border border-border-subtle text-lg text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40';
 
 function CameraIcon() {
   return (
