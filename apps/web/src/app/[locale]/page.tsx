@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
+import { Wordmark } from '@/components/brand/Wordmark';
 import { AiIcon, AnalyticsIcon, CalendarIcon, TrainingIcon } from '@/components/ui/icons';
 
 type Props = { params: Promise<{ locale: string }> };
@@ -23,14 +23,7 @@ export default async function HomePage({ params }: Props) {
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-14 px-6 py-16 sm:py-20">
       <header className="flex flex-col gap-6">
-        <Image
-          src="/logo.png"
-          alt={tCommon('appName')}
-          width={420}
-          height={120}
-          priority
-          className="h-14 w-auto sm:h-16"
-        />
+        <Wordmark label={tCommon('appName')} />
         <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{tCommon('appName')}</p>
         <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
           <span className="text-gradient">{t('title')}</span>
@@ -48,7 +41,7 @@ export default async function HomePage({ params }: Props) {
           </Link>
           <a
             href="#sections"
-            className="inline-flex min-h-11 items-center px-3 py-2.5 font-medium text-text-disabled transition hover:text-text-secondary"
+            className="inline-flex min-h-11 items-center px-3 py-2.5 font-medium text-text-disabled transition hover:text-text-secondary sm:hidden"
           >
             {t('cta.learnMore')}
           </a>
