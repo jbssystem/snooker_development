@@ -828,6 +828,8 @@
     "saving": "Збереження…",
     "delete": "Видалити",
     "edit": "Змінити",
+    "duplicate": "Дублювати",
+    "copySuffix": "копія",
     "form": {
       "title": "Новий шаблон",
       "editTitle": "Редагувати вправу",
@@ -887,7 +889,8 @@
     },
     "visibility": {
       "private": "Особистий",
-      "shared": "Спільний"
+      "shared": "Спільний",
+      "system": "Базовий"
     },
     "metrics": {
       "title": "Метрики",

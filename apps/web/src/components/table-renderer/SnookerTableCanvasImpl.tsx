@@ -88,6 +88,9 @@ export function SnookerTableCanvasImpl({
   const tableWidth = dimensions.width * stageSize.scale;
   const tableHeight = dimensions.height * stageSize.scale;
   const selectedSet = new Set(selectedIds);
+  // Render the canvas at a higher internal resolution so the heavily downscaled
+  // table (full-size in mm → a few hundred px) stays crisp.
+  const pixelRatio = typeof window !== 'undefined' ? Math.min(3, Math.max(2, window.devicePixelRatio || 1)) : 2;
 
   return (
     <div ref={containerRef} className={className} data-testid="snooker-table-canvas">
@@ -99,7 +102,7 @@ export function SnookerTableCanvasImpl({
           if (editable && event.target === event.target.getStage()) onSelectionChange?.([]);
         }}
       >
-        <Layer>
+        <Layer pixelRatio={pixelRatio}>
           <Rect cornerRadius={18} fill="#1F2630" height={stageSize.height} shadowBlur={8} shadowColor="rgba(0,0,0,0.35)" width={stageSize.width} x={0} y={0} />
           <Rect cornerRadius={10} fill="#0E6B4D" height={tableHeight} stroke="#2A323D" strokeWidth={Math.max(2, 8 * stageSize.scale)} width={tableWidth} x={tableX} y={tableY} />
           <TableGuides dimensions={dimensions} scale={stageSize.scale} toCanvas={toCanvas} />

@@ -131,24 +131,27 @@ export function DrillLibraryClient() {
     onError: (e) => setServerError(errorMessage(e, tErr)),
   });
 
-  const startEdit = (template: DrillTemplate) => {
-    setEditingId(template.id);
+  const loadIntoForm = (template: DrillTemplate, clone: boolean) => {
+    // Clone uses the localized (display) text so duplicating a system/library
+    // drill produces a readable editable copy; in-place edit keeps own text.
+    const source = clone ? localizeDrillTemplate(template, tSystemDrills) : template;
+    setEditingId(clone ? null : template.id);
     setServerError(null);
     form.reset({
-      name: template.name,
-      category: template.category,
-      difficulty: template.difficulty,
-      visibility: template.visibility === 'shared' ? 'shared' : 'private',
-      description: template.description,
-      goal: template.goal,
-      rules: template.rules,
-      successCriteria: template.successCriteria,
-      tags: template.tags.join(', '),
+      name: clone ? `${source.name} (${t('copySuffix')})` : source.name,
+      category: source.category,
+      difficulty: source.difficulty,
+      visibility: !clone && source.visibility === 'shared' ? 'shared' : 'private',
+      description: source.description,
+      goal: source.goal,
+      rules: source.rules,
+      successCriteria: source.successCriteria,
+      tags: source.tags.join(', '),
     });
     setMetrics(
-      template.metricsSchema.metrics.length > 0
-        ? template.metricsSchema.metrics.map((metric) => ({
-            key: metric.key,
+      source.metricsSchema.metrics.length > 0
+        ? source.metricsSchema.metrics.map((metric) => ({
+            key: clone ? '' : metric.key,
             label: metric.label,
             type: metric.type,
             unit: metric.unit ?? '',
@@ -156,7 +159,7 @@ export function DrillLibraryClient() {
           }))
         : [{ key: '', label: '', type: 'number', unit: '', required: false }],
     );
-    setLayout(template.defaultTableLayout ?? createStandardTableLayout());
+    setLayout(source.defaultTableLayout ?? createStandardTableLayout());
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -192,8 +195,9 @@ export function DrillLibraryClient() {
               template={template}
               t={t}
               tSystemDrills={tSystemDrills}
+              onClone={() => loadIntoForm(template, true)}
               onDelete={() => deleteTemplate.mutate(template.id)}
-              onEdit={() => startEdit(template)}
+              onEdit={() => loadIntoForm(template, false)}
             />
           ))}
           {templatesQuery.data?.length === 0 && (
@@ -365,53 +369,49 @@ function TemplateCard({
   template,
   t,
   tSystemDrills,
+  onClone,
   onDelete,
   onEdit,
 }: {
   template: DrillTemplate;
   t: (key: string) => string;
   tSystemDrills: ReturnType<typeof useTranslations>;
+  onClone: () => void;
   onDelete: () => void;
   onEdit: () => void;
 }) {
   const localizedTemplate = localizeDrillTemplate(template, tSystemDrills);
+  const isSystem = template.visibility === 'system';
 
   return (
-    <article className="surface rounded-xl p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-text-primary">{localizedTemplate.name}</h2>
-          <p className="mt-1 text-xs uppercase text-brand-accent">
-            {t(`categories.${template.category}`)} · {t(`difficulties.${template.difficulty}`)}
-          </p>
+    <article className="surface relative flex flex-col rounded-xl p-4 sm:p-5">
+      <span className={`absolute right-4 top-4 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${visibilityBadgeClass(template.visibility)}`}>
+        {t(`visibility.${template.visibility}`)}
+      </span>
+
+      <header className="pr-24">
+        <h2 className="text-lg font-semibold leading-snug text-text-primary">{localizedTemplate.name}</h2>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <span className="rounded-md bg-background-elevated px-2 py-0.5 text-[11px] uppercase tracking-wide text-brand-accent">
+            {t(`categories.${template.category}`)}
+          </span>
+          <span className="rounded-md bg-background-elevated px-2 py-0.5 text-[11px] uppercase tracking-wide text-text-secondary">
+            {t(`difficulties.${template.difficulty}`)}
+          </span>
         </div>
-        {template.visibility !== 'system' && (
-          <div className="flex shrink-0 gap-2">
-            <button
-              className="rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:border-brand-accent hover:text-text-primary"
-              onClick={onEdit}
-              type="button"
-            >
-              {t('edit')}
-            </button>
-            <button
-              className="rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:border-state-error hover:text-state-error"
-              onClick={onDelete}
-              type="button"
-            >
-              {t('delete')}
-            </button>
-          </div>
-        )}
-      </div>
-      <p className="mt-3 text-sm text-text-secondary">{localizedTemplate.description}</p>
+      </header>
+
+      <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{localizedTemplate.description}</p>
+
       <div className="mt-4">
         <TableLayoutPreview layout={localizedTemplate.defaultTableLayout ?? EMPTY_PREVIEW_LAYOUT} />
       </div>
-      <dl className="mt-4 grid gap-3 text-sm">
+
+      <dl className="mt-4 grid gap-3 border-t border-border-subtle pt-4 text-sm">
         <Meta label={t('fields.goal')} value={localizedTemplate.goal} />
         <Meta label={t('fields.successCriteria')} value={localizedTemplate.successCriteria} />
       </dl>
+
       {localizedTemplate.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {localizedTemplate.tags.map((tag) => (
@@ -421,8 +421,41 @@ function TemplateCard({
           ))}
         </div>
       )}
+
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-border-subtle pt-4">
+        {isSystem ? (
+          <button className={cardButtonClass} onClick={onClone} type="button">
+            {t('duplicate')}
+          </button>
+        ) : (
+          <>
+            <button className={cardButtonClass} onClick={onEdit} type="button">
+              {t('edit')}
+            </button>
+            <button className={cardButtonClass} onClick={onClone} type="button">
+              {t('duplicate')}
+            </button>
+            <button
+              className="rounded-md border border-border-subtle px-3 py-1.5 text-xs text-text-secondary transition hover:border-state-error hover:text-state-error"
+              onClick={onDelete}
+              type="button"
+            >
+              {t('delete')}
+            </button>
+          </>
+        )}
+      </div>
     </article>
   );
+}
+
+const cardButtonClass =
+  'rounded-md border border-border-subtle px-3 py-1.5 text-xs text-text-secondary transition hover:border-brand-accent hover:text-text-primary';
+
+function visibilityBadgeClass(visibility: DrillTemplate['visibility']): string {
+  if (visibility === 'system') return 'border-brand-gold/40 bg-brand-gold/15 text-brand-gold';
+  if (visibility === 'shared') return 'border-state-info/40 bg-state-info/15 text-state-info';
+  return 'border-border-subtle bg-background-elevated text-text-secondary';
 }
 
 const inputClass =

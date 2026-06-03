@@ -828,6 +828,8 @@
     "saving": "Saving…",
     "delete": "Delete",
     "edit": "Edit",
+    "duplicate": "Duplicate",
+    "copySuffix": "copy",
     "form": {
       "title": "New template",
       "editTitle": "Edit drill",
@@ -887,7 +889,8 @@
     },
     "visibility": {
       "private": "Private",
-      "shared": "Shared"
+      "shared": "Shared",
+      "system": "Built-in"
     },
     "metrics": {
       "title": "Metrics",
