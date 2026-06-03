@@ -43,16 +43,12 @@ type MatchFormValues = {
 };
 
 type FrameFormValues = {
-  frameNumber: string;
   playerScore: string;
   opponentScore: string;
-  winner: FrameWinner;
   highBreak: string;
   frameDurationMinutes: string;
   notes: string;
 };
-
-const frameWinners: FrameWinner[] = ['player', 'opponent', 'unknown'];
 
 const matchDefaultValues: MatchFormValues = {
   matchDate: '',
@@ -79,10 +75,8 @@ const matchDefaultValues: MatchFormValues = {
 };
 
 const frameDefaultValues: FrameFormValues = {
-  frameNumber: '',
   playerScore: '',
   opponentScore: '',
-  winner: 'unknown',
   highBreak: '',
   frameDurationMinutes: '',
   notes: '',
@@ -434,36 +428,26 @@ function MatchDetail({
         </div>
       </section>
 
-      <AccordionSection defaultOpen testId="match-frame-form" title={t('frames.add')}>
-        <form className="grid gap-4 lg:grid-cols-6" onSubmit={frameForm.handleSubmit(addFrame)}>
-          <Field hint={t('hints.frameNumber')} label={t('frames.number')}>
-            <input className={inputClass} min={1} type="number" {...frameForm.register('frameNumber')} />
-          </Field>
-          <Field hint={t('hints.framePoints')} label={t('frames.playerScore')}>
-            <input className={inputClass} min={0} type="number" {...frameForm.register('playerScore')} />
-          </Field>
-          <Field hint={t('hints.framePoints')} label={t('frames.opponentScore')}>
-            <input className={inputClass} min={0} type="number" {...frameForm.register('opponentScore')} />
-          </Field>
-          <Field hint={t('hints.winner')} label={t('frames.winner')}>
-            <select className={inputClass} {...frameForm.register('winner')}>
-              {frameWinners.map((winner) => (
-                <option key={winner} value={winner}>{t(`winner.${winner}`)}</option>
-              ))}
-            </select>
-          </Field>
-          <Field hint={t('hints.count')} label={t('fields.highBreak')}>
-            <input className={inputClass} min={0} type="number" {...frameForm.register('highBreak')} />
-          </Field>
-          <Field hint={t('hints.duration')} label={t('frames.duration')}>
-            <input className={inputClass} min={1} type="number" {...frameForm.register('frameDurationMinutes')} />
-          </Field>
-          <div className="lg:col-span-5">
-            <Field hint={t('hints.notes')} label={t('fields.notes')}>
-              <input className={inputClass} placeholder={t('placeholders.frameNotes')} {...frameForm.register('notes')} />
+      <AccordionSection defaultOpen subtitle={t('frames.autoHint')} testId="match-frame-form" title={t('frames.add')}>
+        <form className="grid gap-4" onSubmit={frameForm.handleSubmit(addFrame)}>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Field hint={t('hints.framePoints')} label={t('frames.playerScore')}>
+              <input className={inputClass} min={0} type="number" {...frameForm.register('playerScore')} />
+            </Field>
+            <Field hint={t('hints.framePoints')} label={t('frames.opponentScore')}>
+              <input className={inputClass} min={0} type="number" {...frameForm.register('opponentScore')} />
+            </Field>
+            <Field hint={t('hints.count')} label={t('fields.highBreak')}>
+              <input className={inputClass} min={0} type="number" {...frameForm.register('highBreak')} />
+            </Field>
+            <Field hint={t('hints.duration')} label={t('frames.duration')}>
+              <input className={inputClass} min={1} type="number" {...frameForm.register('frameDurationMinutes')} />
             </Field>
           </div>
-          <button className={`${primaryButtonClass} self-end`} disabled={addFramePending} type="submit">
+          <Field hint={t('hints.notes')} label={t('fields.notes')}>
+            <input className={inputClass} placeholder={t('placeholders.frameNotes')} {...frameForm.register('notes')} />
+          </Field>
+          <button className={`${primaryButtonClass} w-full justify-center sm:w-auto sm:justify-self-end`} disabled={addFramePending} type="submit">
             {addFramePending ? t('saving') : t('frames.submit')}
           </button>
         </form>
@@ -530,15 +514,23 @@ function toCreateMatchInput(values: MatchFormValues): CreateMatchInput {
 }
 
 function toAddFrameInput(values: FrameFormValues): AddMatchFrameInput {
-  const input: AddMatchFrameInput = { winner: values.winner };
+  // Frame number is auto-assigned by the API; the winner is derived from the
+  // entered scores so the coach only types the points.
+  const input: AddMatchFrameInput = { winner: deriveFrameWinner(values.playerScore, values.opponentScore) };
   const durationMinutes = parseOptionalInt(values.frameDurationMinutes);
-  assignInt(input, 'frameNumber', values.frameNumber);
   assignInt(input, 'playerScore', values.playerScore);
   assignInt(input, 'opponentScore', values.opponentScore);
   assignInt(input, 'highBreak', values.highBreak);
   if (durationMinutes !== undefined) input.frameDurationSec = durationMinutes * 60;
   assignText(input, 'notes', values.notes);
   return input;
+}
+
+function deriveFrameWinner(playerScore: string, opponentScore: string): FrameWinner {
+  const player = parseOptionalInt(playerScore);
+  const opponent = parseOptionalInt(opponentScore);
+  if (player === undefined || opponent === undefined || player === opponent) return 'unknown';
+  return player > opponent ? 'player' : 'opponent';
 }
 
 function assignText<T extends object, K extends keyof T>(target: T, key: K, value: string): void {

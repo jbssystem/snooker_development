@@ -6,7 +6,6 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { Modal } from '@/components/layout/Modal';
 import {
   AiIcon,
-  AnalyticsIcon,
   CalendarIcon,
   DashboardIcon,
   DrillsIcon,
@@ -27,7 +26,6 @@ const PRIMARY = [
 const MORE = [
   { key: 'calendar', href: '/calendar', Icon: CalendarIcon },
   { key: 'ai', href: '/ai', Icon: AiIcon },
-  { key: 'analytics', href: '/analytics', Icon: AnalyticsIcon },
   { key: 'externalData', href: '/external-data', Icon: ExternalIcon },
   { key: 'profile', href: '/profile', Icon: ProfileIcon },
 ] as const;

@@ -1148,6 +1148,7 @@
     "frames": {
       "title": "Frames",
       "add": "Add frame",
+      "autoHint": "Frame number and winner are set automatically from the score.",
       "submit": "Add",
       "empty": "No frames have been added yet.",
       "number": "No.",
