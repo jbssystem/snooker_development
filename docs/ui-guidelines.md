@@ -246,6 +246,27 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   match list.
 - Adding a frame invalidates `matches` and `player-dashboard` query keys so
   match history and downstream analytics refresh together.
+- **Match vs sparring**: both are the same entity tagged by `matchType`. The
+  left sidebar offers a primary "Match" and a secondary "Sparring" create
+  button; the modal carries a segmented Match/Sparring toggle (relabelling the
+  opponent field to "sparring partner"). A `MatchTypeBadge`
+  (`components/matches/ball-visuals.tsx`) tags each list card (top-right) and the
+  detail header. New records pre-fill the date with the current time.
+- **Real names, not generic labels**: frame forms, the edit modal, the frame
+  table's winner column and the scorer all show the player's profile name and
+  the opponent name instead of "player score / opponent score".
+- **Two-mode frame entry** in the add-frame accordion:
+  - *Quick* — the original final-score form.
+  - *Detailed* — `FrameScorer` (`components/matches/FrameScorer.tsx`), a live
+    ball-by-ball scorer driven by the `@snooker/snooker-domain` engine via
+    `useReducer`. Ball palette enables only legal balls, with Foul (4–7), Free
+    ball, Safety, Miss, Undo and Re-rack; a per-player ball-sequence map groups
+    pots into breaks. Saving persists the `scoreEvents` log.
+  - Saved frames with a log expose a "Map" action that reconstructs the
+    sequence via `replay` in a modal.
+- A lightweight `matchProgress` helper parses the free-text `format`
+  ("best of 7", "race to 3", "до 4") into a frames-to-win target and shows a
+  progress/frame-ball/match-ball/decider badge next to the score. No new data.
 
 ## Calendar Factors UI
 

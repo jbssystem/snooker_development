@@ -19,6 +19,31 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Sparring + live frame scorer with snooker rules (2026-06-03)
+
+**Delivered:**
+
+- New pure scoring engine `@snooker/snooker-domain` `scoring/` (immutable,
+  replayable): reds-then-colours phases, min-4 fouls (penalty = max(4, ball)),
+  free ball, break/high-break tracking, undo via replay, per-side ball-sequence
+  map. First Vitest tests in the repo (13 cases incl. a 147).
+- `matchType` (`match`/`sparring`) added across Prisma (enum + index), shared
+  Zod schemas and the API; one entity, tagged. Per-frame `scoreEvents` JSON log
+  added; when present the API recomputes frame totals/winner from it via the
+  engine. Migration `20260603130000_add_match_type_and_score_events`.
+- Match Log UI: Match/Sparring create + segmented toggle, auto-filled current
+  date, `MatchTypeBadge` on list cards and detail header, real player/opponent
+  names throughout the frame forms/table, and a two-mode add-frame flow — quick
+  final-score form or the detailed live `FrameScorer` (ball palette, fouls,
+  free ball, safety/miss, undo, re-rack, per-player ball map). Saved frames with
+  a log get a "Map" reconstruction modal. Lightweight `format`-aware progress
+  badge (best-of/race-to → frame-ball/match-ball/decider).
+- i18n keys added to ru/en/uk.
+
+**Decisions:** sparring is a flag on `Match`, not a separate entity; the
+ball-by-ball event log is the source of truth and the server re-derives totals
+from it via the domain engine (defence against client/server drift).
+
 ### Frame edit/delete, aligned inputs, interactive drill editor (2026-06-03)
 
 **Delivered:**

@@ -1058,6 +1058,51 @@
     }
   },
   "matches": {
+    "type": {
+      "match": "Match",
+      "sparring": "Sparring",
+      "newSparring": "New sparring",
+      "editSparring": "Edit sparring"
+    },
+    "scorer": {
+      "modeQuick": "Quick",
+      "modeDetailed": "Detailed",
+      "modeDetailedHint": "Log shot by shot — score, break and winner are computed automatically by snooker rules.",
+      "atTable": "At table",
+      "break": "Break",
+      "highBreak": "High break",
+      "phase": "Phase",
+      "phaseReds": "Reds & colours",
+      "phaseColors": "Colour clearance",
+      "remainingReds": "Reds left",
+      "nextOn": "On:",
+      "foul": "Foul",
+      "freeBall": "Free ball",
+      "safety": "Safety",
+      "miss": "Miss",
+      "undo": "Undo",
+      "rerack": "Re-rack",
+      "save": "Save frame",
+      "map": "Map",
+      "mapTitle": "Frame {number} map",
+      "mapEmpty": "No balls potted.",
+      "frameOver": "Frame complete",
+      "balls": {
+        "red": "Red",
+        "yellow": "Yellow",
+        "green": "Green",
+        "brown": "Brown",
+        "blue": "Blue",
+        "pink": "Pink",
+        "black": "Black"
+      }
+    },
+    "progress": {
+      "bestOf": "to {target}",
+      "frameBall": "Frame ball",
+      "matchBall": "Match ball",
+      "decider": "Decider"
+    },
     "title": "Matches",
     "subtitle": "Manual match, frame and key-stat history.",
     "authRequired": "Sign in to keep the match log.",
@@ -1092,6 +1137,7 @@
     "fields": {
       "matchDate": "Date",
       "opponentName": "Opponent",
+      "sparringPartner": "Sparring partner",
       "tournament": "Tournament",
       "round": "Round",
       "format": "Format",

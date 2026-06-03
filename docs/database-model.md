@@ -136,7 +136,7 @@ Each new entity ships with:
 
 ### Match
 
-- `id`, `playerProfileId`, `createdByUserId`, `matchDate`, optional
+- `id`, `playerProfileId`, `createdByUserId`, `matchDate`, `matchType`, optional
   `tournament`, optional `country`, optional `city`, optional `club`,
   `opponentName`, optional `opponentExternalId`, optional `round`, optional
   `format`, `framesWon`, `framesLost`, optional `highBreak`, `breaks50`,
@@ -150,6 +150,9 @@ Each new entity ships with:
   counts stay comparable across sources.
 - `result` is a PostgreSQL enum mapped from lowercase API values:
   `player_win`, `opponent_win`, `draw`, `unknown`.
+- `matchType` is a PostgreSQL enum mapped from lowercase API values: `match`,
+  `sparring` (default `match`). Sparring sessions reuse the same entity and
+  statistics; the type only drives labels/tags in the UI.
 - `source` is a PostgreSQL enum mapped from lowercase API values: `manual`,
   `external`. CueTracker import writes external matches with normalized
   player/opponent orientation, `opponentExternalId`, `format`,
@@ -162,10 +165,16 @@ Each new entity ships with:
 
 - `id`, `matchId`, `frameNumber`, optional `playerScore`, optional
   `opponentScore`, `winner`, optional `highBreak`, optional
-  `frameDurationSec`, optional `notes`, `createdAt`.
+  `frameDurationSec`, optional `notes`, optional `scoreEvents` (JSON),
+  `createdAt`.
 - `(matchId, frameNumber)` is unique. Adding a frame through the API
   recalculates `Match.framesWon`, `Match.framesLost` and `Match.result` from
   all saved frame winners.
+- `scoreEvents` is the replayable ball-by-ball log produced by the detailed
+  live scorer (see `@snooker/snooker-domain` `scoring/`). When present, the API
+  recomputes the frame's `playerScore`/`opponentScore`/`highBreak`/`winner`
+  from the log via `replay`/`frameOutcome` — the engine is the source of truth,
+  guarding against client/server drift. Frames entered in quick mode have no log.
 - `winner` is a PostgreSQL enum mapped from lowercase API values: `player`,
   `opponent`, `unknown`.
 - CueTracker import stores frame scores after normalizing the page's

@@ -1058,6 +1058,51 @@
     }
   },
   "matches": {
+    "type": {
+      "match": "Матч",
+      "sparring": "Спаринг",
+      "newSparring": "Новый спаринг",
+      "editSparring": "Редактировать спаринг"
+    },
+    "scorer": {
+      "modeQuick": "Быстро",
+      "modeDetailed": "Детально",
+      "modeDetailedHint": "Записывайте удары по шарам — счёт, брейк и победитель считаются автоматически по правилам снукера.",
+      "atTable": "У стола",
+      "break": "Брейк",
+      "highBreak": "High break",
+      "phase": "Фаза",
+      "phaseReds": "Красные и цвета",
+      "phaseColors": "Чистка цветов",
+      "remainingReds": "Осталось красных",
+      "nextOn": "Очередь:",
+      "foul": "Фол",
+      "freeBall": "Free ball",
+      "safety": "Safety",
+      "miss": "Промах",
+      "undo": "Отменить",
+      "rerack": "Заново",
+      "save": "Сохранить фрейм",
+      "map": "Карта",
+      "mapTitle": "Карта фрейма {number}",
+      "mapEmpty": "Нет забитых шаров.",
+      "frameOver": "Фрейм завершён",
+      "balls": {
+        "red": "Красный",
+        "yellow": "Жёлтый",
+        "green": "Зелёный",
+        "brown": "Коричневый",
+        "blue": "Синий",
+        "pink": "Розовый",
+        "black": "Чёрный"
+      }
+    },
+    "progress": {
+      "bestOf": "до {target}",
+      "frameBall": "Фрейм-болл",
+      "matchBall": "Матч-болл",
+      "decider": "Решающий"
+    },
     "title": "Матчи",
     "subtitle": "Ручной журнал матчей, фреймов и ключевой статистики.",
     "authRequired": "Войдите, чтобы вести журнал матчей.",
@@ -1092,6 +1137,7 @@
     "fields": {
       "matchDate": "Дата",
       "opponentName": "Соперник",
+      "sparringPartner": "Спаринг-партнёр",
       "tournament": "Турнир",
       "round": "Раунд",
       "format": "Формат",
