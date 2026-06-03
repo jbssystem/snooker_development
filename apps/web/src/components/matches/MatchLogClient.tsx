@@ -13,7 +13,8 @@ import type {
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
-import { PageHeader } from '@/components/ui';
+import { Modal } from '@/components/layout/Modal';
+import { Field, PageHeader, PlusIcon } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -97,6 +98,7 @@ export function MatchLogClient() {
   const frameForm = useForm<FrameFormValues>({ defaultValues: frameDefaultValues });
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   const profileQuery = useQuery({
     queryKey: ['player-profile', token],
@@ -130,6 +132,7 @@ export function MatchLogClient() {
     mutationFn: (input: CreateMatchInput) => api.matches.create(token ?? '', input),
     onSuccess: (match) => {
       setServerError(null);
+      setShowCreate(false);
       setActiveMatchId(match.id);
       matchForm.reset(matchDefaultValues);
       queryClient.invalidateQueries({ queryKey: ['matches', token] });
@@ -164,11 +167,15 @@ export function MatchLogClient() {
   const profileMissing = profileQuery.data === null;
 
   return (
-    <main className="grid gap-8 xl:grid-cols-[310px_minmax(0,1fr)_380px]">
+    <main className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
       <aside className="surface rounded-xl p-5">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
-        <div className="mt-5 grid gap-2">
+        <button className="btn-primary mt-5 w-full" onClick={() => { setServerError(null); setShowCreate(true); }} type="button">
+          <PlusIcon className="h-4 w-4" />
+          {t('newMatch.open')}
+        </button>
+        <div className="mt-4 grid gap-2">
           {matches.map((match) => (
             <button
               key={match.id}
@@ -194,7 +201,7 @@ export function MatchLogClient() {
         </div>
       </aside>
 
-      <section className="order-first min-w-0 xl:order-none">
+      <section className="order-first min-w-0 lg:order-none">
         {profileMissing && (
           <div className="mb-5 rounded-lg border border-state-warning/40 bg-state-warning/10 p-5 text-text-secondary">
             <h2 className="text-lg font-semibold text-text-primary">{t('profileRequired.title')}</h2>
@@ -222,12 +229,12 @@ export function MatchLogClient() {
         )}
       </section>
 
-      <aside className="content-start">
-        <AccordionSection defaultOpen testId="match-create-form" title={t('form.title')}>
-          <form
-            className="grid gap-4"
-            onSubmit={matchForm.handleSubmit((values) => createMatch.mutate(toCreateMatchInput(values)))}
-          >
+      <Modal closeLabel={t('newMatch.close')} onClose={() => setShowCreate(false)} open={showCreate} title={t('form.title')}>
+        <form
+          className="grid gap-4"
+          onSubmit={matchForm.handleSubmit((values) => createMatch.mutate(toCreateMatchInput(values)))}
+        >
+          <FormSection title={t('newMatch.sections.main')}>
             <Field error={matchForm.formState.errors.opponentName?.message} hint={t('hints.opponentName')} label={t('fields.opponentName')}>
               <input
                 className={inputClass}
@@ -246,13 +253,12 @@ export function MatchLogClient() {
                 <input className={inputClass} min={0} type="number" {...matchForm.register('framesLost')} />
               </Field>
             </div>
+          </FormSection>
+
+          <FormSection title={t('newMatch.sections.context')}>
             <div className="grid grid-cols-2 gap-3">
               <Field hint={t('hints.tournament')} label={t('fields.tournament')}>
-                <input
-                  className={inputClass}
-                  placeholder={t('placeholders.tournament')}
-                  {...matchForm.register('tournament')}
-                />
+                <input className={inputClass} placeholder={t('placeholders.tournament')} {...matchForm.register('tournament')} />
               </Field>
               <Field hint={t('hints.round')} label={t('fields.round')}>
                 <input className={inputClass} placeholder={t('placeholders.round')} {...matchForm.register('round')} />
@@ -262,6 +268,20 @@ export function MatchLogClient() {
               <input className={inputClass} placeholder={t('placeholders.format')} {...matchForm.register('format')} />
             </Field>
             <div className="grid grid-cols-3 gap-2">
+              <Field hint={t('hints.country')} label={t('fields.country')}>
+                <input className={inputClass} placeholder={t('placeholders.country')} {...matchForm.register('country')} />
+              </Field>
+              <Field hint={t('hints.city')} label={t('fields.city')}>
+                <input className={inputClass} placeholder={t('placeholders.city')} {...matchForm.register('city')} />
+              </Field>
+              <Field hint={t('hints.club')} label={t('fields.club')}>
+                <input className={inputClass} placeholder={t('placeholders.club')} {...matchForm.register('club')} />
+              </Field>
+            </div>
+          </FormSection>
+
+          <FormSection title={t('newMatch.sections.stats')}>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Field hint={t('hints.count')} label={t('fields.highBreak')}>
                 <input className={inputClass} min={0} type="number" {...matchForm.register('highBreak')} />
               </Field>
@@ -271,30 +291,17 @@ export function MatchLogClient() {
               <Field hint={t('hints.count')} label={t('fields.breaks70')}>
                 <input className={inputClass} min={0} type="number" {...matchForm.register('breaks70')} />
               </Field>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
               <Field hint={t('hints.count')} label={t('fields.breaks100')}>
                 <input className={inputClass} min={0} type="number" {...matchForm.register('breaks100')} />
               </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Field hint={t('hints.percent')} label={t('fields.safetySuccess')}>
                 <input className={inputClass} max={100} min={0} type="number" {...matchForm.register('safetySuccess')} />
               </Field>
               <Field hint={t('hints.percent')} label={t('fields.longPotSuccess')}>
                 <input className={inputClass} max={100} min={0} type="number" {...matchForm.register('longPotSuccess')} />
               </Field>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field hint={t('hints.country')} label={t('fields.country')}>
-                <input className={inputClass} placeholder={t('placeholders.country')} {...matchForm.register('country')} />
-              </Field>
-              <Field hint={t('hints.city')} label={t('fields.city')}>
-                <input className={inputClass} placeholder={t('placeholders.city')} {...matchForm.register('city')} />
-              </Field>
-            </div>
-            <Field hint={t('hints.club')} label={t('fields.club')}>
-              <input className={inputClass} placeholder={t('placeholders.club')} {...matchForm.register('club')} />
-            </Field>
-            <div className="grid grid-cols-2 gap-3">
               <Field hint={t('hints.count')} label={t('fields.unforcedErrors')}>
                 <input className={inputClass} min={0} type="number" {...matchForm.register('unforcedErrors')} />
               </Field>
@@ -302,6 +309,9 @@ export function MatchLogClient() {
                 <input className={inputClass} min={0} type="number" {...matchForm.register('tacticalErrors')} />
               </Field>
             </div>
+          </FormSection>
+
+          <FormSection title={t('newMatch.sections.links')}>
             <Field hint={t('hints.videoUrl')} label={t('fields.videoUrl')}>
               <input className={inputClass} placeholder={t('placeholders.videoUrl')} {...matchForm.register('videoUrl')} />
             </Field>
@@ -309,24 +319,30 @@ export function MatchLogClient() {
               <input className={inputClass} placeholder={t('placeholders.sourceUrl')} {...matchForm.register('sourceUrl')} />
             </Field>
             <Field hint={t('hints.notes')} label={t('fields.notes')}>
-              <textarea
-                className={`${inputClass} min-h-20`}
-                placeholder={t('placeholders.notes')}
-                {...matchForm.register('notes')}
-              />
+              <textarea className={`${inputClass} min-h-20`} placeholder={t('placeholders.notes')} {...matchForm.register('notes')} />
             </Field>
-            {serverError && (
-              <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
-                {serverError}
-              </p>
-            )}
-            <button className={primaryButtonClass} disabled={createMatch.isPending || profileMissing} type="submit">
-              {createMatch.isPending ? t('saving') : t('form.submit')}
-            </button>
-          </form>
-        </AccordionSection>
-      </aside>
+          </FormSection>
+
+          {serverError && (
+            <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
+              {serverError}
+            </p>
+          )}
+          <button className={`${primaryButtonClass} w-full justify-center`} disabled={createMatch.isPending || profileMissing} type="submit">
+            {createMatch.isPending ? t('saving') : t('form.submit')}
+          </button>
+        </form>
+      </Modal>
     </main>
+  );
+}
+
+function FormSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <fieldset className="grid gap-3 rounded-lg border border-border-subtle p-3">
+      <legend className="px-1 text-xs font-medium uppercase tracking-wide text-brand-accent">{title}</legend>
+      {children}
+    </fieldset>
   );
 }
 
@@ -453,27 +469,6 @@ function MatchDetail({
         </form>
       </AccordionSection>
     </div>
-  );
-}
-
-function Field({
-  children,
-  error,
-  hint,
-  label,
-}: {
-  children: ReactNode;
-  error?: string | undefined;
-  hint?: string | undefined;
-  label: string;
-}) {
-  return (
-    <label className="grid gap-1 text-sm text-text-secondary">
-      <span>{label}</span>
-      {children}
-      {hint && <span className="text-xs leading-5 text-text-disabled">{hint}</span>}
-      {error && <span className="text-xs text-state-error">{error}</span>}
-    </label>
   );
 }
 

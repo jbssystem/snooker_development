@@ -19,6 +19,22 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Matches page redesign + tooltip fields (2026-06-03)
+
+**Delivered:**
+
+- New `Field` + `InfoTooltip` primitives: field hints moved from a permanent
+  helper line under each input to a "?" tooltip next to the label (hover / tap /
+  keyboard, Escape-closable). Keeps dense forms uncluttered.
+- Matches page de-cluttered: dropped the permanent third column; the long
+  create-match form now opens in a `Modal` (triggered by a "+ New match" button
+  in the list rail) and is grouped into Basics / Context / Statistics /
+  Links sections. Page is now a two-column list + detail; detail still comes
+  first on mobile. Verified desktop + modal + tooltip with Playwright.
+- i18n: `matches.newMatch.{open,close,sections.*}` in ru/en/uk.
+
+Pattern to roll out to the other forms once approved.
+
 ### Site-wide redesign — foundation + dashboard (2026-06-03)
 
 Goal: a more modern, tablet/mobile-friendly, less-cluttered, subscription-grade

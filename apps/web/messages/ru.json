@@ -1053,6 +1053,16 @@
       "title": "Новый матч",
       "submit": "Сохранить матч"
     },
+    "newMatch": {
+      "open": "Новый матч",
+      "close": "Закрыть",
+      "sections": {
+        "main": "Основное",
+        "context": "Контекст",
+        "stats": "Статистика",
+        "links": "Ссылки и заметки"
+      }
+    },
     "fields": {
       "matchDate": "Дата",
       "opponentName": "Соперник",

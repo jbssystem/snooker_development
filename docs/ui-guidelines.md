@@ -86,6 +86,11 @@ Delivered so far (under `apps/web/src/components/layout/`):
 - Ambient depth: `globals.css` paints a fixed brand radial glow behind content;
   surfaces use the `.surface` / `.surface-hover` classes for consistent
   elevation.
+- `Field` + `InfoTooltip` — labelled control where the helper text is surfaced
+  through a "?" tooltip next to the label (hover on pointer, tap/Enter on touch,
+  Escape/blur closes) instead of a permanent helper line under every input. Use
+  `Field` from `components/ui` for dense forms to keep them uncluttered. The
+  matches page is the reference implementation; roll out to other forms next.
 - `Modal` — client component for occasional forms/dialogs (bottom-sheet on
   mobile, centered card on >= sm). Backdrop click + Escape close, body scroll
   lock. Used for the training "new session" form so it does not occupy a

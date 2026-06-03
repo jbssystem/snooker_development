@@ -1053,6 +1053,16 @@
       "title": "New match",
       "submit": "Save match"
     },
+    "newMatch": {
+      "open": "New match",
+      "close": "Close",
+      "sections": {
+        "main": "Basics",
+        "context": "Context",
+        "stats": "Statistics",
+        "links": "Links & notes"
+      }
+    },
     "fields": {
       "matchDate": "Date",
       "opponentName": "Opponent",
