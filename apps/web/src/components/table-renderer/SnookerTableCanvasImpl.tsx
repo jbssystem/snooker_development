@@ -122,13 +122,10 @@ export function SnookerTableCanvasImpl({
           {layout.shotPaths.map((path) => (
             <ShotPathShape
               key={path.id}
-              editable={editable}
               scale={stageSize.scale}
               selected={selectedSet.has(path.id)}
               toCanvas={toCanvas}
-              toDomain={toDomain}
               path={path}
-              onChange={(next) => onPathChange?.(path.id, next)}
               onSelect={() => onSelectionChange?.([path.id])}
             />
           ))}
@@ -159,10 +156,97 @@ export function SnookerTableCanvasImpl({
               onSelect={() => onSelectionChange?.([ball.id])}
             />
           ))}
+
+          {editable && (
+            <EditHandles
+              layout={layout}
+              selectedId={selectedIds[0]}
+              toCanvas={toCanvas}
+              toDomain={toDomain}
+              onPathChange={onPathChange}
+              onZoneChange={onZoneChange}
+            />
+          )}
         </Layer>
       </Stage>
     </div>
   );
+}
+
+/** Grab handles for the selected element, drawn on top of every shape so they
+ * are always reachable (like the selection handles on a Miro board). */
+function EditHandles({
+  layout,
+  selectedId,
+  toCanvas,
+  toDomain,
+  onPathChange,
+  onZoneChange,
+}: {
+  layout: SnookerTableCanvasProps['layout'];
+  selectedId: string | undefined;
+  toCanvas: (point: Point) => Point;
+  toDomain: (point: Point) => Point;
+  onPathChange?: ((id: string, next: ShotPath) => void) | undefined;
+  onZoneChange?: ((id: string, next: TargetZone) => void) | undefined;
+}) {
+  if (!selectedId) return null;
+
+  const path = layout.shotPaths.find((item) => item.id === selectedId);
+  if (path) {
+    const from = toCanvas(path.from);
+    const to = toCanvas(path.to);
+    return (
+      <>
+        <DragHandle x={from.x} y={from.y} onDragMove={(canvas) => onPathChange?.(path.id, { ...path, from: toDomain(canvas) })} />
+        <DragHandle x={to.x} y={to.y} onDragMove={(canvas) => onPathChange?.(path.id, { ...path, to: toDomain(canvas) })} />
+      </>
+    );
+  }
+
+  const zone = layout.targetZones.find((item) => item.id === selectedId);
+  if (zone && zone.type === 'circle') {
+    const center = toCanvas(zone);
+    const edge = toCanvas({ x: zone.x + zone.radius, y: zone.y });
+    return (
+      <>
+        <DragHandle x={center.x} y={center.y} onDragMove={(canvas) => onZoneChange?.(zone.id, { ...zone, ...toDomain(canvas) })} />
+        <DragHandle
+          variant="resize"
+          x={edge.x}
+          y={center.y}
+          onDragMove={(canvas) => onZoneChange?.(zone.id, { ...zone, radius: Math.max(40, Math.abs(toDomain(canvas).x - zone.x)) })}
+        />
+      </>
+    );
+  }
+  if (zone && zone.type === 'rectangle') {
+    const center = toCanvas({ x: zone.x + zone.width / 2, y: zone.y + zone.height / 2 });
+    const corner = toCanvas({ x: zone.x + zone.width, y: zone.y + zone.height });
+    return (
+      <>
+        <DragHandle
+          x={center.x}
+          y={center.y}
+          onDragMove={(canvas) => {
+            const next = toDomain(canvas);
+            onZoneChange?.(zone.id, { ...zone, x: next.x - zone.width / 2, y: next.y - zone.height / 2 });
+          }}
+        />
+        <DragHandle
+          variant="resize"
+          x={corner.x}
+          y={corner.y}
+          onDragMove={(canvas) => {
+            const next = toDomain(canvas);
+            onZoneChange?.(zone.id, { ...zone, width: Math.max(40, next.x - zone.x), height: Math.max(40, next.y - zone.y) });
+          }}
+        />
+      </>
+    );
+  }
+
+  return null;
 }
 
 function TableGuides({ dimensions, scale, toCanvas }: { dimensions: { width: number; height: number }; scale: number; toCanvas: (point: Point) => Point }) {
@@ -199,18 +283,36 @@ function Pockets({ dimensions, scale, toCanvas }: { dimensions: { width: number;
   );
 }
 
-function DragHandle({ x, y, onDragMove }: { x: number; y: number; onDragMove: (canvas: Point) => void }) {
+function DragHandle({
+  x,
+  y,
+  variant = 'move',
+  onDragMove,
+}: {
+  x: number;
+  y: number;
+  variant?: 'move' | 'resize';
+  onDragMove: (canvas: Point) => void;
+}) {
   return (
-    <Circle
+    <Group
       draggable
-      fill={HANDLE}
-      radius={7}
-      stroke="#1F2630"
-      strokeWidth={2}
       x={x}
       y={y}
       onDragMove={(event) => onDragMove({ x: event.target.x(), y: event.target.y() })}
-    />
+      onMouseEnter={(event) => {
+        const stage = event.target.getStage();
+        if (stage) stage.container().style.cursor = variant === 'resize' ? 'nwse-resize' : 'grab';
+      }}
+      onMouseLeave={(event) => {
+        const stage = event.target.getStage();
+        if (stage) stage.container().style.cursor = 'default';
+      }}
+    >
+      {/* Large invisible hit area so the handle is easy to grab. */}
+      <Circle radius={18} fill="#000" opacity={0.001} />
+      <Circle fill="#F5F1E6" radius={9} shadowBlur={5} shadowColor="rgba(0,0,0,0.55)" stroke={HANDLE} strokeWidth={3} />
+    </Group>
   );
 }
 
@@ -258,17 +360,6 @@ function TargetZoneShape({
           }}
         />
         {zone.label && <ZoneLabel scale={scale} text={zone.label} x={center.x} y={center.y} />}
-        {editable && selected && (
-          <DragHandle
-            x={center.x + radius}
-            y={center.y}
-            onDragMove={(canvas) => {
-              const domain = toDomain(canvas);
-              const nextRadius = Math.max(40, Math.abs(domain.x - zone.x));
-              onChange({ ...zone, radius: nextRadius });
-            }}
-          />
-        )}
       </>
     );
   }
@@ -295,16 +386,6 @@ function TargetZoneShape({
           }}
         />
         {zone.label && <ZoneLabel scale={scale} text={zone.label} x={(topLeft.x + end.x) / 2} y={(topLeft.y + end.y) / 2} />}
-        {editable && selected && (
-          <DragHandle
-            x={end.x}
-            y={end.y}
-            onDragMove={(canvas) => {
-              const domain = toDomain(canvas);
-              onChange({ ...zone, width: Math.max(40, domain.x - zone.x), height: Math.max(40, domain.y - zone.y) });
-            }}
-          />
-        )}
       </>
     );
   }
@@ -330,22 +411,16 @@ function ZoneLabel({ text, x, y, scale }: { text: string; x: number; y: number; 
 }
 
 function ShotPathShape({
-  editable,
   scale,
   selected,
   toCanvas,
-  toDomain,
   path,
-  onChange,
   onSelect,
 }: {
-  editable: boolean;
   scale: number;
   selected: boolean;
   toCanvas: (point: Point) => Point;
-  toDomain: (point: Point) => Point;
   path: ShotPath;
-  onChange: (next: ShotPath) => void;
   onSelect: () => void;
 }) {
   const from = toCanvas(path.from);
@@ -357,7 +432,7 @@ function ShotPathShape({
       <Arrow
         dash={[10, 8]}
         fill={selected ? '#F5F1E6' : HANDLE}
-        hitStrokeWidth={16}
+        hitStrokeWidth={20}
         pointerLength={10}
         pointerWidth={8}
         points={points}
@@ -367,12 +442,6 @@ function ShotPathShape({
         onTap={onSelect}
       />
       {path.label && <Text fill="#E9E6DF" fontSize={Math.max(10, 34 * scale)} listening={false} text={path.label} x={mid.x + 6} y={mid.y - 18} />}
-      {editable && selected && (
-        <>
-          <DragHandle x={from.x} y={from.y} onDragMove={(canvas) => onChange({ ...path, from: toDomain(canvas) })} />
-          <DragHandle x={to.x} y={to.y} onDragMove={(canvas) => onChange({ ...path, to: toDomain(canvas) })} />
-        </>
-      )}
     </>
   );
 }

@@ -15,7 +15,7 @@ import type {
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
-import { Field, PageHeader } from '@/components/ui';
+import { Field, InfoTooltip, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillTemplate } from '@/lib/drill-localization';
@@ -286,53 +286,48 @@ export function DrillLibraryClient() {
 
           <section className="grid gap-3 rounded-md border border-border-subtle bg-background-primary p-3">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="font-medium text-text-primary">{t('metrics.title')}</h3>
+              <span className="flex items-center gap-1.5 font-medium text-text-primary">
+                {t('metrics.title')}
+                <InfoTooltip label={t('metrics.title')} text={t('metrics.examples')} />
+              </span>
               <button className={secondaryButtonClass} onClick={() => setMetrics((items) => [...items, emptyMetric()])} type="button">
                 {t('metrics.add')}
               </button>
             </div>
+            {metrics.length === 0 && <p className="text-xs text-text-disabled">{t('metrics.empty')}</p>}
             {metrics.map((metric, index) => (
-              <div key={index} className="grid gap-2 rounded-md border border-border-subtle p-3">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <input
-                    className={inputClass}
-                    placeholder={t('metrics.key')}
-                    value={metric.key}
-                    onChange={(e) => updateMetric(index, { key: e.target.value }, setMetrics)}
-                  />
-                  <input
-                    className={inputClass}
-                    placeholder={t('metrics.label')}
-                    value={metric.label}
-                    onChange={(e) => updateMetric(index, { label: e.target.value }, setMetrics)}
-                  />
-                </div>
-                <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-                  <select
-                    className={inputClass}
-                    value={metric.type}
-                    onChange={(e) => updateMetric(index, { type: e.target.value as DrillMetricType }, setMetrics)}
-                  >
-                    {metricTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {t(`metricTypes.${type}`)}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    className={inputClass}
-                    placeholder={t('metrics.unit')}
-                    value={metric.unit}
-                    onChange={(e) => updateMetric(index, { unit: e.target.value }, setMetrics)}
-                  />
-                  <button
-                    className="min-h-11 rounded-md border border-border-subtle px-2 text-sm text-text-secondary hover:border-state-error hover:text-state-error"
-                    onClick={() => setMetrics((items) => items.filter((_, itemIndex) => itemIndex !== index))}
-                    type="button"
-                  >
-                    {t('metrics.remove')}
-                  </button>
-                </div>
+              <div key={index} className="grid grid-cols-[minmax(0,1fr)_7.5rem_4.5rem_auto] items-center gap-2">
+                <input
+                  className={inputClass}
+                  placeholder={t('metrics.label')}
+                  value={metric.label}
+                  onChange={(e) => updateMetric(index, { label: e.target.value }, setMetrics)}
+                />
+                <select
+                  className={inputClass}
+                  value={metric.type}
+                  onChange={(e) => updateMetric(index, { type: e.target.value as DrillMetricType }, setMetrics)}
+                >
+                  {metricTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {t(`metricTypes.${type}`)}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className={inputClass}
+                  placeholder={t('metrics.unit')}
+                  value={metric.unit}
+                  onChange={(e) => updateMetric(index, { unit: e.target.value }, setMetrics)}
+                />
+                <button
+                  aria-label={t('metrics.remove')}
+                  className="flex h-11 w-9 items-center justify-center rounded-md border border-border-subtle text-text-secondary transition hover:border-state-error hover:text-state-error"
+                  onClick={() => setMetrics((items) => items.filter((_, itemIndex) => itemIndex !== index))}
+                  type="button"
+                >
+                  ×
+                </button>
               </div>
             ))}
           </section>
@@ -457,6 +452,16 @@ function emptyMetric(): MetricRow {
   return { key: '', label: '', type: 'number', unit: '', required: false };
 }
 
+// Auto-derive a stable metric key from its label (latin slug), falling back to a
+// positional key so non-latin labels still get a unique id.
+function slugifyMetric(label: string, index: number): string {
+  const slug = label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return slug || `metric_${index + 1}`;
+}
+
 function parseTags(value: string): string[] {
   return value
     .split(',')
@@ -479,9 +484,9 @@ function buildTemplateInput(values: FormValues, metrics: MetricRow[], layout: Ta
     metricsSchema: {
       version: 1,
       metrics: metrics
-        .filter((metric) => metric.key.trim() && metric.label.trim())
-        .map((metric) => ({
-          key: metric.key.trim(),
+        .filter((metric) => metric.label.trim())
+        .map((metric, index) => ({
+          key: metric.key.trim() || slugifyMetric(metric.label, index),
           label: metric.label.trim(),
           type: metric.type,
           unit: metric.unit.trim() || undefined,

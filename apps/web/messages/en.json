@@ -895,7 +895,9 @@
       "remove": "Remove",
       "key": "Key",
       "label": "Label",
-      "unit": "Unit"
+      "unit": "Unit",
+      "empty": "No metrics yet — add what to record per attempt.",
+      "examples": "What to track in the drill. Examples: \"Pots\" (number), \"Position hit\" (yes/no), \"Success\" (%), \"Pre-shot time\" (ms). Unit is optional."
     },
     "defaultMetrics": {
       "attempts": "Attempts",
