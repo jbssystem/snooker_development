@@ -1,11 +1,19 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { HttpErrorFilter } from './common/filters/http-error.filter';
 
+// Photo → ball-map sends a base64-encoded JPEG, which easily exceeds Express's
+// default 100 KB JSON body limit. Disable the default parser and re-register it
+// with a larger cap aligned to RecognizeLayoutInputSchema's ~12 MB image bound.
+const BODY_LIMIT = '15mb';
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
+  app.useBodyParser('json', { limit: BODY_LIMIT });
+  app.useBodyParser('urlencoded', { extended: true, limit: BODY_LIMIT });
   const configService = app.get(ConfigService);
   if (configService.get<string>('NODE_ENV') === 'production') {
     const express = app.getHttpAdapter().getInstance() as { set?: (name: string, value: unknown) => void };
