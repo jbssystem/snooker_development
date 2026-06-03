@@ -44,6 +44,8 @@ export interface ShotPath {
   from: Point;
   to: Point;
   cushions?: Point[] | undefined;
+  /** Line rendering style; defaults to a dashed aiming line when omitted. */
+  style?: 'solid' | 'dashed' | undefined;
   label?: string | undefined;
 }
 

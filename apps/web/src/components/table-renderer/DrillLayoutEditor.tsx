@@ -24,6 +24,10 @@ import {
 import { SnookerTableCanvas, type SnookerTableCanvasHandle } from './SnookerTableCanvas';
 
 const BALL_COLORS: BallColor[] = ['white', 'red', 'yellow', 'green', 'brown', 'blue', 'pink', 'black'];
+type ZoneShape = 'circle' | 'rectangle' | 'square';
+const ZONE_SHAPES: ZoneShape[] = ['circle', 'rectangle', 'square'];
+type PathStyle = NonNullable<ShotPath['style']>;
+const PATH_STYLES: PathStyle[] = ['dashed', 'solid'];
 
 export function DrillLayoutEditor({
   value,
@@ -151,6 +155,65 @@ export function DrillLayoutEditor({
               value={(selected.element as TableAnnotation).text}
             />
           )}
+          {selected.kind === 'zone' && (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs text-text-disabled">{t('editor.zoneShape.title')}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {ZONE_SHAPES.map((shape) => (
+                  <button
+                    key={shape}
+                    aria-pressed={zoneShapeOf(selected.element as TargetZone) === shape}
+                    className={toggleButtonClass(zoneShapeOf(selected.element as TargetZone) === shape)}
+                    onClick={() => setZoneShape(value, onChange, selected.id, selected.element as TargetZone, shape)}
+                    type="button"
+                  >
+                    {t(`editor.zoneShape.${shape}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {selected.kind === 'path' && (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs text-text-disabled">{t('editor.pathKind.title')}</span>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    aria-pressed={!hasCushion(selected.element as ShotPath)}
+                    className={toggleButtonClass(!hasCushion(selected.element as ShotPath))}
+                    onClick={() => setPathBank(value, onChange, selected.id, selected.element as ShotPath, false)}
+                    type="button"
+                  >
+                    {t('editor.pathKind.direct')}
+                  </button>
+                  <button
+                    aria-pressed={hasCushion(selected.element as ShotPath)}
+                    className={toggleButtonClass(hasCushion(selected.element as ShotPath))}
+                    onClick={() => setPathBank(value, onChange, selected.id, selected.element as ShotPath, true)}
+                    type="button"
+                  >
+                    {t('editor.pathKind.bank')}
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs text-text-disabled">{t('editor.pathStyle.title')}</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {PATH_STYLES.map((style) => (
+                    <button
+                      key={style}
+                      aria-pressed={((selected.element as ShotPath).style ?? 'dashed') === style}
+                      className={toggleButtonClass(((selected.element as ShotPath).style ?? 'dashed') === style)}
+                      onClick={() => updatePath(value, onChange, selected.id, { ...(selected.element as ShotPath), style })}
+                      type="button"
+                    >
+                      {t(`editor.pathStyle.${style}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           {(selected.kind === 'zone' || selected.kind === 'path') && (
             <input
               className={inputClass}
@@ -259,6 +322,13 @@ const secondaryButtonClass =
   'rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-50';
 const chipButtonClass =
   'rounded-full border border-border-subtle px-3 py-1.5 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary';
+function toggleButtonClass(active: boolean): string {
+  return `rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
+    active
+      ? 'border-brand-accent bg-brand-accent/15 text-brand-accent'
+      : 'border-border-subtle text-text-secondary hover:border-brand-accent/60 hover:text-text-primary'
+  }`;
+}
 const stepperButtonClass =
   'flex h-10 w-10 items-center justify-center rounded-md border border-border-subtle text-lg text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40';
 
@@ -332,6 +402,74 @@ function updateZone(layout: TableLayout, onChange: (layout: TableLayout) => void
 
 function updatePath(layout: TableLayout, onChange: (layout: TableLayout) => void, id: string, next: ShotPath): void {
   onChange({ ...layout, shotPaths: layout.shotPaths.map((path) => (path.id === id ? next : path)) });
+}
+
+// A rectangle whose sides match is shown as a "square" in the shape toggle so the
+// user can tell the two rectangle variants apart at a glance.
+function zoneShapeOf(zone: TargetZone): ZoneShape {
+  if (zone.type === 'circle') return 'circle';
+  if (zone.type === 'rectangle') return Math.abs(zone.width - zone.height) < 1 ? 'square' : 'rectangle';
+  return 'rectangle';
+}
+
+// Convert the selected zone to another shape, preserving its centre and roughly its
+// footprint so the change feels like a reshape rather than a reset.
+function setZoneShape(
+  layout: TableLayout,
+  onChange: (layout: TableLayout) => void,
+  id: string,
+  zone: TargetZone,
+  shape: ZoneShape,
+): void {
+  if (zoneShapeOf(zone) === shape) return;
+  const center = zoneCenter(zone);
+  const extent = zoneExtent(zone); // half-size of the current footprint
+  let next: TargetZone;
+  if (shape === 'circle') {
+    next = { id, type: 'circle', x: center.x, y: center.y, radius: extent, label: zone.label };
+  } else {
+    const height = extent * 2;
+    const width = shape === 'square' ? height : height * 1.4;
+    next = { id, type: 'rectangle', x: center.x - width / 2, y: center.y - height / 2, width, height, label: zone.label };
+  }
+  updateZone(layout, onChange, id, next);
+}
+
+function zoneCenter(zone: TargetZone): Point {
+  if (zone.type === 'circle') return { x: zone.x, y: zone.y };
+  if (zone.type === 'rectangle') return { x: zone.x + zone.width / 2, y: zone.y + zone.height / 2 };
+  const xs = zone.points.map((p) => p.x);
+  const ys = zone.points.map((p) => p.y);
+  return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
+}
+
+function zoneExtent(zone: TargetZone): number {
+  if (zone.type === 'circle') return zone.radius;
+  if (zone.type === 'rectangle') return Math.min(zone.width, zone.height) / 2;
+  return 240;
+}
+
+function hasCushion(path: ShotPath): boolean {
+  return (path.cushions?.length ?? 0) > 0;
+}
+
+// Toggle a bank shot: drop a single cushion bounce at the midpoint (so it reads as a
+// deliberate kick) or strip the cushions to return to a direct line.
+function setPathBank(
+  layout: TableLayout,
+  onChange: (layout: TableLayout) => void,
+  id: string,
+  path: ShotPath,
+  bank: boolean,
+): void {
+  if (bank === hasCushion(path)) return;
+  if (!bank) {
+    const { cushions: _cushions, ...rest } = path;
+    updatePath(layout, onChange, id, rest);
+    return;
+  }
+  const mid = { x: (path.from.x + path.to.x) / 2, y: (path.from.y + path.to.y) / 2 };
+  updatePath(layout, onChange, id, { ...path, cushions: [mid] });
 }
 
 function updateAnnotation(layout: TableLayout, onChange: (layout: TableLayout) => void, id: string, next: TableAnnotation): void {

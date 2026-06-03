@@ -68,6 +68,9 @@ const metricTypes: DrillMetricType[] = ['number', 'boolean', 'percentage', 'time
 type VisibilityFilter = 'all' | DrillVisibility;
 const visibilityFilters: VisibilityFilter[] = ['all', 'private', 'system', 'shared'];
 
+type FormTab = 'details' | 'metrics' | 'table';
+const formTabs: FormTab[] = ['details', 'metrics', 'table'];
+
 const defaultValues: FormValues = {
   name: '',
   category: 'potting',
@@ -99,6 +102,7 @@ export function DrillLibraryClient() {
   const [categoryFilter, setCategoryFilter] = useState<DrillCategory | 'all'>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<DrillDifficulty | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
+  const [formTab, setFormTab] = useState<FormTab>('details');
   const form = useForm<FormValues>({ defaultValues });
 
   const templatesQuery = useQuery({
@@ -142,6 +146,7 @@ export function DrillLibraryClient() {
     setPhotoError(null);
     setImportingPhoto(false);
     setShowForm(false);
+    setFormTab('details');
     form.reset(defaultValues);
     setMetrics([
       { key: 'attempts', label: t('defaultMetrics.attempts'), type: 'number', unit: '', required: true },
@@ -186,6 +191,7 @@ export function DrillLibraryClient() {
     const source = clone ? localizeDrillTemplate(template, tSystemDrills) : template;
     setEditingId(clone ? null : template.id);
     setServerError(null);
+    setFormTab('details');
     form.reset({
       name: clone ? `${source.name} (${t('copySuffix')})` : source.name,
       category: source.category,
@@ -268,17 +274,16 @@ export function DrillLibraryClient() {
 
       {templates.length > 0 && (
         <div className="mb-5 flex flex-wrap items-center gap-2" role="group" aria-label={t('filter.label')}>
-          {visibilityFilters.map((filter) => (
-            <FilterChip
-              key={filter}
-              active={visibilityFilter === filter}
-              count={visibilityCounts[filter]}
-              label={filter === 'all' ? t('filter.all') : t(`visibility.${filter}`)}
-              onClick={() => setVisibilityFilter(filter)}
-            />
-          ))}
-
-          <span aria-hidden className="mx-1 hidden h-6 w-px bg-border-subtle sm:block" />
+          <FilterSelect
+            active={visibilityFilter !== 'all'}
+            label={t('filter.label')}
+            options={visibilityFilters.map((filter) => ({
+              value: filter,
+              label: `${filter === 'all' ? t('filter.all') : t(`visibility.${filter}`)} (${visibilityCounts[filter]})`,
+            }))}
+            onChange={(value) => setVisibilityFilter(value as VisibilityFilter)}
+            value={visibilityFilter}
+          />
 
           <FilterSelect
             active={categoryFilter !== 'all'}
@@ -355,81 +360,104 @@ export function DrillLibraryClient() {
         open={showForm}
         title={editingId ? t('form.editTitle') : t('form.title')}
       >
-        <form className="grid gap-4" data-testid="drill-template-form" onSubmit={form.handleSubmit(submitTemplate)}>
+        <form className="grid gap-4" data-testid="drill-template-form" onSubmit={form.handleSubmit(submitTemplate, () => setFormTab('details'))}>
           {editingId && <p className="text-sm text-text-secondary">{t('form.editingSubtitle')}</p>}
-          <Field error={form.formState.errors.name?.message} hint={t('hints.name')} label={t('fields.name')}>
-            <input
-              className={inputClass}
-              placeholder={t('placeholders.name')}
-              {...form.register('name', { required: t('required') })}
-            />
-          </Field>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field hint={t('hints.category')} label={t('fields.category')}>
-              <select className={inputClass} {...form.register('category')}>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {t(`categories.${category}`)}
-                  </option>
-                ))}
-              </select>
+          <div className="flex gap-1 rounded-lg bg-background-primary p-1" role="tablist">
+            {formTabs.map((tab) => (
+              <button
+                key={tab}
+                aria-selected={formTab === tab}
+                className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
+                  formTab === tab
+                    ? 'bg-background-elevated text-brand-accent shadow-[0_0_0_1px_rgba(25,169,116,0.25)]'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+                onClick={() => setFormTab(tab)}
+                role="tab"
+                type="button"
+              >
+                {t(`form.tabs.${tab}`)}
+              </button>
+            ))}
+          </div>
+
+          <div className={formTab === 'details' ? 'grid gap-4' : 'hidden'}>
+            <Field error={form.formState.errors.name?.message} hint={t('hints.name')} label={t('fields.name')}>
+              <input
+                className={inputClass}
+                placeholder={t('placeholders.name')}
+                {...form.register('name', { required: t('required') })}
+              />
             </Field>
-            <Field hint={t('hints.difficulty')} label={t('fields.difficulty')}>
-              <select className={inputClass} {...form.register('difficulty')}>
-                {difficulties.map((difficulty) => (
-                  <option key={difficulty} value={difficulty}>
-                    {t(`difficulties.${difficulty}`)}
-                  </option>
-                ))}
-              </select>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field hint={t('hints.category')} label={t('fields.category')}>
+                <select className={inputClass} {...form.register('category')}>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {t(`categories.${category}`)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field hint={t('hints.difficulty')} label={t('fields.difficulty')}>
+                <select className={inputClass} {...form.register('difficulty')}>
+                  {difficulties.map((difficulty) => (
+                    <option key={difficulty} value={difficulty}>
+                      {t(`difficulties.${difficulty}`)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field hint={t('hints.visibility')} label={t('fields.visibility')}>
+                <select className={inputClass} {...form.register('visibility')}>
+                  <option value="private">{t('visibility.private')}</option>
+                  <option value="shared">{t('visibility.shared')}</option>
+                </select>
+              </Field>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field error={form.formState.errors.description?.message} hint={t('hints.description')} label={t('fields.description')}>
+                <textarea
+                  className={`${inputClass} min-h-16`}
+                  placeholder={t('placeholders.description')}
+                  {...form.register('description', { required: t('required') })}
+                />
+              </Field>
+              <Field error={form.formState.errors.goal?.message} hint={t('hints.goal')} label={t('fields.goal')}>
+                <textarea
+                  className={`${inputClass} min-h-16`}
+                  placeholder={t('placeholders.goal')}
+                  {...form.register('goal', { required: t('required') })}
+                />
+              </Field>
+              <Field error={form.formState.errors.rules?.message} hint={t('hints.rules')} label={t('fields.rules')}>
+                <textarea
+                  className={`${inputClass} min-h-16`}
+                  placeholder={t('placeholders.rules')}
+                  {...form.register('rules', { required: t('required') })}
+                />
+              </Field>
+              <Field
+                error={form.formState.errors.successCriteria?.message}
+                hint={t('hints.successCriteria')}
+                label={t('fields.successCriteria')}
+              >
+                <textarea
+                  className={`${inputClass} min-h-16`}
+                  placeholder={t('placeholders.successCriteria')}
+                  {...form.register('successCriteria', { required: t('required') })}
+                />
+              </Field>
+            </div>
+            <Field hint={t('hints.tags')} label={t('fields.tags')}>
+              <input className={inputClass} placeholder={t('placeholders.tags')} {...form.register('tags')} />
             </Field>
           </div>
 
-          <Field hint={t('hints.visibility')} label={t('fields.visibility')}>
-            <select className={inputClass} {...form.register('visibility')}>
-              <option value="private">{t('visibility.private')}</option>
-              <option value="shared">{t('visibility.shared')}</option>
-            </select>
-          </Field>
-
-          <Field error={form.formState.errors.description?.message} hint={t('hints.description')} label={t('fields.description')}>
-            <textarea
-              className={`${inputClass} min-h-20`}
-              placeholder={t('placeholders.description')}
-              {...form.register('description', { required: t('required') })}
-            />
-          </Field>
-          <Field error={form.formState.errors.goal?.message} hint={t('hints.goal')} label={t('fields.goal')}>
-            <textarea
-              className={`${inputClass} min-h-20`}
-              placeholder={t('placeholders.goal')}
-              {...form.register('goal', { required: t('required') })}
-            />
-          </Field>
-          <Field error={form.formState.errors.rules?.message} hint={t('hints.rules')} label={t('fields.rules')}>
-            <textarea
-              className={`${inputClass} min-h-24`}
-              placeholder={t('placeholders.rules')}
-              {...form.register('rules', { required: t('required') })}
-            />
-          </Field>
-          <Field
-            error={form.formState.errors.successCriteria?.message}
-            hint={t('hints.successCriteria')}
-            label={t('fields.successCriteria')}
-          >
-            <textarea
-              className={`${inputClass} min-h-20`}
-              placeholder={t('placeholders.successCriteria')}
-              {...form.register('successCriteria', { required: t('required') })}
-            />
-          </Field>
-          <Field hint={t('hints.tags')} label={t('fields.tags')}>
-            <input className={inputClass} placeholder={t('placeholders.tags')} {...form.register('tags')} />
-          </Field>
-
-          <section className="grid gap-3 rounded-md border border-border-subtle bg-background-primary p-3">
+          <section className={formTab === 'metrics' ? 'grid gap-3 rounded-md border border-border-subtle bg-background-primary p-3' : 'hidden'}>
             <div className="flex items-center justify-between gap-3">
               <span className="flex items-center gap-1.5 font-medium text-text-primary">
                 {t('metrics.title')}
@@ -477,13 +505,15 @@ export function DrillLibraryClient() {
             ))}
           </section>
 
-          <DrillLayoutEditor
-            value={layout}
-            onChange={setLayout}
-            onImportFromPhoto={handleImportFromPhoto}
-            importing={importingPhoto}
-            importError={photoError}
-          />
+          <div className={formTab === 'table' ? 'block' : 'hidden'}>
+            <DrillLayoutEditor
+              value={layout}
+              onChange={setLayout}
+              onImportFromPhoto={handleImportFromPhoto}
+              importing={importingPhoto}
+              importError={photoError}
+            />
+          </div>
 
           {serverError && (
             <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
@@ -508,40 +538,6 @@ export function DrillLibraryClient() {
         </form>
       </Modal>
     </main>
-  );
-}
-
-function FilterChip({
-  active,
-  count,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  count: number;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
-        active
-          ? 'border-brand-accent bg-brand-accent/15 text-brand-accent shadow-[0_0_0_1px_rgba(25,169,116,0.25)]'
-          : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent/60 hover:text-text-primary'
-      }`}
-    >
-      {label}
-      <span
-        className={`rounded-full px-1.5 text-[11px] tabular-nums ${
-          active ? 'bg-brand-accent/20 text-brand-accent' : 'bg-background-elevated text-text-disabled'
-        }`}
-      >
-        {count}
-      </span>
-    </button>
   );
 }
 

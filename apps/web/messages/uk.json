@@ -1100,7 +1100,12 @@
       "editingSubtitle": "Зміни збережуться в цій вправі.",
       "submit": "Створити шаблон",
       "saveEdit": "Зберегти зміни",
-      "cancelEdit": "Скасувати"
+      "cancelEdit": "Скасувати",
+      "tabs": {
+        "details": "Основне",
+        "metrics": "Метрики",
+        "table": "Стіл"
+      }
     },
     "fields": {
       "name": "Назва",
@@ -1540,6 +1545,22 @@
       "annotationText": "Текст підпису",
       "label": "Підпис (необов'язково)",
       "dragHint": "Перетягуйте елемент і маркери на столі, щоб змінити.",
+      "zoneShape": {
+        "title": "Форма зони",
+        "circle": "Коло",
+        "rectangle": "Прямокутник",
+        "square": "Квадрат"
+      },
+      "pathKind": {
+        "title": "Тип лінії",
+        "direct": "Пряма",
+        "bank": "З відбиттям"
+      },
+      "pathStyle": {
+        "title": "Стиль",
+        "dashed": "Пунктир",
+        "solid": "Суцільна"
+      },
       "selectedKinds": {
         "ball": "Куля",
         "zone": "Зона",

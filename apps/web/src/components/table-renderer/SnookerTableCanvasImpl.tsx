@@ -199,9 +199,27 @@ function EditHandles({
   if (path) {
     const from = toCanvas(path.from);
     const to = toCanvas(path.to);
+    const cushions = path.cushions ?? [];
     return (
       <>
         <DragHandle x={from.x} y={from.y} onDragMove={(canvas) => onPathChange?.(path.id, { ...path, from: toDomain(canvas) })} />
+        {cushions.map((cushion, index) => {
+          const point = toCanvas(cushion);
+          return (
+            <DragHandle
+              key={index}
+              variant="resize"
+              x={point.x}
+              y={point.y}
+              onDragMove={(canvas) =>
+                onPathChange?.(path.id, {
+                  ...path,
+                  cushions: cushions.map((item, itemIndex) => (itemIndex === index ? toDomain(canvas) : item)),
+                })
+              }
+            />
+          );
+        })}
         <DragHandle x={to.x} y={to.y} onDragMove={(canvas) => onPathChange?.(path.id, { ...path, to: toDomain(canvas) })} />
       </>
     );
@@ -433,7 +451,7 @@ function ShotPathShape({
   return (
     <>
       <Arrow
-        dash={[10, 8]}
+        dash={path.style === 'solid' ? [] : [10, 8]}
         fill={selected ? '#F5F1E6' : HANDLE}
         hitStrokeWidth={20}
         pointerLength={10}

@@ -1100,7 +1100,12 @@
       "editingSubtitle": "Changes are saved to this drill.",
       "submit": "Create template",
       "saveEdit": "Save changes",
-      "cancelEdit": "Cancel"
+      "cancelEdit": "Cancel",
+      "tabs": {
+        "details": "Details",
+        "metrics": "Metrics",
+        "table": "Table"
+      }
     },
     "fields": {
       "name": "Name",
@@ -1540,6 +1545,22 @@
       "annotationText": "Label text",
       "label": "Label (optional)",
       "dragHint": "Drag the element and its handles on the table to adjust.",
+      "zoneShape": {
+        "title": "Zone shape",
+        "circle": "Circle",
+        "rectangle": "Rectangle",
+        "square": "Square"
+      },
+      "pathKind": {
+        "title": "Line type",
+        "direct": "Direct",
+        "bank": "Bank shot"
+      },
+      "pathStyle": {
+        "title": "Style",
+        "dashed": "Dashed",
+        "solid": "Solid"
+      },
       "selectedKinds": {
         "ball": "Ball",
         "zone": "Zone",

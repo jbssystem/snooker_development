@@ -97,6 +97,7 @@ const ShotPathSchema = z.object({
   from: PointSchema,
   to: PointSchema,
   cushions: z.array(PointSchema).optional(),
+  style: z.enum(['solid', 'dashed']).optional(),
   label: z.string().optional(),
 });
 const TableAnnotationSchema = z.object({
