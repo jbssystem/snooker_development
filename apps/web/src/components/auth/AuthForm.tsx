@@ -17,26 +17,37 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const setSession = useAuthStore((s) => s.setSession);
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Set after a successful registration → show "check your email" panel.
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  // Set when login is rejected because the email is not verified yet.
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const { register, handleSubmit, formState } = useForm<FormValues>({
     defaultValues: { email: '', password: '', displayName: '' },
   });
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
+    setUnverifiedEmail(null);
     setSubmitting(true);
     try {
-      const session =
-        mode === 'login'
-          ? await api.auth.login({ email: values.email, password: values.password })
-          : await api.auth.register({
-              email: values.email,
-              password: values.password,
-              displayName: values.displayName ?? '',
-            });
+      if (mode === 'register') {
+        const result = await api.auth.register({
+          email: values.email,
+          password: values.password,
+          displayName: values.displayName ?? '',
+        });
+        setPendingEmail(result.email);
+        return;
+      }
+      const session = await api.auth.login({ email: values.email, password: values.password });
       setSession(session);
       router.replace('/dashboard');
     } catch (e) {
       if (e instanceof ApiError) {
+        if (e.code === 'auth.emailNotVerified') {
+          setUnverifiedEmail(values.email);
+        }
         setServerError(safeTranslate(tErr, e.code));
       } else {
         setServerError(safeTranslate(tErr, 'generic.internal'));
@@ -46,13 +57,37 @@ export function AuthForm({ mode }: { mode: Mode }) {
     }
   });
 
+  async function resend(email: string) {
+    setResendState('sending');
+    try {
+      await api.auth.resendVerification({ email });
+    } catch {
+      /* resend always succeeds silently server-side */
+    } finally {
+      setResendState('sent');
+    }
+  }
+
+  if (pendingEmail) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="rounded-md border border-brand-accent/40 bg-brand-accent/10 px-4 py-3 text-sm text-text-primary">
+          <p className="font-medium">{t('verify.checkEmailTitle')}</p>
+          <p className="mt-1 text-text-secondary">{t('verify.checkEmailBody', { email: pendingEmail })}</p>
+        </div>
+        <ResendButton
+          label={resendState === 'sent' ? t('verify.resent') : t('verify.resend')}
+          disabled={resendState !== 'idle'}
+          onClick={() => resend(pendingEmail)}
+        />
+      </div>
+    );
+  }
+
   return (
     <form method="post" onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
       {mode === 'register' && (
-        <Field
-          label={t('fields.displayName')}
-          error={formState.errors.displayName?.message}
-        >
+        <Field label={t('fields.displayName')} error={formState.errors.displayName?.message}>
           <input
             type="text"
             autoComplete="name"
@@ -85,9 +120,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </Field>
 
       {serverError && (
-        <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
-          {serverError}
-        </p>
+        <div className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
+          <p>{serverError}</p>
+          {unverifiedEmail && (
+            <button
+              type="button"
+              disabled={resendState !== 'idle'}
+              onClick={() => resend(unverifiedEmail)}
+              className="mt-2 font-medium text-brand-accent hover:underline disabled:opacity-60"
+            >
+              {resendState === 'sent' ? t('verify.resent') : t('verify.resend')}
+            </button>
+          )}
+        </div>
       )}
 
       <button type="submit" disabled={submitting} className="btn-primary mt-2 w-full">
@@ -99,6 +144,27 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
 const inputClass =
   'w-full rounded-md border border-border-subtle bg-background-secondary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
+
+function ResendButton({
+  label,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="inline-flex min-h-11 items-center justify-center rounded-md border border-border-subtle px-4 py-2.5 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-60"
+    >
+      {label}
+    </button>
+  );
+}
 
 function Field({
   label,

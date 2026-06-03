@@ -48,9 +48,21 @@
         "goal": "Build a reliable straight delivery before potting and positional drills.",
         "rules": "Place the cue ball on the brown line and a red in the center of the table. Play 20 shots at one tempo. After each shot, mark whether the cue ball left the line.",
         "successCriteria": "At least 16 of 20 shots stay on line, with the cue ball remaining in the central corridor after contact.",
-        "tags": ["start", "technique", "15min"],
-        "metrics": { "attempts": "Attempts", "line_hits": "Line hits", "cue_ball_deviation_mm": "Cue ball deviation" },
-        "layout": { "annotations": { "tempo": "One tempo, pause before delivery" } }
+        "tags": [
+          "start",
+          "technique",
+          "15min"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "line_hits": "Line hits",
+          "cue_ball_deviation_mm": "Cue ball deviation"
+        },
+        "layout": {
+          "annotations": {
+            "tempo": "One tempo, pause before delivery"
+          }
+        }
       },
       "cmseeddrill000000000000002": {
         "name": "Long red to the corner",
@@ -58,9 +70,21 @@
         "goal": "Improve the long-red percentage and remove forced cueing on distance shots.",
         "rules": "Play the red to the far top corner from the diagram position. Complete 5 sets of 10 shots, fixing the contact point before each shot.",
         "successCriteria": "At least 5 reds potted in every set, with stable stance and repeatable preparation time.",
-        "tags": ["potting", "long shots", "30min"],
-        "metrics": { "attempts": "Attempts", "pots": "Pots", "pre_shot_time_ms": "Pre-shot time" },
-        "layout": { "annotations": { "sight": "Check the line from behind the cue ball" } }
+        "tags": [
+          "potting",
+          "long shots",
+          "30min"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "pots": "Pots",
+          "pre_shot_time_ms": "Pre-shot time"
+        },
+        "layout": {
+          "annotations": {
+            "sight": "Check the line from behind the cue ball"
+          }
+        }
       },
       "cmseeddrill000000000000003": {
         "name": "Black with position on blue",
@@ -68,9 +92,22 @@
         "goal": "Learn to control pace after the black and avoid leaving the cue ball tight to a cushion.",
         "rules": "Play the black to the top right corner. After contact, the cue ball should return to the marked zone near the blue. Play 4 sets of 8 shots.",
         "successCriteria": "At least 60% blacks potted and at least 50% cue-ball zone hits.",
-        "tags": ["position", "colors", "25min"],
-        "metrics": { "attempts": "Attempts", "pots": "Pots", "position_hits": "Position hits", "success_rate": "Success" },
-        "layout": { "annotations": { "pace": "Pace matters more than side" } }
+        "tags": [
+          "position",
+          "colors",
+          "25min"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "pots": "Pots",
+          "position_hits": "Position hits",
+          "success_rate": "Success"
+        },
+        "layout": {
+          "annotations": {
+            "pace": "Pace matters more than side"
+          }
+        }
       },
       "cmseeddrill000000000000004": {
         "name": "Small break around the pink",
@@ -78,9 +115,22 @@
         "goal": "Build a stable mini-break from reds around the pink while returning to pink or black.",
         "rules": "Start from a chosen red near the pink. After each red, play a color and return to one of the marked zones. Work in runs of 6 reds.",
         "successCriteria": "A 12+ point break in at least three of five attempts, without drifting the cue ball to a cushion after the color.",
-        "tags": ["break", "break-building", "40min"],
-        "metrics": { "attempts": "Attempts", "break_points": "Break points", "max_run": "Best break", "position_errors": "Position errors" },
-        "layout": { "annotations": { "choice": "Choose the next red before playing the color" } }
+        "tags": [
+          "break",
+          "break-building",
+          "40min"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "break_points": "Break points",
+          "max_run": "Best break",
+          "position_errors": "Position errors"
+        },
+        "layout": {
+          "annotations": {
+            "choice": "Choose the next red before playing the color"
+          }
+        }
       },
       "cmseeddrill000000000000005": {
         "name": "Safe baulk safety",
@@ -88,9 +138,21 @@
         "goal": "Build a reliable safety that leaves the opponent a long, difficult reply.",
         "rules": "Play a thin contact on the red. The cue ball returns into the marked baulk zone via a cushion, and the red leaves an easy potting line.",
         "successCriteria": "In 7 of 10 attempts the cue ball finishes in baulk and the opponent has no short direct pot.",
-        "tags": ["safety", "tactics", "25min"],
-        "metrics": { "attempts": "Attempts", "safe_leaves": "Safe leaves", "cue_ball_zone_hits": "Cue ball in baulk" },
-        "layout": { "annotations": { "thin": "Thinner contact, less risk of leaving a pot" } }
+        "tags": [
+          "safety",
+          "tactics",
+          "25min"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "safe_leaves": "Safe leaves",
+          "cue_ball_zone_hits": "Cue ball in baulk"
+        },
+        "layout": {
+          "annotations": {
+            "thin": "Thinner contact, less risk of leaving a pot"
+          }
+        }
       },
       "cmseeddrill000000000000006": {
         "name": "One-cushion snooker escape",
@@ -98,9 +160,22 @@
         "goal": "Hit the object ball reliably through one cushion and leave a safe reply.",
         "rules": "The cue ball is blocked by colors. Calculate the angle from the bottom cushion and hit the red. Start without potting pressure, then add safety control.",
         "successCriteria": "At least 8 red contacts from 10 attempts, with no more than two fouls from pace or a miss.",
-        "tags": ["snooker", "cushions", "20min"],
-        "metrics": { "attempts": "Attempts", "escapes": "Ball contacts", "fouls": "Fouls", "safety_quality": "Safety quality" },
-        "layout": { "annotations": { "angle": "Aim at the cushion point, not at the red" } }
+        "tags": [
+          "snooker",
+          "cushions",
+          "20min"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "escapes": "Ball contacts",
+          "fouls": "Fouls",
+          "safety_quality": "Safety quality"
+        },
+        "layout": {
+          "annotations": {
+            "angle": "Aim at the cushion point, not at the red"
+          }
+        }
       },
       "cmseeddrill000000000000007": {
         "name": "Final black under pressure",
@@ -108,9 +183,22 @@
         "goal": "Make the pre-shot routine stable when the shot value is higher than in normal practice.",
         "rules": "Call the score before each shot and complete the full routine. The run ends after a miss or after 10 consecutive pots.",
         "successCriteria": "Best streak of 7+ final blacks with the same routine and no rushed preparation.",
-        "tags": ["pressure", "routine", "match"],
-        "metrics": { "attempts": "Attempts", "pots": "Pots", "best_streak": "Best streak", "routine_kept": "Routine kept" },
-        "layout": { "annotations": { "routine": "Breath, eyes, pause, delivery" } }
+        "tags": [
+          "pressure",
+          "routine",
+          "match"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "pots": "Pots",
+          "best_streak": "Best streak",
+          "routine_kept": "Routine kept"
+        },
+        "layout": {
+          "annotations": {
+            "routine": "Breath, eyes, pause, delivery"
+          }
+        }
       },
       "cmseeddrill000000000000008": {
         "name": "6 reds: break control",
@@ -118,9 +206,23 @@
         "goal": "Transfer technical skills into a game scenario: plan, execute and adjust after errors.",
         "rules": "Set six reds as shown. Play by match rules: red, color, next red. After the run, record whether the stop came from a decision or execution error.",
         "successCriteria": "Average 18+ points per attempt with a clear reason why each break ended.",
-        "tags": ["match", "break", "analysis"],
-        "metrics": { "attempts": "Attempts", "break_points": "Break points", "max_run": "Best break", "decision_errors": "Decision errors", "execution_errors": "Execution errors" },
-        "layout": { "annotations": { "review": "After the break, record: decision or execution" } }
+        "tags": [
+          "match",
+          "break",
+          "analysis"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "break_points": "Break points",
+          "max_run": "Best break",
+          "decision_errors": "Decision errors",
+          "execution_errors": "Execution errors"
+        },
+        "layout": {
+          "annotations": {
+            "review": "After the break, record: decision or execution"
+          }
+        }
       },
       "cmseeddrill000000000000009": {
         "name": "Long red with black-side recovery",
@@ -128,9 +230,23 @@
         "goal": "Connect long potting with precise first-position control in a break-building situation.",
         "rules": "Play the long red to the top corner. The cue ball must finish in the marked zone for black. Play 6 sets of 8 shots with a full pre-shot routine on every shot.",
         "successCriteria": "At least 55% long reds potted and at least 45% cue-ball hits in the position zone.",
-        "tags": ["professional", "long shots", "position"],
-        "metrics": { "attempts": "Attempts", "pots": "Pots", "position_hits": "Position hits", "cue_ball_deviation_mm": "Cue ball deviation", "pre_shot_time_ms": "Pre-shot time" },
-        "layout": { "annotations": { "routine": "Pause on the line, then one tempo" } }
+        "tags": [
+          "professional",
+          "long shots",
+          "position"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "pots": "Pots",
+          "position_hits": "Position hits",
+          "cue_ball_deviation_mm": "Cue ball deviation",
+          "pre_shot_time_ms": "Pre-shot time"
+        },
+        "layout": {
+          "annotations": {
+            "routine": "Pause on the line, then one tempo"
+          }
+        }
       },
       "cmseeddrill000000000000010": {
         "name": "Three-ball black clearance",
@@ -138,9 +254,23 @@
         "goal": "Strengthen micro-position reading and short cue-ball control around the black.",
         "rules": "Set three reds around the black. Play red, black, red, black, red, black. Repeat 10 runs, changing the first red.",
         "successCriteria": "At least 18 points in 6 of 10 runs and no more than two positional errors in the drill.",
-        "tags": ["professional", "break-building", "black"],
-        "metrics": { "attempts": "Attempts", "break_points": "Break points", "max_run": "Best break", "position_errors": "Position errors", "execution_errors": "Execution errors" },
-        "layout": { "annotations": { "choice": "Next red chosen before playing the black" } }
+        "tags": [
+          "professional",
+          "break-building",
+          "black"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "break_points": "Break points",
+          "max_run": "Best break",
+          "position_errors": "Position errors",
+          "execution_errors": "Execution errors"
+        },
+        "layout": {
+          "annotations": {
+            "choice": "Next red chosen before playing the black"
+          }
+        }
       },
       "cmseeddrill000000000000011": {
         "name": "Two-visit containment safety",
@@ -148,9 +278,24 @@
         "goal": "Build safety sequences, not only single safety shots, with a predictable opponent reply.",
         "rules": "Play a thin contact on the red and return the cue ball to baulk. On the second repeat, make the object ball finish near the long cushion while the cue ball is behind the colors.",
         "successCriteria": "In 7 of 10 attempts the cue ball is hidden behind the colors, the object ball leaves no direct pot, and the tactical error is recorded immediately.",
-        "tags": ["professional", "tactics", "safety"],
-        "metrics": { "attempts": "Attempts", "safe_leaves": "Safe leaves", "cue_ball_zone_hits": "Cue ball zone hits", "object_ball_zone_hits": "Object ball zone hits", "tactical_errors": "Tactical errors", "safety_quality": "Safety quality" },
-        "layout": { "annotations": { "plan": "Plan the opponent's reply before the first shot" } }
+        "tags": [
+          "professional",
+          "tactics",
+          "safety"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "safe_leaves": "Safe leaves",
+          "cue_ball_zone_hits": "Cue ball zone hits",
+          "object_ball_zone_hits": "Object ball zone hits",
+          "tactical_errors": "Tactical errors",
+          "safety_quality": "Safety quality"
+        },
+        "layout": {
+          "annotations": {
+            "plan": "Plan the opponent's reply before the first shot"
+          }
+        }
       },
       "cmseeddrill000000000000012": {
         "name": "Two-cushion snooker escape",
@@ -158,9 +303,23 @@
         "goal": "Bring angle calculation and pace control to match level under penalty pressure.",
         "rules": "The cue ball is blocked by colors. Calculate the two-cushion route to the red. After contact, the cue ball or red must finish in a safe sector.",
         "successCriteria": "At least 7 contacts from 10, no more than two fouls, and at least 5 safe leaves.",
-        "tags": ["professional", "snooker", "cushions"],
-        "metrics": { "attempts": "Attempts", "escapes": "Escapes", "safe_leaves": "Safe leaves", "fouls": "Fouls", "escape_quality": "Escape quality" },
-        "layout": { "annotations": { "speed": "Speed matters more than contact thickness" } }
+        "tags": [
+          "professional",
+          "snooker",
+          "cushions"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "escapes": "Escapes",
+          "safe_leaves": "Safe leaves",
+          "fouls": "Fouls",
+          "escape_quality": "Escape quality"
+        },
+        "layout": {
+          "annotations": {
+            "speed": "Speed matters more than contact thickness"
+          }
+        }
       },
       "cmseeddrill000000000000013": {
         "name": "First chance: 8 reds",
@@ -168,9 +327,24 @@
         "goal": "Improve conversion of the first open chance into a decisive scoring advantage.",
         "rules": "Set eight reds as shown. Play as in a match until a miss or positional loss. After each attempt, record whether the break stopped because of decision or execution.",
         "successCriteria": "Average 32+ points, at least 3 breaks of 40+ from 8 attempts, and a clear stop reason for each break.",
-        "tags": ["professional", "match", "break"],
-        "metrics": { "attempts": "Attempts", "break_points": "Break points", "max_run": "Best break", "first_chance_conversion": "First-chance conversion", "decision_errors": "Decision errors", "execution_errors": "Execution errors" },
-        "layout": { "annotations": { "review": "After the break: decision or execution" } }
+        "tags": [
+          "professional",
+          "match",
+          "break"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "break_points": "Break points",
+          "max_run": "Best break",
+          "first_chance_conversion": "First-chance conversion",
+          "decision_errors": "Decision errors",
+          "execution_errors": "Execution errors"
+        },
+        "layout": {
+          "annotations": {
+            "review": "After the break: decision or execution"
+          }
+        }
       },
       "cmseeddrill000000000000014": {
         "name": "Shot-clock color clearance",
@@ -178,9 +352,24 @@
         "goal": "Keep a clear pre-shot routine when match tempo requires faster decisions.",
         "rules": "Play yellow, green, brown, blue, pink and black. Each shot has 20 seconds of preparation. Repeat the clearance 8 times.",
         "successCriteria": "At least 5 complete clearances from 8 and average preparation time in the target window without rushing the final shot.",
-        "tags": ["professional", "routine", "colors"],
-        "metrics": { "attempts": "Attempts", "pots": "Pots", "best_streak": "Best streak", "routine_kept": "Routine kept", "pre_shot_time_ms": "Pre-shot time", "pressure_errors": "Pressure errors" },
-        "layout": { "annotations": { "clock": "20 seconds: breath, eyes, pause" } }
+        "tags": [
+          "professional",
+          "routine",
+          "colors"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "pots": "Pots",
+          "best_streak": "Best streak",
+          "routine_kept": "Routine kept",
+          "pre_shot_time_ms": "Pre-shot time",
+          "pressure_errors": "Pressure errors"
+        },
+        "layout": {
+          "annotations": {
+            "clock": "20 seconds: breath, eyes, pause"
+          }
+        }
       }
     },
     "demoTemplates": {
@@ -190,12 +379,27 @@
         "goal": "Confirm alignment, pause and cue delivery before long-red work.",
         "rules": "Play three blocks of ten central-line shots. Record misses by reason, not only by result.",
         "successCriteria": "At least 24 line hits from 30 attempts with no repeated shoulder-drop error.",
-        "tags": ["personal", "routine", "warm-up"],
-        "metrics": { "attempts": "Attempts", "line_hits": "Line hits", "cue_ball_deviation_mm": "Cue ball deviation", "routine_kept": "Routine kept" },
+        "tags": [
+          "personal",
+          "routine",
+          "warm-up"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "line_hits": "Line hits",
+          "cue_ball_deviation_mm": "Cue ball deviation",
+          "routine_kept": "Routine kept"
+        },
         "layout": {
-          "targetZones": { "customer-target-zone": "Straight-cue test" },
-          "shotPaths": { "customer-primary-line": "Primary route" },
-          "annotations": { "customer-note": "Straight-cue test" }
+          "targetZones": {
+            "customer-target-zone": "Straight-cue test"
+          },
+          "shotPaths": {
+            "customer-primary-line": "Primary route"
+          },
+          "annotations": {
+            "customer-note": "Straight-cue test"
+          }
         }
       },
       "customer-black-recovery": {
@@ -204,12 +408,27 @@
         "goal": "Recover position without dragging the cue ball to the side cushion.",
         "rules": "Play the black from three cue-ball starting positions and mark whether the next-red position is natural.",
         "successCriteria": "Two successful position recoveries in each block of three shots.",
-        "tags": ["personal", "black", "recovery"],
-        "metrics": { "attempts": "Attempts", "pots": "Pots", "position_hits": "Position hits", "position_errors": "Position errors" },
+        "tags": [
+          "personal",
+          "black",
+          "recovery"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "pots": "Pots",
+          "position_hits": "Position hits",
+          "position_errors": "Position errors"
+        },
         "layout": {
-          "targetZones": { "customer-target-zone": "Black recovery corridor" },
-          "shotPaths": { "customer-primary-line": "Primary route" },
-          "annotations": { "customer-note": "Black recovery corridor" }
+          "targetZones": {
+            "customer-target-zone": "Black recovery corridor"
+          },
+          "shotPaths": {
+            "customer-primary-line": "Primary route"
+          },
+          "annotations": {
+            "customer-note": "Black recovery corridor"
+          }
         }
       },
       "customer-baulk-lock": {
@@ -218,12 +437,27 @@
         "goal": "Leave the cue ball behind the baulk colors and the object ball near the top cushion.",
         "rules": "Play ten safeties from each side of the table. Count only positions where there is no direct pot.",
         "successCriteria": "At least 16 safe leaves from 20 attempts and fewer than three tactical leaks.",
-        "tags": ["personal", "safety", "baulk"],
-        "metrics": { "attempts": "Attempts", "safe_leaves": "Safe leaves", "cue_ball_zone_hits": "Cue ball zone hits", "tactical_errors": "Tactical errors" },
+        "tags": [
+          "personal",
+          "safety",
+          "baulk"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "safe_leaves": "Safe leaves",
+          "cue_ball_zone_hits": "Cue ball zone hits",
+          "tactical_errors": "Tactical errors"
+        },
         "layout": {
-          "targetZones": { "customer-target-zone": "Baulk lock" },
-          "shotPaths": { "customer-primary-line": "Primary route" },
-          "annotations": { "customer-note": "Baulk lock" }
+          "targetZones": {
+            "customer-target-zone": "Baulk lock"
+          },
+          "shotPaths": {
+            "customer-primary-line": "Primary route"
+          },
+          "annotations": {
+            "customer-note": "Baulk lock"
+          }
         }
       },
       "customer-first-visit-30": {
@@ -232,12 +466,28 @@
         "goal": "Make the first visit create a real lead rather than only 8-12 points.",
         "rules": "Start from a semi-open pack. The attempt ends on a miss, poor position or tactical reset.",
         "successCriteria": "Average 24+ points per attempt and at least one 30+ visit in the session.",
-        "tags": ["personal", "match", "break"],
-        "metrics": { "attempts": "Attempts", "break_points": "Break points", "max_run": "Best break", "decision_errors": "Decision errors", "execution_errors": "Execution errors" },
+        "tags": [
+          "personal",
+          "match",
+          "break"
+        ],
+        "metrics": {
+          "attempts": "Attempts",
+          "break_points": "Break points",
+          "max_run": "Best break",
+          "decision_errors": "Decision errors",
+          "execution_errors": "Execution errors"
+        },
         "layout": {
-          "targetZones": { "customer-target-zone": "First-visit conversion" },
-          "shotPaths": { "customer-primary-line": "Primary route" },
-          "annotations": { "customer-note": "First-visit conversion" }
+          "targetZones": {
+            "customer-target-zone": "First-visit conversion"
+          },
+          "shotPaths": {
+            "customer-primary-line": "Primary route"
+          },
+          "annotations": {
+            "customer-note": "First-visit conversion"
+          }
         }
       }
     }
@@ -723,6 +973,16 @@
     "logout": "Sign out",
     "errors": {
       "required": "Required"
+    },
+    "verify": {
+      "title": "Email verification",
+      "verifying": "Verifying your email…",
+      "success": "Email verified. Redirecting…",
+      "missingToken": "Invalid link: token is missing.",
+      "checkEmailTitle": "Check your email",
+      "checkEmailBody": "We sent a confirmation link to {email}. Follow it to activate your account.",
+      "resend": "Resend email",
+      "resent": "Email sent"
     }
   },
   "profile": {
@@ -1309,7 +1569,12 @@
         "invalidCredentials": "Invalid email or password",
         "refreshTokenInvalid": "Session is invalid. Please sign in again.",
         "refreshTokenExpired": "Session expired. Please sign in again.",
-        "unauthorized": "Sign in required"
+        "unauthorized": "Sign in required",
+        "forbidden": "Insufficient permissions",
+        "emailNotVerified": "Verify your email to sign in",
+        "accountBlocked": "Account is blocked. Contact support.",
+        "verificationTokenInvalid": "Verification link is invalid",
+        "verificationTokenExpired": "Verification link has expired"
       },
       "validation": {
         "failed": "Please check the form values"
@@ -1317,6 +1582,10 @@
       "generic": {
         "notFound": "Not found",
         "internal": "Internal error. Please try again later."
+      },
+      "admin": {
+        "lastAdmin": "Cannot remove the last administrator",
+        "cannotBlockSelf": "You cannot block yourself"
       }
     }
   },

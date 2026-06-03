@@ -19,12 +19,17 @@ import {
   LoginSchema,
   RefreshSchema,
   RegisterSchema,
+  ResendVerificationSchema,
+  VerifyEmailSchema,
   type AuthMe,
   type AuthSession,
   type LoginInput,
   type RefreshInput,
   type RegisterInput,
+  type RegisterResult,
+  type ResendVerificationInput,
   type Tokens,
+  type VerifyEmailInput,
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { AuthService } from './auth.service';
@@ -44,14 +49,32 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   register(
     @Body(new ZodValidationPipe(RegisterSchema)) body: RegisterInput,
+  ): Promise<RegisterResult> {
+    return this.auth.register(body);
+  }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  verifyEmail(
+    @Body(new ZodValidationPipe(VerifyEmailSchema)) body: VerifyEmailInput,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Ip() ip: string,
   ): Promise<AuthSession> {
-    return this.auth.register(body, requestMeta(req, ip)).then((issue) => {
+    return this.auth.verifyEmail(body.token, requestMeta(req, ip)).then((issue) => {
       setRefreshCookie(res, issue.refreshToken);
       return issue.session;
     });
+  }
+
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  async resendVerification(
+    @Body(new ZodValidationPipe(ResendVerificationSchema)) body: ResendVerificationInput,
+  ): Promise<void> {
+    await this.auth.resendVerification(body.email);
   }
 
   @Post('login')

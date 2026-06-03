@@ -28,6 +28,9 @@ import type {
   PlayerDashboard,
   PlayerProfile,
   RegisterInput,
+  RegisterResult,
+  VerifyEmailInput,
+  ResendVerificationInput,
   CreateLifestyleFactorInput,
   CreateSupplementEventInput,
   LifestyleFactor,
@@ -152,9 +155,13 @@ async function refreshAccessToken(): Promise<Tokens | null> {
 export const api = {
   auth: {
     register: (input: RegisterInput) =>
-      request<AuthSession>('/auth/register', { method: 'POST', body: JSON.stringify(input) }),
+      request<RegisterResult>('/auth/register', { method: 'POST', body: JSON.stringify(input) }),
     login: (input: LoginInput) =>
       request<AuthSession>('/auth/login', { method: 'POST', body: JSON.stringify(input) }),
+    verifyEmail: (input: VerifyEmailInput) =>
+      request<AuthSession>('/auth/verify-email', { method: 'POST', body: JSON.stringify(input) }),
+    resendVerification: (input: ResendVerificationInput) =>
+      request<void>('/auth/resend-verification', { method: 'POST', body: JSON.stringify(input) }),
     refresh: () =>
       request<Tokens>('/auth/refresh', {
         method: 'POST',
