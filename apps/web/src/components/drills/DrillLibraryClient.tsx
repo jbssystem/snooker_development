@@ -92,6 +92,8 @@ export function DrillLibraryClient() {
   const [layout, setLayout] = useState<TableLayout>(() => createStandardTableLayout());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState<DrillCategory | 'all'>('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<DrillDifficulty | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
   const form = useForm<FormValues>({ defaultValues });
 
@@ -102,15 +104,33 @@ export function DrillLibraryClient() {
   });
 
   const templates = useMemo(() => templatesQuery.data ?? [], [templatesQuery.data]);
-  const visibilityCounts = useMemo(() => {
-    const counts: Record<VisibilityFilter, number> = { all: templates.length, private: 0, system: 0, shared: 0 };
-    for (const template of templates) counts[template.visibility] += 1;
-    return counts;
-  }, [templates]);
-  const visibleTemplates = useMemo(
-    () => (visibilityFilter === 'all' ? templates : templates.filter((tpl) => tpl.visibility === visibilityFilter)),
-    [templates, visibilityFilter],
+
+  // Category/difficulty narrow the pool first; visibility chip counts then
+  // reflect what's left, so the numbers stay truthful as filters combine.
+  const pool = useMemo(
+    () =>
+      templates.filter(
+        (tpl) =>
+          (categoryFilter === 'all' || tpl.category === categoryFilter) &&
+          (difficultyFilter === 'all' || tpl.difficulty === difficultyFilter),
+      ),
+    [templates, categoryFilter, difficultyFilter],
   );
+  const visibilityCounts = useMemo(() => {
+    const counts: Record<VisibilityFilter, number> = { all: pool.length, private: 0, system: 0, shared: 0 };
+    for (const template of pool) counts[template.visibility] += 1;
+    return counts;
+  }, [pool]);
+  const visibleTemplates = useMemo(
+    () => (visibilityFilter === 'all' ? pool : pool.filter((tpl) => tpl.visibility === visibilityFilter)),
+    [pool, visibilityFilter],
+  );
+  const hasActiveFilters = visibilityFilter !== 'all' || categoryFilter !== 'all' || difficultyFilter !== 'all';
+  const resetFilters = () => {
+    setVisibilityFilter('all');
+    setCategoryFilter('all');
+    setDifficultyFilter('all');
+  };
 
   const resetForm = () => {
     setEditingId(null);
@@ -220,7 +240,7 @@ export function DrillLibraryClient() {
       />
 
       {templates.length > 0 && (
-        <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label={t('filter.label')}>
+        <div className="mb-5 flex flex-wrap items-center gap-2" role="group" aria-label={t('filter.label')}>
           {visibilityFilters.map((filter) => (
             <FilterChip
               key={filter}
@@ -230,6 +250,46 @@ export function DrillLibraryClient() {
               onClick={() => setVisibilityFilter(filter)}
             />
           ))}
+
+          <span aria-hidden className="mx-1 hidden h-6 w-px bg-border-subtle sm:block" />
+
+          <FilterSelect
+            active={categoryFilter !== 'all'}
+            label={t('fields.category')}
+            onChange={(value) => setCategoryFilter(value as DrillCategory | 'all')}
+            value={categoryFilter}
+          >
+            <option value="all">{t('filter.allCategories')}</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {t(`categories.${category}`)}
+              </option>
+            ))}
+          </FilterSelect>
+
+          <FilterSelect
+            active={difficultyFilter !== 'all'}
+            label={t('fields.difficulty')}
+            onChange={(value) => setDifficultyFilter(value as DrillDifficulty | 'all')}
+            value={difficultyFilter}
+          >
+            <option value="all">{t('filter.allDifficulties')}</option>
+            {difficulties.map((difficulty) => (
+              <option key={difficulty} value={difficulty}>
+                {t(`difficulties.${difficulty}`)}
+              </option>
+            ))}
+          </FilterSelect>
+
+          {hasActiveFilters && (
+            <button
+              className="ml-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-text-secondary transition hover:text-text-primary"
+              onClick={resetFilters}
+              type="button"
+            >
+              × {t('filter.reset')}
+            </button>
+          )}
         </div>
       )}
 
@@ -448,6 +508,49 @@ function FilterChip({
         {count}
       </span>
     </button>
+  );
+}
+
+function FilterSelect({
+  active,
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  active: boolean;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`relative inline-flex items-center rounded-full border text-sm font-medium transition ${
+        active
+          ? 'border-brand-accent bg-brand-accent/15 text-brand-accent shadow-[0_0_0_1px_rgba(25,169,116,0.25)]'
+          : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent/60 hover:text-text-primary'
+      }`}
+    >
+      <select
+        aria-label={label}
+        className="cursor-pointer appearance-none rounded-full bg-transparent py-1.5 pl-3.5 pr-8 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active"
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        {children}
+      </select>
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute right-3 h-3.5 w-3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
   );
 }
 

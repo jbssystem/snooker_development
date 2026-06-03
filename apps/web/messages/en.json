@@ -1159,7 +1159,10 @@
     "filter": {
       "all": "All",
       "label": "Filter",
-      "noResults": "No drills in this category."
+      "noResults": "No drills match the selected filters.",
+      "allCategories": "All categories",
+      "allDifficulties": "Any difficulty",
+      "reset": "Reset"
     },
     "metrics": {
       "title": "Metrics",
