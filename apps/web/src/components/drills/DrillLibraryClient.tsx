@@ -219,23 +219,26 @@ export function DrillLibraryClient() {
         )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          {visibleTemplates.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              t={t}
-              tSystemDrills={tSystemDrills}
-              onClone={() => loadIntoForm(template, true)}
-              onDelete={() => deleteTemplate.mutate(template.id)}
-              onEdit={() => loadIntoForm(template, false)}
-            />
-          ))}
-          {templates.length === 0 && (
+          {templatesQuery.isLoading &&
+            Array.from({ length: 4 }).map((_, index) => <TemplateCardSkeleton key={index} />)}
+          {!templatesQuery.isLoading &&
+            visibleTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                t={t}
+                tSystemDrills={tSystemDrills}
+                onClone={() => loadIntoForm(template, true)}
+                onDelete={() => deleteTemplate.mutate(template.id)}
+                onEdit={() => loadIntoForm(template, false)}
+              />
+            ))}
+          {!templatesQuery.isLoading && templates.length === 0 && (
             <p className="surface rounded-xl p-5 text-text-secondary">
               {t('empty')}
             </p>
           )}
-          {templates.length > 0 && visibleTemplates.length === 0 && (
+          {!templatesQuery.isLoading && templates.length > 0 && visibleTemplates.length === 0 && (
             <p className="surface rounded-xl p-5 text-text-secondary">
               {t('filter.noResults')}
             </p>
@@ -434,6 +437,22 @@ function FilterChip({
   );
 }
 
+function TemplateCardSkeleton() {
+  return (
+    <article className="surface flex animate-pulse flex-col rounded-xl p-4 sm:p-5" aria-hidden>
+      <div className="flex gap-1.5">
+        <div className="h-4 w-20 rounded-md bg-background-elevated" />
+        <div className="h-4 w-16 rounded-md bg-background-elevated" />
+      </div>
+      <div className="mt-3 h-5 w-2/3 rounded bg-background-elevated" />
+      <div className="mt-3 h-3 w-full rounded bg-background-elevated" />
+      <div className="mt-2 h-3 w-4/5 rounded bg-background-elevated" />
+      <div className="mt-4 h-28 rounded-lg bg-background-elevated" />
+      <div className="mt-4 h-3 w-1/2 rounded bg-background-elevated" />
+    </article>
+  );
+}
+
 function TemplateCard({
   template,
   t,
@@ -473,26 +492,26 @@ function TemplateCard({
 
       <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{localizedTemplate.description}</p>
 
-      <div className="mt-4">
+      <div className="mt-4 rounded-lg border border-border-subtle bg-background-primary p-2">
         <TableLayoutPreview layout={localizedTemplate.defaultTableLayout ?? EMPTY_PREVIEW_LAYOUT} />
       </div>
 
-      <dl className="mt-4 grid gap-3 border-t border-border-subtle pt-4 text-sm">
+      <dl className="mt-4 grid gap-3 text-sm">
         <Meta label={t('fields.goal')} value={localizedTemplate.goal} />
         <Meta label={t('fields.successCriteria')} value={localizedTemplate.successCriteria} />
       </dl>
 
       {localizedTemplate.tags.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-1.5">
           {localizedTemplate.tags.map((tag) => (
-            <span key={tag} className="rounded-md bg-background-primary px-2 py-1 text-xs text-text-secondary">
-              {tag}
+            <span key={tag} className="text-xs text-text-disabled transition hover:text-brand-accent">
+              #{tag}
             </span>
           ))}
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-border-subtle pt-4">
+      <div className="mt-auto flex flex-wrap gap-2 border-t border-border-subtle pt-4">
         {isSystem ? (
           <button className={cardButtonClass} onClick={onClone} type="button">
             {t('duplicate')}
