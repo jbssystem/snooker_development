@@ -66,7 +66,11 @@ Each new entity ships with:
 
 - `id`, `userId` (unique), `firstName`, `lastName`, optional `dateOfBirth`,
   optional `country`, optional `dominantHand`, optional `level`, optional
-  `seasonGoal`, `createdAt`, `updatedAt`.
+  `seasonGoal`, optional `avatar`, `createdAt`, `updatedAt`.
+- `avatar` (migration `20260603120000_add_player_avatar`) stores either a preset
+  id (`preset:<id>`) or a cropped image data URL (client crops to a 256px JPEG,
+  capped at 300k chars). Updated independently via `PATCH
+  /players/me/profile/avatar` so it does not require a full valid profile.
 
 ### EquipmentProfile
 

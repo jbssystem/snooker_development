@@ -32,11 +32,25 @@ export const PlayerProfileSchema = z.object({
   dominantHand: DominantHandSchema.optional(),
   level: z.string().optional(),
   seasonGoal: z.string().optional(),
+  avatar: z.string().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
 
 export type PlayerProfile = z.infer<typeof PlayerProfileSchema>;
+
+// Avatar is either a preset id ("preset:<id>") or a cropped image data URL.
+// Capped to keep the stored data URL small (client crops to a 256px square).
+const AvatarSchema = z.preprocess(
+  (value) => (value === '' || value === null ? undefined : value),
+  z
+    .string()
+    .max(300000)
+    .refine((value) => value.startsWith('preset:') || value.startsWith('data:image/'), {
+      message: 'invalid avatar',
+    })
+    .optional(),
+);
 
 export const UpsertPlayerProfileSchema = z.object({
   firstName: z.string().trim().min(1).max(120),
@@ -49,7 +63,18 @@ export const UpsertPlayerProfileSchema = z.object({
   dominantHand: DominantHandSchema.optional(),
   level: OptionalTextSchema,
   seasonGoal: OptionalTextSchema,
+  avatar: AvatarSchema,
 });
+
+export const UpdateAvatarSchema = z.object({
+  avatar: z
+    .string()
+    .max(300000)
+    .refine((value) => value.startsWith('preset:') || value.startsWith('data:image/'), {
+      message: 'invalid avatar',
+    }),
+});
+export type UpdateAvatarInput = z.infer<typeof UpdateAvatarSchema>;
 
 export const CreatePlayerProfileSchema = UpsertPlayerProfileSchema;
 export type CreatePlayerProfileInput = z.infer<typeof CreatePlayerProfileSchema>;

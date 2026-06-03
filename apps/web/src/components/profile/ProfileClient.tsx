@@ -10,6 +10,8 @@ import { AccordionSection } from '@/components/layout/AccordionSection';
 import { PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { AvatarPicker } from './AvatarPicker';
+import { PlayerAvatar } from './PlayerAvatar';
 
 type ProfileFormValues = {
   firstName: string;
@@ -19,6 +21,7 @@ type ProfileFormValues = {
   dominantHand: '' | 'LEFT' | 'RIGHT' | 'AMBIDEXTROUS';
   level: string;
   seasonGoal: string;
+  avatar: string;
 };
 
 type EquipmentFormValues = {
@@ -41,6 +44,7 @@ const profileDefaults: ProfileFormValues = {
   dominantHand: '',
   level: '',
   seasonGoal: '',
+  avatar: '',
 };
 
 const equipmentDefaults: EquipmentFormValues = {
@@ -62,6 +66,7 @@ export function ProfileClient() {
   const tokens = useAuthStore((s) => s.tokens);
   const token = tokens?.accessToken ?? null;
   const [serverError, setServerError] = useState<string | null>(null);
+  const [avatarOpen, setAvatarOpen] = useState(false);
 
   const profileForm = useForm<ProfileFormValues>({ defaultValues: profileDefaults });
   const equipmentForm = useForm<EquipmentFormValues>({ defaultValues: equipmentDefaults });
@@ -89,6 +94,7 @@ export function ProfileClient() {
       dominantHand: profile.dominantHand ?? '',
       level: profile.level ?? '',
       seasonGoal: profile.seasonGoal ?? '',
+      avatar: profile.avatar ?? '',
     });
   }, [profileForm, profileQuery.data]);
 
@@ -118,7 +124,28 @@ export function ProfileClient() {
     onError: (e) => setServerError(errorMessage(e, tErr)),
   });
 
+  const saveAvatar = useMutation({
+    mutationFn: (avatar: string) => api.players.updateAvatar(token ?? '', avatar),
+    onSuccess: () => {
+      setServerError(null);
+      queryClient.invalidateQueries({ queryKey: ['player-profile'] });
+    },
+    onError: (e) => setServerError(errorMessage(e, tErr)),
+  });
+
   const equipmentItems = useMemo(() => equipmentQuery.data ?? [], [equipmentQuery.data]);
+  const avatarValue = profileForm.watch('avatar');
+  const fullName = [profileForm.watch('firstName'), profileForm.watch('lastName')]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  const persistAvatar = (value: string) => {
+    profileForm.setValue('avatar', value, { shouldDirty: true });
+    if (profileQuery.data) {
+      saveAvatar.mutate(value);
+    }
+  };
 
   if (!token) {
     return (
@@ -136,19 +163,29 @@ export function ProfileClient() {
       <section>
         <PageHeader subtitle={t('subtitle')} title={t('title')} />
 
+        <div className="surface mb-6 flex items-center gap-4 rounded-xl p-4 sm:p-5">
+          <button
+            aria-label={t('avatar.edit')}
+            className="group relative rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-active"
+            onClick={() => setAvatarOpen(true)}
+            type="button"
+          >
+            <PlayerAvatar avatar={avatarValue} className="h-20 w-20 ring-2 ring-border-subtle transition group-hover:ring-brand-accent" name={fullName} />
+            <span className="absolute inset-0 grid place-items-center rounded-full bg-black/45 text-xs font-medium text-text-primary opacity-0 transition group-hover:opacity-100">
+              {t('avatar.edit')}
+            </span>
+          </button>
+          <div className="min-w-0">
+            <p className="truncate text-lg font-semibold text-text-primary">{fullName || t('avatar.noName')}</p>
+            <button className="mt-1 text-sm text-brand-accent hover:underline" onClick={() => setAvatarOpen(true)} type="button">
+              {t('avatar.edit')}
+            </button>
+          </div>
+        </div>
+
         <form
           className="grid gap-4 surface rounded-xl p-5 sm:grid-cols-2"
-          onSubmit={profileForm.handleSubmit((values) =>
-            saveProfile.mutate({
-              firstName: values.firstName,
-              lastName: values.lastName,
-              dateOfBirth: values.dateOfBirth || undefined,
-              country: values.country || undefined,
-              dominantHand: values.dominantHand || undefined,
-              level: values.level || undefined,
-              seasonGoal: values.seasonGoal || undefined,
-            }),
-          )}
+          onSubmit={profileForm.handleSubmit((values) => saveProfile.mutate(toProfilePayload(values)))}
         >
           <Field
             error={profileForm.formState.errors.firstName?.message}
@@ -352,8 +389,30 @@ export function ProfileClient() {
           </div>
         </section>
       </aside>
+
+      <AvatarPicker
+        name={fullName}
+        onChange={persistAvatar}
+        onClose={() => setAvatarOpen(false)}
+        open={avatarOpen}
+        t={t}
+        value={avatarValue}
+      />
     </main>
   );
+}
+
+function toProfilePayload(values: ProfileFormValues): UpsertPlayerProfileInput {
+  return {
+    firstName: values.firstName,
+    lastName: values.lastName,
+    dateOfBirth: values.dateOfBirth || undefined,
+    country: values.country || undefined,
+    dominantHand: values.dominantHand || undefined,
+    level: values.level || undefined,
+    seasonGoal: values.seasonGoal || undefined,
+    avatar: values.avatar || undefined,
+  };
 }
 
 const inputClass =

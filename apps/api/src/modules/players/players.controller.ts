@@ -14,11 +14,13 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CreateEquipmentProfileSchema,
+  UpdateAvatarSchema,
   UpsertPlayerProfileSchema,
   UpdateEquipmentProfileSchema,
   type CreateEquipmentProfileInput,
   type EquipmentProfile,
   type PlayerProfile,
+  type UpdateAvatarInput,
   type UpsertPlayerProfileInput,
   type UpdateEquipmentProfileInput,
 } from '@snooker/shared';
@@ -46,6 +48,14 @@ export class PlayersController {
     @Body(new ZodValidationPipe(UpsertPlayerProfileSchema)) body: UpsertPlayerProfileInput,
   ): Promise<PlayerProfile> {
     return this.players.upsertProfile(userId, body);
+  }
+
+  @Patch('profile/avatar')
+  updateAvatar(
+    @CurrentUserId() userId: string,
+    @Body(new ZodValidationPipe(UpdateAvatarSchema)) body: UpdateAvatarInput,
+  ): Promise<PlayerProfile> {
+    return this.players.updateAvatar(userId, body.avatar);
   }
 
   @Get('equipment-profiles')

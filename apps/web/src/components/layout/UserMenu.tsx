@@ -1,21 +1,29 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Link, useRouter } from '@/i18n/navigation';
 import { api } from '@/lib/api-client';
 import { useDismissable } from '@/lib/use-dismissable';
+import { PlayerAvatar } from '@/components/profile/PlayerAvatar';
 import { ChevronDown } from './ChevronDown';
 
 export function UserMenu() {
   const t = useTranslations('auth');
   const tNav = useTranslations('nav');
   const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const clear = useAuthStore((s) => s.clear);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const profileQuery = useQuery({
+    queryKey: ['player-profile', token],
+    queryFn: () => api.players.getProfile(token ?? ''),
+    enabled: Boolean(token),
+    staleTime: 60_000,
+  });
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
   const containerRef = useDismissable<HTMLDivElement>(open, close);
@@ -53,9 +61,7 @@ export function UserMenu() {
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-primary text-xs font-semibold uppercase text-text-primary">
-          {initials(user.displayName)}
-        </span>
+        <PlayerAvatar avatar={profileQuery.data?.avatar ?? null} className="h-7 w-7" name={user.displayName} />
         <span className="hidden max-w-32 truncate sm:inline" title={user.email}>
           {user.displayName}
         </span>
@@ -83,13 +89,4 @@ export function UserMenu() {
       )}
     </div>
   );
-}
-
-function initials(displayName: string): string {
-  return displayName
-    .split(' ')
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('') || '?';
 }

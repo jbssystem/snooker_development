@@ -174,6 +174,12 @@ export const api = {
         token,
         body: JSON.stringify(input),
       }),
+    updateAvatar: (token: string, avatar: string) =>
+      request<PlayerProfile>('/players/me/profile/avatar', {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify({ avatar }),
+      }),
     listEquipment: (token: string) =>
       request<EquipmentProfile[]>('/players/me/equipment-profiles', { token }),
     createEquipment: (token: string, input: CreateEquipmentProfileInput) =>

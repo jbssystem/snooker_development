@@ -33,6 +33,15 @@ export class PlayersService {
     return toPlayerProfile(profile);
   }
 
+  async updateAvatar(userId: string, avatar: string): Promise<PlayerProfile> {
+    await this.findProfileOrThrow(userId);
+    const profile = await this.prisma.playerProfile.update({
+      where: { userId },
+      data: { avatar },
+    });
+    return toPlayerProfile(profile);
+  }
+
   async listEquipment(userId: string): Promise<EquipmentProfile[]> {
     const profile = await this.findProfileOrThrow(userId);
     const equipment = await this.prisma.equipmentProfile.findMany({
@@ -101,6 +110,7 @@ function toPlayerProfileData(input: UpsertPlayerProfileInput) {
     dominantHand: input.dominantHand ?? null,
     level: input.level ?? null,
     seasonGoal: input.seasonGoal ?? null,
+    avatar: input.avatar ?? null,
   };
 }
 
@@ -153,6 +163,7 @@ function toPlayerProfile(profile: PrismaPlayerProfile): PlayerProfile {
     dominantHand: profile.dominantHand ?? undefined,
     level: profile.level ?? undefined,
     seasonGoal: profile.seasonGoal ?? undefined,
+    avatar: profile.avatar ?? undefined,
     createdAt: profile.createdAt.toISOString(),
     updatedAt: profile.updatedAt.toISOString(),
   };

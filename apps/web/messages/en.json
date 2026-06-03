@@ -733,6 +733,18 @@
     "required": "Required",
     "saving": "Saving…",
     "saveProfile": "Save profile",
+    "avatar": {
+      "edit": "Edit photo",
+      "title": "Player photo",
+      "presets": "Preset avatars",
+      "upload": "Upload photo",
+      "zoom": "Zoom",
+      "cancel": "Cancel",
+      "save": "Save",
+      "close": "Close",
+      "hint": "A square face photo works best. Drag and zoom to fit.",
+      "noName": "No name"
+    },
     "fields": {
       "firstName": "First name",
       "lastName": "Last name",

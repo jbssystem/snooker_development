@@ -19,6 +19,21 @@ Format:
 
 **Status:** 🟡 In progress (started 2026-05-20).
 
+### Player avatar (2026-06-03)
+
+**Delivered:**
+
+- `PlayerProfile.avatar` column (migration `20260603120000_add_player_avatar`):
+  stores a preset id or a cropped image data URL.
+- `PATCH /players/me/profile/avatar` (+ `UpdateAvatarSchema`) updates only the
+  avatar, so it persists even when other profile fields are incomplete/invalid.
+- Web: `PlayerAvatar` (photo / coloured preset glyph / initials fallback),
+  `AvatarPicker` (six round preset "people" + photo upload) and a dependency-free
+  circular `AvatarCropper` (drag + zoom → 256px JPEG). The profile page leads
+  with an editable avatar hero; the header `UserMenu` shows the avatar too
+  (picking one saves immediately). i18n `profile.avatar.*` in ru/en/uk.
+- Verified upload → crop → save → persist (header + hero) with Playwright.
+
 ### Matches page redesign + tooltip fields (2026-06-03)
 
 **Delivered:**
