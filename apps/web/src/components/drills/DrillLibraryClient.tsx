@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type {
   CreateDrillTemplateInput,
@@ -16,7 +16,9 @@ import type {
 } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { Modal } from '@/components/layout/Modal';
+import { ChevronDown } from '@/components/layout/ChevronDown';
 import { Field, InfoTooltip, PageHeader } from '@/components/ui';
+import { useDismissable } from '@/lib/use-dismissable';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillTemplate } from '@/lib/drill-localization';
@@ -256,30 +258,24 @@ export function DrillLibraryClient() {
           <FilterSelect
             active={categoryFilter !== 'all'}
             label={t('fields.category')}
+            options={[
+              { value: 'all', label: t('filter.allCategories') },
+              ...categories.map((category) => ({ value: category, label: t(`categories.${category}`) })),
+            ]}
             onChange={(value) => setCategoryFilter(value as DrillCategory | 'all')}
             value={categoryFilter}
-          >
-            <option value="all">{t('filter.allCategories')}</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {t(`categories.${category}`)}
-              </option>
-            ))}
-          </FilterSelect>
+          />
 
           <FilterSelect
             active={difficultyFilter !== 'all'}
             label={t('fields.difficulty')}
+            options={[
+              { value: 'all', label: t('filter.allDifficulties') },
+              ...difficulties.map((difficulty) => ({ value: difficulty, label: t(`difficulties.${difficulty}`) })),
+            ]}
             onChange={(value) => setDifficultyFilter(value as DrillDifficulty | 'all')}
             value={difficultyFilter}
-          >
-            <option value="all">{t('filter.allDifficulties')}</option>
-            {difficulties.map((difficulty) => (
-              <option key={difficulty} value={difficulty}>
-                {t(`difficulties.${difficulty}`)}
-              </option>
-            ))}
-          </FilterSelect>
+          />
 
           {hasActiveFilters && (
             <button
@@ -511,45 +507,78 @@ function FilterChip({
   );
 }
 
+type FilterOption = { value: string; label: string };
+
 function FilterSelect({
   active,
   label,
   value,
+  options,
   onChange,
-  children,
 }: {
   active: boolean;
   label: string;
   value: string;
+  options: FilterOption[];
   onChange: (value: string) => void;
-  children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const containerRef = useDismissable<HTMLDivElement>(open, close);
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? label;
+
   return (
-    <div
-      className={`relative inline-flex items-center rounded-full border text-sm font-medium transition ${
-        active
-          ? 'border-brand-accent bg-brand-accent/15 text-brand-accent shadow-[0_0_0_1px_rgba(25,169,116,0.25)]'
-          : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent/60 hover:text-text-primary'
-      }`}
-    >
-      <select
+    <div className="relative" ref={containerRef}>
+      <button
+        aria-expanded={open}
+        aria-haspopup="listbox"
         aria-label={label}
-        className="cursor-pointer appearance-none rounded-full bg-transparent py-1.5 pl-3.5 pr-8 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active"
-        onChange={(event) => onChange(event.target.value)}
-        value={value}
+        className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
+          active
+            ? 'border-brand-accent bg-brand-accent/15 text-brand-accent shadow-[0_0_0_1px_rgba(25,169,116,0.25)]'
+            : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent/60 hover:text-text-primary'
+        }`}
+        onClick={() => setOpen((current) => !current)}
+        type="button"
       >
-        {children}
-      </select>
-      <svg
-        aria-hidden
-        className="pointer-events-none absolute right-3 h-3.5 w-3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-      >
-        <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+        {selectedLabel}
+        <ChevronDown open={open} />
+      </button>
+
+      {open && (
+        <div
+          className="absolute left-0 z-30 mt-2 max-h-72 w-60 overflow-y-auto rounded-md border border-border-subtle bg-background-secondary py-1 shadow-glow"
+          role="listbox"
+        >
+          {options.map((option) => {
+            const selected = option.value === value;
+            return (
+              <button
+                key={option.value}
+                aria-selected={selected}
+                className={`flex min-h-10 w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition ${
+                  selected
+                    ? 'bg-background-elevated text-brand-accent'
+                    : 'text-text-secondary hover:bg-background-elevated hover:text-text-primary'
+                }`}
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                }}
+                role="option"
+                type="button"
+              >
+                {option.label}
+                {selected && (
+                  <svg aria-hidden className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
