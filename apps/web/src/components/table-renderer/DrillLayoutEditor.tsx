@@ -58,9 +58,38 @@ export function DrillLayoutEditor({
   return (
     <section className="grid gap-4 rounded-md border border-border-subtle bg-background-primary p-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="font-medium text-text-primary">{t('editor.title')}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium text-text-primary">{t('editor.title')}</h3>
+          {onImportFromPhoto && (
+            <>
+              <input
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = '';
+                  if (file) onImportFromPhoto(file);
+                }}
+                ref={photoInputRef}
+                type="file"
+              />
+              <button
+                aria-label={t('editor.photo.importFromPhoto')}
+                className="relative inline-flex h-8 w-8 items-center justify-center rounded-md border border-brand-accent/40 text-brand-accent transition hover:border-brand-accent hover:bg-brand-accent/10 disabled:opacity-60"
+                disabled={importing}
+                onClick={() => photoInputRef.current?.click()}
+                title={t('editor.photo.hint')}
+                type="button"
+              >
+                {importing ? <MiniSpinner /> : <CameraIcon />}
+              </button>
+            </>
+          )}
+        </div>
         <span className="text-xs text-text-disabled">{t('editor.ballCount', { count: ballTotal })}</span>
       </div>
+      {onImportFromPhoto && importError && <span className="text-xs text-state-error">{importError}</span>}
 
       <fieldset className="grid gap-2">
         <legend className="mb-1 text-xs uppercase tracking-wide text-text-disabled">{t('editor.presets.title')}</legend>
@@ -78,48 +107,26 @@ export function DrillLayoutEditor({
         </div>
       </fieldset>
 
-      {onImportFromPhoto && (
-        <fieldset className="grid gap-2 rounded-md border border-brand-accent/40 bg-background-secondary p-3">
-          <legend className="px-1 text-xs uppercase tracking-wide text-brand-accent">{t('editor.photo.title')}</legend>
-          <input
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = '';
-              if (file) onImportFromPhoto(file);
-            }}
-            ref={photoInputRef}
-            type="file"
-          />
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              className={secondaryButtonClass}
-              disabled={importing}
-              onClick={() => photoInputRef.current?.click()}
-              type="button"
-            >
-              {importing ? t('editor.photo.importing') : t('editor.photo.importFromPhoto')}
-            </button>
-            <span className="text-xs text-text-disabled">{t('editor.photo.hint')}</span>
+      <div className="relative">
+        <SnookerTableCanvas
+          ref={canvasRef}
+          className="overflow-hidden rounded-md border border-border-subtle"
+          layout={value}
+          mode="edit"
+          selectedIds={selectedIds}
+          onAnnotationChange={(id, next) => updateAnnotation(value, onChange, id, next)}
+          onBallMove={(ballId, next) => updateBall(value, onChange, ballId, next)}
+          onPathChange={(id, next) => updatePath(value, onChange, id, next)}
+          onSelectionChange={setSelectedIds}
+          onZoneChange={(id, next) => updateZone(value, onChange, id, next)}
+        />
+        {importing && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-md bg-background-primary/70 backdrop-blur-sm">
+            <PhotoSpinner />
+            <span className="animate-pulse text-sm font-medium text-brand-accent">{t('editor.photo.importing')}</span>
           </div>
-          {importError && <span className="text-xs text-state-error">{importError}</span>}
-        </fieldset>
-      )}
-
-      <SnookerTableCanvas
-        ref={canvasRef}
-        className="overflow-hidden rounded-md border border-border-subtle"
-        layout={value}
-        mode="edit"
-        selectedIds={selectedIds}
-        onAnnotationChange={(id, next) => updateAnnotation(value, onChange, id, next)}
-        onBallMove={(ballId, next) => updateBall(value, onChange, ballId, next)}
-        onPathChange={(id, next) => updatePath(value, onChange, id, next)}
-        onSelectionChange={setSelectedIds}
-        onZoneChange={(id, next) => updateZone(value, onChange, id, next)}
-      />
+        )}
+      </div>
 
       {selected && (
         <div className="grid gap-2 rounded-md border border-brand-accent/50 bg-background-secondary p-3">
@@ -254,6 +261,41 @@ const chipButtonClass =
   'rounded-full border border-border-subtle px-3 py-1.5 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary';
 const stepperButtonClass =
   'flex h-10 w-10 items-center justify-center rounded-md border border-border-subtle text-lg text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40';
+
+function CameraIcon() {
+  return (
+    <svg aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+      <path
+        d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2l1-1.6a1 1 0 0 1 .85-.4h7.3a1 1 0 0 1 .85.4L17.5 7h2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-9Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="13" r="3.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// Small inline spinner shown inside the camera button while a photo uploads.
+function MiniSpinner() {
+  return (
+    <span
+      aria-hidden
+      className="h-4 w-4 animate-spin rounded-full border-2 border-brand-accent/30 border-t-brand-accent"
+    />
+  );
+}
+
+// Full overlay spinner over the table while recognition runs: two counter-rotating
+// arcs (accent + gold) around a glowing centre dot.
+function PhotoSpinner() {
+  return (
+    <span aria-hidden className="relative inline-flex h-16 w-16 items-center justify-center">
+      <span className="absolute inset-0 animate-spin rounded-full border-[3px] border-transparent border-l-brand-accent border-t-brand-accent [animation-duration:0.9s]" />
+      <span className="absolute inset-2 animate-spin rounded-full border-[3px] border-transparent border-b-brand-gold border-r-brand-gold [animation-direction:reverse] [animation-duration:1.5s]" />
+      <span className="h-3 w-3 rounded-full bg-brand-accent shadow-[0_0_14px_3px_rgba(25,169,116,0.65)]" />
+    </span>
+  );
+}
 
 type Selected =
   | { kind: 'ball'; id: string; element: TableLayout['balls'][number] }
