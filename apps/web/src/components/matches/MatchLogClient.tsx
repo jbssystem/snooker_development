@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import type {
@@ -26,6 +26,7 @@ import { BallMap, MatchTypeBadge } from './ball-visuals';
 
 type MatchFormValues = {
   matchType: MatchType;
+  isLive: boolean;
   matchDate: string;
   opponentName: string;
   tournament: string;
@@ -59,6 +60,7 @@ type FrameFormValues = {
 
 const matchDefaultValues: MatchFormValues = {
   matchType: 'match',
+  isLive: false,
   matchDate: '',
   opponentName: '',
   tournament: '',
@@ -239,6 +241,7 @@ export function MatchLogClient() {
   const profile = profileQuery.data ?? null;
   const playerName = profile ? `${profile.firstName} ${profile.lastName}`.trim() : t('frames.playerScore');
   const formMatchType = matchForm.watch('matchType');
+  const formIsLive = matchForm.watch('isLive');
 
   return (
     <main className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
@@ -346,6 +349,22 @@ export function MatchLogClient() {
             t={t}
             value={formMatchType}
           />
+          <label className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle px-3 py-2">
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-text-primary">{t('live.label')}</span>
+              <span className="text-xs text-text-disabled">{t('live.hint')}</span>
+            </span>
+            <button
+              aria-pressed={formIsLive}
+              className={`relative h-6 w-11 shrink-0 rounded-full transition ${formIsLive ? 'bg-brand-accent' : 'bg-border-subtle'}`}
+              onClick={() => matchForm.setValue('isLive', !formIsLive)}
+              type="button"
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${formIsLive ? 'left-[22px]' : 'left-0.5'}`}
+              />
+            </button>
+          </label>
           <FormSection title={t('newMatch.sections.main')}>
             <Field
               error={matchForm.formState.errors.opponentName?.message}
@@ -361,14 +380,16 @@ export function MatchLogClient() {
             <Field hint={t('hints.matchDate')} label={t('fields.matchDate')}>
               <input className={inputClass} type="datetime-local" {...matchForm.register('matchDate')} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field hint={t('hints.frameScore')} label={t('fields.framesWon')}>
-                <input className={inputClass} min={0} type="number" {...matchForm.register('framesWon')} />
-              </Field>
-              <Field hint={t('hints.frameScore')} label={t('fields.framesLost')}>
-                <input className={inputClass} min={0} type="number" {...matchForm.register('framesLost')} />
-              </Field>
-            </div>
+            {!formIsLive && (
+              <div className="grid grid-cols-2 gap-3">
+                <Field hint={t('hints.frameScore')} label={t('fields.framesWon')}>
+                  <input className={inputClass} min={0} type="number" {...matchForm.register('framesWon')} />
+                </Field>
+                <Field hint={t('hints.frameScore')} label={t('fields.framesLost')}>
+                  <input className={inputClass} min={0} type="number" {...matchForm.register('framesLost')} />
+                </Field>
+              </div>
+            )}
           </FormSection>
 
           <FormSection title={t('newMatch.sections.context')}>
@@ -398,6 +419,7 @@ export function MatchLogClient() {
             </div>
           </FormSection>
 
+          {!formIsLive && (
           <FormSection title={t('newMatch.sections.stats')}>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Field hint={t('hints.count')} label={t('fields.highBreak')}>
@@ -428,6 +450,7 @@ export function MatchLogClient() {
               </Field>
             </div>
           </FormSection>
+          )}
 
           <FormSection title={t('newMatch.sections.links')}>
             <Field hint={t('hints.videoUrl')} label={t('fields.videoUrl')}>
@@ -614,6 +637,22 @@ function MatchDetail({
 }) {
   const progress = matchProgress(match);
   const [frameMode, setFrameMode] = useState<'quick' | 'detailed'>('quick');
+  // Live matches auto-time each frame: measure the gap since the previous frame
+  // was logged (or since the match was opened) and fill the duration for the coach.
+  const liveTickRef = useRef<number>(Date.now());
+  useEffect(() => {
+    liveTickRef.current = Date.now();
+  }, [match.id]);
+
+  const onQuickSubmit = (values: FrameFormValues) => {
+    if (match.isLive) {
+      const minutes = Math.max(1, Math.round((Date.now() - liveTickRef.current) / 60000));
+      liveTickRef.current = Date.now();
+      addFrame({ ...values, frameDurationMinutes: String(minutes) });
+    } else {
+      addFrame(values);
+    }
+  };
   return (
     <div className="grid gap-6">
       <section className="surface rounded-xl p-5">
@@ -649,17 +688,22 @@ function MatchDetail({
             </button>
           </div>
         </div>
-        <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label={t('stats.result')} value={t(`result.${match.result}`)} />
-          <Stat label={t('fields.highBreak')} value={formatOptional(match.highBreak)} />
-          <Stat label={t('fields.breaks50')} value={String(match.breaks50)} />
-          <Stat label={t('fields.breaks100')} value={String(match.breaks100)} />
-          <Stat label={t('fields.longPotSuccess')} value={formatPercent(match.longPotSuccess)} />
-          <Stat label={t('fields.safetySuccess')} value={formatPercent(match.safetySuccess)} />
-          <Stat label={t('fields.unforcedErrors')} value={formatOptional(match.unforcedErrors)} />
-          <Stat label={t('fields.tacticalErrors')} value={formatOptional(match.tacticalErrors)} />
-        </dl>
-        {match.notes && <p className="mt-5 rounded-md bg-background-primary p-3 text-sm text-text-secondary">{match.notes}</p>}
+        <div className="mt-4 flex items-center gap-2">
+          <ResultChip result={match.result} t={t} />
+        </div>
+        <StatStrip
+          className="mt-4"
+          items={[
+            { label: t('fields.highBreak'), value: formatOptional(match.highBreak) },
+            { label: t('fields.breaks50'), value: String(match.breaks50) },
+            { label: t('fields.breaks100'), value: String(match.breaks100) },
+            { label: t('fields.longPotSuccess'), value: formatPercent(match.longPotSuccess) },
+            { label: t('fields.safetySuccess'), value: formatPercent(match.safetySuccess) },
+            { label: t('fields.unforcedErrors'), value: formatOptional(match.unforcedErrors) },
+            { label: t('fields.tacticalErrors'), value: formatOptional(match.tacticalErrors) },
+          ]}
+        />
+        {match.notes && <p className="mt-4 rounded-md bg-background-primary p-3 text-sm text-text-secondary">{match.notes}</p>}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -727,14 +771,24 @@ function MatchDetail({
           </div>
         </div>
 
-        <div className="surface rounded-xl p-5">
-          <h2 className="text-xl font-semibold text-text-primary">{t('opponent.title')}</h2>
+        <div className="surface h-fit rounded-xl p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">{t('opponent.title')}</h2>
           {opponentHistory && (
-            <dl className="mt-4 grid gap-3 text-sm">
-              <Stat label={t('opponent.matches')} value={String(opponentHistory.matches)} />
-              <Stat label={t('opponent.record')} value={`${opponentHistory.wins}-${opponentHistory.losses}-${opponentHistory.draws}`} />
-              <Stat label={t('opponent.frames')} value={`${opponentHistory.framesWon}:${opponentHistory.framesLost}`} />
-            </dl>
+            <div className="mt-3 grid gap-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold tabular-nums text-text-primary">
+                  {opponentHistory.wins}–{opponentHistory.losses}
+                  {opponentHistory.draws > 0 ? `–${opponentHistory.draws}` : ''}
+                </span>
+                <span className="text-xs text-text-disabled">{t('opponent.record')}</span>
+              </div>
+              <StatStrip
+                items={[
+                  { label: t('opponent.matches'), value: String(opponentHistory.matches) },
+                  { label: t('opponent.frames'), value: `${opponentHistory.framesWon}:${opponentHistory.framesLost}` },
+                ]}
+              />
+            </div>
           )}
         </div>
       </section>
@@ -763,21 +817,26 @@ function MatchDetail({
             ))}
           </div>
 
-          {frameMode === 'quick' ? (
-            <form className="grid gap-4" onSubmit={frameForm.handleSubmit(addFrame)}>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Field hint={t('hints.framePoints')} label={playerName}>
+          {/* Both modes stay mounted; toggling only hides one so the live
+              scorer keeps its in-progress break when the coach flips back. */}
+          <div className={frameMode === 'quick' ? '' : 'hidden'}>
+            <form className="grid gap-4" onSubmit={frameForm.handleSubmit(onQuickSubmit)}>
+              <div className={`grid grid-cols-2 gap-3 ${match.isLive ? 'sm:grid-cols-3' : 'sm:grid-cols-4'}`}>
+                <Field hint={t('hints.framePoints')} label={t('scorer.scoreOf', { name: playerName })}>
                   <input className={inputClass} min={0} type="number" {...frameForm.register('playerScore')} />
                 </Field>
-                <Field hint={t('hints.framePoints')} label={opponentName}>
+                <Field hint={t('hints.framePoints')} label={t('scorer.scoreOf', { name: opponentName })}>
                   <input className={inputClass} min={0} type="number" {...frameForm.register('opponentScore')} />
                 </Field>
                 <Field hint={t('hints.count')} label={t('fields.highBreak')}>
                   <input className={inputClass} min={0} type="number" {...frameForm.register('highBreak')} />
                 </Field>
-                <Field hint={t('hints.duration')} label={t('frames.duration')}>
-                  <input className={inputClass} min={1} type="number" {...frameForm.register('frameDurationMinutes')} />
-                </Field>
+                {/* Live frames are auto-timed; manual duration is hidden. */}
+                {!match.isLive && (
+                  <Field hint={t('hints.duration')} label={t('frames.duration')}>
+                    <input className={inputClass} min={1} type="number" {...frameForm.register('frameDurationMinutes')} />
+                  </Field>
+                )}
               </div>
               <Field hint={t('hints.notes')} label={t('fields.notes')}>
                 <input className={inputClass} placeholder={t('placeholders.frameNotes')} {...frameForm.register('notes')} />
@@ -786,9 +845,10 @@ function MatchDetail({
                 {addFramePending ? t('saving') : t('frames.submit')}
               </button>
             </form>
-          ) : (
-            // Remount (fresh frame) after each saved frame so the scorer can't
-            // re-submit the same break as a duplicate.
+          </div>
+          <div className={frameMode === 'detailed' ? '' : 'hidden'}>
+            {/* Remount (fresh frame) after each saved frame so the scorer can't
+                re-submit the same break as a duplicate. */}
             <FrameScorer
               key={match.frames.length}
               onSave={addFrameFromScorer}
@@ -797,19 +857,48 @@ function MatchDetail({
               saving={addFramePending}
               t={t}
             />
-          )}
+          </div>
         </div>
       </AccordionSection>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+// Compact, modern stat row: tiny uppercase labels over tabular values,
+// separated by subtle dividers — far less vertical space than bordered tiles.
+function StatStrip({ items, className = '' }: { items: Array<{ label: string; value: string }>; className?: string }) {
   return (
-    <div className="rounded-md border border-border-subtle bg-background-primary p-3">
-      <dt className="text-xs text-text-disabled">{label}</dt>
-      <dd className="mt-1 font-medium text-text-primary">{value}</dd>
+    <div className={`flex flex-wrap gap-x-5 gap-y-3 ${className}`}>
+      {items.map((item, index) => (
+        <div
+          key={item.label}
+          className={`flex flex-col ${index > 0 ? 'border-l border-border-subtle pl-5' : ''}`}
+        >
+          <span className="text-[10px] font-medium uppercase tracking-wide text-text-disabled">{item.label}</span>
+          <span className="mt-0.5 text-sm font-semibold tabular-nums text-text-primary">{item.value}</span>
+        </div>
+      ))}
     </div>
+  );
+}
+
+function ResultChip({
+  result,
+  t,
+}: {
+  result: Match['result'];
+  t: (key: string) => string;
+}) {
+  const tone =
+    result === 'player_win'
+      ? 'border-state-success/40 bg-state-success/10 text-state-success'
+      : result === 'opponent_win'
+        ? 'border-state-error/40 bg-state-error/10 text-state-error'
+        : 'border-border-subtle bg-background-primary text-text-secondary';
+  return (
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold ${tone}`}>
+      {t(`result.${result}`)}
+    </span>
   );
 }
 
@@ -841,6 +930,7 @@ function matchToFormValues(match: Match): MatchFormValues {
     value === undefined || value === null ? '' : String(value);
   return {
     matchType: match.matchType,
+    isLive: match.isLive,
     matchDate: match.matchDate ? toDateTimeLocal(match.matchDate) : '',
     opponentName: match.opponentName,
     tournament: match.tournament ?? '',
@@ -873,7 +963,11 @@ function toDateTimeLocal(iso: string): string {
 }
 
 function toCreateMatchInput(values: MatchFormValues): CreateMatchInput {
-  const input: CreateMatchInput = { opponentName: values.opponentName, matchType: values.matchType };
+  const input: CreateMatchInput = {
+    opponentName: values.opponentName,
+    matchType: values.matchType,
+    isLive: values.isLive,
+  };
   if (values.matchDate) input.matchDate = new Date(values.matchDate).toISOString();
   assignText(input, 'tournament', values.tournament);
   assignText(input, 'round', values.round);

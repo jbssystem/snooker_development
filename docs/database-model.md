@@ -136,8 +136,8 @@ Each new entity ships with:
 
 ### Match
 
-- `id`, `playerProfileId`, `createdByUserId`, `matchDate`, `matchType`, optional
-  `tournament`, optional `country`, optional `city`, optional `club`,
+- `id`, `playerProfileId`, `createdByUserId`, `matchDate`, `matchType`, `isLive`,
+  optional `tournament`, optional `country`, optional `city`, optional `club`,
   `opponentName`, optional `opponentExternalId`, optional `round`, optional
   `format`, `framesWon`, `framesLost`, optional `highBreak`, `breaks50`,
   `breaks70`, `breaks100`, optional `decidingFrameResult`, optional
@@ -153,6 +153,9 @@ Each new entity ships with:
 - `matchType` is a PostgreSQL enum mapped from lowercase API values: `match`,
   `sparring` (default `match`). Sparring sessions reuse the same entity and
   statistics; the type only drives labels/tags in the UI.
+- `isLive` (boolean, default false) marks a record scored in real time. In live
+  mode the web frame entry auto-times each frame's duration and hides the
+  summary-stat inputs at creation (stats are expected to come from frames).
 - `source` is a PostgreSQL enum mapped from lowercase API values: `manual`,
   `external`. CueTracker import writes external matches with normalized
   player/opponent orientation, `opponentExternalId`, `format`,

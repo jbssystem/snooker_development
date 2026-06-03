@@ -373,6 +373,7 @@ model Match {
   createdByUserId     String
   matchDate           DateTime     @default(now())
   matchType           MatchType    @default(MATCH)
+  isLive              Boolean      @default(false)
   tournament          String?
   country             String?
   city                String?

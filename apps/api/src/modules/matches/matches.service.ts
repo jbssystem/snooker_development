@@ -64,6 +64,7 @@ export class MatchesService {
       breaks70: input.breaks70 ?? 0,
       breaks100: input.breaks100 ?? 0,
       matchType: toPrismaMatchType(input.matchType ?? 'match'),
+      isLive: input.isLive ?? false,
       result: toPrismaMatchResult(input.result ?? resultFromScore(framesWon, framesLost)),
       source: 'MANUAL',
     };
@@ -96,6 +97,9 @@ export class MatchesService {
 
     if (input.matchType !== undefined) {
       data.matchType = toPrismaMatchType(input.matchType);
+    }
+    if (input.isLive !== undefined) {
+      data.isLive = input.isLive;
     }
     assignDate(data, 'matchDate', input.matchDate);
     assignOptional(data, 'tournament', input.tournament);
@@ -279,6 +283,7 @@ function toMatch(match: MatchWithFrames): Match {
     createdByUserId: match.createdByUserId,
     matchDate: match.matchDate.toISOString(),
     matchType: fromPrismaMatchType(match.matchType),
+    isLive: match.isLive,
     ...(match.tournament ? { tournament: match.tournament } : {}),
     ...(match.country ? { country: match.country } : {}),
     ...(match.city ? { city: match.city } : {}),

@@ -100,6 +100,7 @@ export const MatchSchema = z.object({
   createdByUserId: z.string().cuid(),
   matchDate: z.string().datetime(),
   matchType: MatchTypeSchema,
+  isLive: z.boolean(),
   tournament: z.string().optional(),
   country: z.string().optional(),
   city: z.string().optional(),
@@ -133,6 +134,7 @@ export type Match = z.infer<typeof MatchSchema>;
 export const CreateMatchSchema = z.object({
   matchDate: OptionalDateStringSchema,
   matchType: MatchTypeSchema.default('match'),
+  isLive: z.boolean().optional().default(false),
   tournament: OptionalTextSchema,
   country: OptionalTextSchema,
   city: OptionalTextSchema,
@@ -162,6 +164,7 @@ export type CreateMatchInput = z.infer<typeof CreateMatchSchema>;
 export const UpdateMatchSchema = z.object({
   matchDate: OptionalDateStringSchema,
   matchType: MatchTypeSchema.optional(),
+  isLive: z.boolean().optional(),
   tournament: OptionalTextSchema,
   country: OptionalTextSchema,
   city: OptionalTextSchema,

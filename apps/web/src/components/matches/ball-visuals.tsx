@@ -57,11 +57,11 @@ export function BallMap({
     return <p className="text-xs text-text-disabled">{emptyLabel}</p>;
   }
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-start gap-1.5">
       {runs.map((run, index) => (
         <span
           key={index}
-          className="inline-flex items-center gap-1 rounded-md border border-border-subtle bg-background-primary px-1.5 py-1"
+          className="flex max-w-full flex-wrap items-center gap-1 rounded-md border border-border-subtle bg-background-primary px-1.5 py-1"
         >
           {run.balls.map((ball, ballIndex) => (
             <Ball key={ballIndex} ball={ball} size={size} />

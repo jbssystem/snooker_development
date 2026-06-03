@@ -179,8 +179,13 @@ export function FrameScorer({
         <button className={actionBtn} disabled={state.finished} onClick={() => dispatch({ kind: 'safety' })} type="button">
           {t('scorer.safety')}
         </button>
-        <button className={actionBtn} disabled={state.finished} onClick={() => dispatch({ kind: 'miss' })} type="button">
-          {t('scorer.miss')}
+        <button
+          className="inline-flex items-center gap-1.5 rounded-md border border-brand-accent bg-brand-accent/15 px-3 py-1.5 font-semibold text-brand-accent transition hover:bg-brand-accent/25 disabled:opacity-40"
+          disabled={state.finished}
+          onClick={() => dispatch({ kind: 'switch' })}
+          type="button"
+        >
+          {t('scorer.endTurn')} →
         </button>
         <button className={actionBtn} disabled={!hasEvents} onClick={() => dispatch({ kind: 'undo' })} type="button">
           {t('scorer.undo')}

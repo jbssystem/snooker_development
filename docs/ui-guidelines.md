@@ -267,6 +267,19 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - A lightweight `matchProgress` helper parses the free-text `format`
   ("best of 7", "race to 3", "до 4") into a frames-to-win target and shows a
   progress/frame-ball/match-ball/decider badge next to the score. No new data.
+- **Live mode** (`isLive`): a toggle in the create modal. When on, the summary-
+  stats section and manual frame score are hidden (they derive from frames), and
+  in the detail view quick frame entry auto-times each frame's duration (gap
+  since the previous logged frame) and hides the manual duration input.
+- Both frame-entry modes stay mounted (the inactive one is `hidden`, not
+  unmounted) so the live scorer keeps its in-progress break when the coach flips
+  between Quick and Detailed.
+- The detailed scorer's turn-pass control is a prominent "end turn" button
+  (accent-tinted) rather than a plain "miss"; the ball-sequence map wraps balls
+  onto new lines for long breaks.
+- Match stats and opponent history use a compact `StatStrip` (tiny uppercase
+  labels over tabular values with hairline dividers) plus a coloured
+  `ResultChip`, replacing the bordered stat-tile grid.
 
 ## Calendar Factors UI
 

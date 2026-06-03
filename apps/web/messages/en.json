@@ -1079,6 +1079,8 @@
       "foul": "Foul",
       "freeBall": "Free ball",
       "safety": "Safety",
+      "endTurn": "End turn",
+      "scoreOf": "{name} points",
       "miss": "Miss",
       "undo": "Undo",
       "rerack": "Re-rack",
@@ -1102,6 +1104,10 @@
       "frameBall": "Frame ball",
       "matchBall": "Match ball",
       "decider": "Decider"
+    },
+    "live": {
+      "label": "Live mode",
+      "hint": "Scored in real time — frame durations are timed automatically and summary stats are hidden."
     },
     "title": "Matches",
     "subtitle": "Manual match, frame and key-stat history.",
