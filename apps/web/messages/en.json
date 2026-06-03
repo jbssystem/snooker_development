@@ -1559,6 +1559,13 @@
         "decrease": "Remove red",
         "increase": "Add red",
         "hint": "0–15 in a triangle"
+      },
+      "photo": {
+        "title": "Import from photo",
+        "importFromPhoto": "Choose a photo",
+        "importing": "Recognising…",
+        "hint": "Take a top-down photo of the table; recognised balls open here for fine-tuning.",
+        "error": "Could not recognise the layout. Try a clearer, more top-down photo."
       }
     },
     "balls": {
@@ -1590,6 +1597,10 @@
       },
       "validation": {
         "failed": "Please check the form values"
+      },
+      "drills": {
+        "aiUnavailable": "Photo recognition is unavailable: the AI provider is not configured.",
+        "recognitionFailed": "Could not recognise the layout from the photo. Try a clearer, more top-down shot."
       },
       "generic": {
         "notFound": "Not found",

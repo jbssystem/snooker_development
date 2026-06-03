@@ -92,6 +92,8 @@ export function DrillLibraryClient() {
     { key: 'successes', label: t('defaultMetrics.successes'), type: 'number', unit: '', required: true },
   ]);
   const [layout, setLayout] = useState<TableLayout>(() => createStandardTableLayout());
+  const [importingPhoto, setImportingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<DrillCategory | 'all'>('all');
@@ -137,6 +139,8 @@ export function DrillLibraryClient() {
   const resetForm = () => {
     setEditingId(null);
     setServerError(null);
+    setPhotoError(null);
+    setImportingPhoto(false);
     setShowForm(false);
     form.reset(defaultValues);
     setMetrics([
@@ -207,6 +211,27 @@ export function DrillLibraryClient() {
     setLayout(source.defaultTableLayout ?? createStandardTableLayout());
     setShowForm(true);
   };
+
+  const handleImportFromPhoto = useCallback(
+    async (file: File) => {
+      setPhotoError(null);
+      setImportingPhoto(true);
+      try {
+        const imageBase64 = await resizeImageToJpegBase64(file);
+        const recognized = await api.drills.recognizeLayout(token ?? '', {
+          imageBase64,
+          mediaType: 'image/jpeg',
+          tableSize: layout.tableSize,
+        });
+        setLayout(recognized);
+      } catch (e) {
+        setPhotoError(errorMessage(e, tErr));
+      } finally {
+        setImportingPhoto(false);
+      }
+    },
+    [token, layout.tableSize, tErr],
+  );
 
   const submitTemplate = (values: FormValues) => {
     const data = buildTemplateInput(values, metrics, layout);
@@ -445,7 +470,13 @@ export function DrillLibraryClient() {
             ))}
           </section>
 
-          <DrillLayoutEditor value={layout} onChange={setLayout} />
+          <DrillLayoutEditor
+            value={layout}
+            onChange={setLayout}
+            onImportFromPhoto={handleImportFromPhoto}
+            importing={importingPhoto}
+            importError={photoError}
+          />
 
           {serverError && (
             <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
@@ -778,6 +809,37 @@ function buildTemplateInput(values: FormValues, metrics: MetricRow[], layout: Ta
     },
     defaultTableLayout: layout,
   };
+}
+
+// Re-encode the chosen photo to a downscaled JPEG before upload: keeps the
+// synchronous request small (long edge ≤ 1600px) and normalises any browser-
+// decodable format to image/jpeg so the API only ever sees one media type.
+async function resizeImageToJpegBase64(file: File, maxEdge = 1600, quality = 0.85): Promise<string> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await loadImage(objectUrl);
+    const scale = Math.min(1, maxEdge / Math.max(image.width, image.height));
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D context unavailable');
+    ctx.drawImage(image, 0, 0, width, height);
+    return canvas.toDataURL('image/jpeg', quality);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Could not decode image'));
+    image.src = src;
+  });
 }
 
 const EMPTY_PREVIEW_LAYOUT = createEmptyTableLayout('empty-preview');

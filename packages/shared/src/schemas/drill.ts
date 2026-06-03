@@ -115,6 +115,17 @@ export const TableLayoutSchema = z.object({
 });
 export type TableLayout = z.infer<typeof TableLayoutSchema>;
 
+// Photo → ball-map: the client sends a base64-encoded photo of a real table and
+// the server returns a TableLayout recognised by Claude Vision. The cap (~9.5M
+// chars ≈ 7 MB binary) keeps the synchronous request from ballooning; the client
+// should downscale before sending.
+export const RecognizeLayoutInputSchema = z.object({
+  imageBase64: z.string().min(1).max(12_000_000),
+  mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  tableSize: z.enum(['full-size', 'club', 'custom']).default('full-size'),
+});
+export type RecognizeLayoutInput = z.infer<typeof RecognizeLayoutInputSchema>;
+
 const OptionalTextSchema = z
   .string()
   .trim()

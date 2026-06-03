@@ -22,6 +22,10 @@ export const ErrorCodes = {
   Validation: {
     Failed: 'validation.failed',
   },
+  Drills: {
+    AiUnavailable: 'drills.aiUnavailable',
+    RecognitionFailed: 'drills.recognitionFailed',
+  },
   Generic: {
     NotFound: 'generic.notFound',
     Internal: 'generic.internal',
@@ -32,4 +36,5 @@ export type ApiErrorCode =
   | (typeof ErrorCodes.Auth)[keyof typeof ErrorCodes.Auth]
   | (typeof ErrorCodes.Admin)[keyof typeof ErrorCodes.Admin]
   | (typeof ErrorCodes.Validation)[keyof typeof ErrorCodes.Validation]
+  | (typeof ErrorCodes.Drills)[keyof typeof ErrorCodes.Drills]
   | (typeof ErrorCodes.Generic)[keyof typeof ErrorCodes.Generic];

@@ -12,6 +12,8 @@ import type {
   AiReport,
   CreateEquipmentProfileInput,
   CreateDrillTemplateInput,
+  RecognizeLayoutInput,
+  TableLayout,
   CreateDrillAttemptInput,
   CreateExternalLinkInput,
   CreateMatchInput,
@@ -221,6 +223,12 @@ export const api = {
       request<DrillTemplate>(`/drill-templates/${id}`, { token }),
     createTemplate: (token: string, input: CreateDrillTemplateInput) =>
       request<DrillTemplate>('/drill-templates', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    recognizeLayout: (token: string, input: RecognizeLayoutInput) =>
+      request<TableLayout>('/drill-templates/recognize-layout', {
         method: 'POST',
         token,
         body: JSON.stringify(input),

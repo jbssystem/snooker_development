@@ -13,9 +13,12 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CreateDrillTemplateSchema,
+  RecognizeLayoutInputSchema,
   UpdateDrillTemplateSchema,
   type CreateDrillTemplateInput,
   type DrillTemplate,
+  type RecognizeLayoutInput,
+  type TableLayout,
   type UpdateDrillTemplateInput,
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -47,6 +50,13 @@ export class DrillsController {
     @Body(new ZodValidationPipe(CreateDrillTemplateSchema)) body: CreateDrillTemplateInput,
   ): Promise<DrillTemplate> {
     return this.drills.create(userId, body);
+  }
+
+  @Post('recognize-layout')
+  recognizeLayout(
+    @Body(new ZodValidationPipe(RecognizeLayoutInputSchema)) body: RecognizeLayoutInput,
+  ): Promise<TableLayout> {
+    return this.drills.recognizeLayout(body);
   }
 
   @Patch(':id')

@@ -1,4 +1,5 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type {
   DrillCategory as PrismaDrillCategory,
   DrillDifficulty as PrismaDrillDifficulty,
@@ -8,20 +9,53 @@ import type {
 } from '@prisma/client';
 import {
   ErrorCodes,
+  TableLayoutSchema,
   type CreateDrillTemplateInput,
   type DrillCategory,
   type DrillDifficulty,
   type DrillMetrics,
   type DrillTemplate,
   type DrillVisibility,
+  type RecognizeLayoutInput,
   type TableLayout,
   type UpdateDrillTemplateInput,
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
+import { recognizeTableLayout } from './table-vision';
 
 @Injectable()
 export class DrillsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
+
+  /**
+   * Photo → ball map. Synchronously asks Claude Vision to read ball positions
+   * off an uploaded table photo and returns a TableLayout the client can drop
+   * into the layout editor for manual correction before saving. Requires an
+   * Anthropic provider + API key; no local fallback is meaningful for vision.
+   */
+  async recognizeLayout(input: RecognizeLayoutInput): Promise<TableLayout> {
+    const provider = (this.config.get<string>('AI_PROVIDER') ?? 'none').toLowerCase();
+    const apiKey = this.config.get<string>('AI_API_KEY');
+    if (provider !== 'anthropic' || !apiKey) {
+      throw new BadRequestException({ error: { code: ErrorCodes.Drills.AiUnavailable } });
+    }
+    const model = this.config.get<string>('AI_MODEL') ?? 'claude-3-5-sonnet-latest';
+    try {
+      const layout = await recognizeTableLayout({
+        apiKey,
+        model,
+        base64: input.imageBase64,
+        mediaType: input.mediaType,
+        tableSize: input.tableSize,
+      });
+      return TableLayoutSchema.parse(layout);
+    } catch {
+      throw new BadRequestException({ error: { code: ErrorCodes.Drills.RecognitionFailed } });
+    }
+  }
 
   async list(userId: string): Promise<DrillTemplate[]> {
     const templates = await this.prisma.drillTemplate.findMany({

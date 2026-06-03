@@ -25,9 +25,23 @@ import { SnookerTableCanvas, type SnookerTableCanvasHandle } from './SnookerTabl
 
 const BALL_COLORS: BallColor[] = ['white', 'red', 'yellow', 'green', 'brown', 'blue', 'pink', 'black'];
 
-export function DrillLayoutEditor({ value, onChange }: { value: TableLayout; onChange: (layout: TableLayout) => void }) {
+export function DrillLayoutEditor({
+  value,
+  onChange,
+  onImportFromPhoto,
+  importing = false,
+  importError = null,
+}: {
+  value: TableLayout;
+  onChange: (layout: TableLayout) => void;
+  /** When provided, shows the "import from photo" control; the parent owns the request and calls onChange with the result. */
+  onImportFromPhoto?: (file: File) => void;
+  importing?: boolean;
+  importError?: string | null;
+}) {
   const t = useTranslations('tableRenderer');
   const canvasRef = useRef<SnookerTableCanvasHandle | null>(null);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [ballColor, setBallColor] = useState<BallColor>('white');
   const [jsonDraft, setJsonDraft] = useState('');
@@ -63,6 +77,36 @@ export function DrillLayoutEditor({ value, onChange }: { value: TableLayout; onC
           ))}
         </div>
       </fieldset>
+
+      {onImportFromPhoto && (
+        <fieldset className="grid gap-2 rounded-md border border-brand-accent/40 bg-background-secondary p-3">
+          <legend className="px-1 text-xs uppercase tracking-wide text-brand-accent">{t('editor.photo.title')}</legend>
+          <input
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = '';
+              if (file) onImportFromPhoto(file);
+            }}
+            ref={photoInputRef}
+            type="file"
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              className={secondaryButtonClass}
+              disabled={importing}
+              onClick={() => photoInputRef.current?.click()}
+              type="button"
+            >
+              {importing ? t('editor.photo.importing') : t('editor.photo.importFromPhoto')}
+            </button>
+            <span className="text-xs text-text-disabled">{t('editor.photo.hint')}</span>
+          </div>
+          {importError && <span className="text-xs text-state-error">{importError}</span>}
+        </fieldset>
+      )}
 
       <SnookerTableCanvas
         ref={canvasRef}
