@@ -11,31 +11,37 @@ const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const REQUEST_TIMEOUT_MS = 90_000;
 const BALL_COLORS: BallColor[] = ['white', 'red', 'yellow', 'green', 'brown', 'blue', 'pink', 'black'];
 
+type BaulkSide = 'left' | 'right' | 'top' | 'bottom';
 type RecognizedBall = { color: BallColor; x: number; y: number };
+type RecognizedTable = { baulkSide: BaulkSide; balls: RecognizedBall[] };
 
 const SYSTEM_PROMPT =
   'You are a computer-vision assistant for snooker coaching. ' +
   'You receive a single photo of a snooker table with balls on it, usually taken at an angle. ' +
-  'Identify every ball you can see on the playing surface and estimate its position, mentally correcting for perspective. ' +
+  'Report where each ball appears in the photo and which side the baulk (D) end is on. ' +
   'Pay special attention to tightly packed groups of reds: resolve each ball individually and KEEP THEM CLUSTERED — never scatter a tight pack across the table. ' +
   'Reply with STRICT JSON only — no prose, no markdown fences.';
 
 const USER_PROMPT = [
   'Return a JSON object of the form:',
-  '{"balls":[{"color":"red","x":0.0,"y":0.0}, ...]}',
+  '{"baulkSide":"left","balls":[{"color":"red","x":0.0,"y":0.0}, ...]}',
   '',
-  'Coordinate system (fractions of the playing surface between the cushions, each 0..1):',
-  '- x = position along the LONG axis: 0 = baulk cushion (cue-ball / D end), 1 = the far black-spot cushion.',
-  '- y = position across the SHORT axis: 0 = one long cushion, 1 = the opposite long cushion.',
+  'Use IMAGE coordinates — simply where each ball appears in the photo:',
+  '- x = 0 at the LEFT edge of the playing area, 1 at the RIGHT edge.',
+  '- y = 0 at the TOP edge of the playing area, 1 at the BOTTOM edge.',
+  '- Fractions of the playing surface inside the cushions. Correct for perspective if the photo is angled.',
   '',
-  'Scale reference — use this to space balls correctly:',
-  '- One ball is about 0.015 wide along x and about 0.030 wide along y.',
-  '- Two balls that touch have centres about 0.015 apart along x (or 0.030 along y). Balls can NEVER be closer than that and can never overlap.',
+  'baulkSide = which side of the photo the BAULK end is on: the end with the curved "D" line and the baulk colours (yellow, green, brown). One of "left", "right", "top", "bottom".',
+  '',
+  'Scale reference — space balls correctly:',
+  '- One ball is about 1/24 of the table\'s LONG side. Balls that touch are about that far apart, centre to centre, and can NEVER be closer than that or overlap.',
   '',
   'Reds (most common mistake — read carefully):',
-  '- Reds are very often bunched in a TIGHT cluster: a triangular pack or a short line, usually in the middle-to-far half of the table (around x 0.6–0.95).',
-  '- When the reds are bunched together in the photo, KEEP THEM BUNCHED in the output: neighbouring reds sit right next to each other, centres only ~0.015–0.03 apart. DO NOT spread a tight group of reds across the whole table.',
-  '- Estimate the centre of every individual red you can see, even when they are touching. Count them carefully (up to 15).',
+  '- Reds usually sit in a TIGHT triangular pack. Keep the pack tight: neighbouring reds almost touching.',
+  '- DO NOT spread the reds across the table. Give the centre of every red you can see and count them (up to 15).',
+  '',
+  'Snooker layout hints (only for balls actually present):',
+  '- yellow, green, brown sit in a row on the baulk line; blue is the centre spot; pink sits just in front of the red pack; black is behind the pack near the far cushion.',
   '',
   'Other rules:',
   `- color is one of: ${BALL_COLORS.join(', ')}.`,
@@ -56,8 +62,8 @@ export async function recognizeTableLayout(params: {
   mediaType: 'image/jpeg' | 'image/png' | 'image/webp';
   tableSize: TableSize;
 }): Promise<TableLayout> {
-  const balls = await callAnthropicVision(params);
-  return buildLayout(balls, params.tableSize);
+  const recognized = await callAnthropicVision(params);
+  return buildLayout(recognized, params.tableSize);
 }
 
 async function callAnthropicVision(params: {
@@ -65,7 +71,7 @@ async function callAnthropicVision(params: {
   model: string;
   base64: string;
   mediaType: string;
-}): Promise<RecognizedBall[]> {
+}): Promise<RecognizedTable> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   const response = await fetch(ANTHROPIC_URL, {
@@ -99,12 +105,12 @@ async function callAnthropicVision(params: {
   const body = (await response.json()) as { content?: Array<{ type?: string; text?: string }> };
   const text = body.content?.find((item) => item.type === 'text')?.text;
   if (!text) throw new Error('Anthropic response did not contain text');
-  return parseBalls(text);
+  return parseTable(text);
 }
 
-function parseBalls(text: string): RecognizedBall[] {
+function parseTable(text: string): RecognizedTable {
   const json = extractJson(text);
-  const parsed = JSON.parse(json) as { balls?: unknown };
+  const parsed = JSON.parse(json) as { baulkSide?: unknown; balls?: unknown };
   const raw = Array.isArray(parsed.balls) ? parsed.balls : [];
   const balls: RecognizedBall[] = [];
   for (const entry of raw) {
@@ -113,7 +119,11 @@ function parseBalls(text: string): RecognizedBall[] {
     if (!isBallColor(color) || typeof x !== 'number' || typeof y !== 'number') continue;
     balls.push({ color, x, y });
   }
-  return balls;
+  return { baulkSide: toBaulkSide(parsed.baulkSide), balls };
+}
+
+function toBaulkSide(value: unknown): BaulkSide {
+  return value === 'right' || value === 'top' || value === 'bottom' ? value : 'left';
 }
 
 // The model is asked for bare JSON but may still wrap it in ``` fences or stray
@@ -127,14 +137,14 @@ function extractJson(text: string): string {
   return candidate.slice(start, end + 1);
 }
 
-function buildLayout(balls: RecognizedBall[], tableSize: TableSize): TableLayout {
+function buildLayout(recognized: RecognizedTable, tableSize: TableSize): TableLayout {
   const dimensions = tableSize === 'club' ? TABLE_DIMENSIONS_MM.club : TABLE_DIMENSIONS_MM.fullSize;
   const radius = BALL_DIAMETER_MM / 2;
   let redCount = 0;
   const seenColours = new Set<BallColor>();
   const positioned: BallPosition[] = [];
 
-  for (const ball of balls) {
+  for (const ball of recognized.balls) {
     if (positioned.length >= 32) break;
     let id: string;
     if (ball.color === 'red') {
@@ -146,11 +156,15 @@ function buildLayout(balls: RecognizedBall[], tableSize: TableSize): TableLayout
       seenColours.add(ball.color);
       id = ball.color;
     }
+    // Map image coords → domain so the baulk (D) end always lands at low x,
+    // where the canvas draws the D. Without this, a photo shot from the baulk
+    // side comes out mirrored.
+    const { fx, fy } = toDomainFractions(ball.x, ball.y, recognized.baulkSide);
     positioned.push({
       id,
       color: ball.color,
-      x: clamp(ball.x * dimensions.width, radius, dimensions.width - radius),
-      y: clamp(ball.y * dimensions.height, radius, dimensions.height - radius),
+      x: clamp(fx * dimensions.width, radius, dimensions.width - radius),
+      y: clamp(fy * dimensions.height, radius, dimensions.height - radius),
       visible: true,
     });
   }
@@ -204,6 +218,24 @@ function separateOverlaps(
       }
     }
     if (!moved) break;
+  }
+}
+
+// Convert image-relative fractions (x: left→right, y: top→bottom) to domain
+// fractions where fx runs along the LONG axis from the baulk end (0). For
+// portrait photos (baulk top/bottom) the long axis is vertical, so the image
+// axes are swapped.
+function toDomainFractions(x: number, y: number, baulkSide: BaulkSide): { fx: number; fy: number } {
+  switch (baulkSide) {
+    case 'right':
+      return { fx: 1 - x, fy: y };
+    case 'top':
+      return { fx: y, fy: x };
+    case 'bottom':
+      return { fx: 1 - y, fy: x };
+    case 'left':
+    default:
+      return { fx: x, fy: y };
   }
 }
 
