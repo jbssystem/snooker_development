@@ -77,6 +77,16 @@ export function UserMenu() {
           >
             {tNav('profile')}
           </Link>
+          {user.roles.includes('SYSTEM_ADMIN') && (
+            <Link
+              href={'/admin/stats' as never}
+              className="block min-h-11 px-3 py-2.5 text-text-secondary transition hover:bg-background-elevated hover:text-text-primary"
+              onClick={() => setOpen(false)}
+              role="menuitem"
+            >
+              {tNav('admin')}
+            </Link>
+          )}
           <button
             onClick={onLogout}
             className="block min-h-11 w-full px-3 py-2.5 text-left text-text-secondary transition hover:bg-background-elevated hover:text-state-error"

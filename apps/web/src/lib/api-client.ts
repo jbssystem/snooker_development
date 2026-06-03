@@ -1,6 +1,13 @@
 import type {
   AuthMe,
   AuthSession,
+  ActiveAnnouncement,
+  Announcement,
+  AdminUserList,
+  AdminUserDetail,
+  AdminStats,
+  CreateAnnouncementInput,
+  UpdateAnnouncementInput,
   AddDrillExecutionInput,
   AiReport,
   CreateEquipmentProfileInput,
@@ -392,5 +399,78 @@ export const api = {
       request<ExternalImportJob[]>(`/external-links/${id}/jobs`, { token }),
     listImportedMatches: (token: string) =>
       request<ImportedMatch[]>('/external-links/imported-matches', { token }),
+  },
+  announcements: {
+    listActive: (token: string) =>
+      request<ActiveAnnouncement[]>('/announcements/active', { token }),
+    dismiss: (token: string, id: string) =>
+      request<void>(`/announcements/${id}/dismiss`, { method: 'POST', token, body: JSON.stringify({}) }),
+  },
+  admin: {
+    listUsers: (token: string, query: Record<string, string | number | undefined> = {}) => {
+      const params = new URLSearchParams();
+      for (const [k, v] of Object.entries(query)) if (v !== undefined && v !== '') params.set(k, String(v));
+      const qs = params.toString();
+      return request<AdminUserList>(`/admin/users${qs ? `?${qs}` : ''}`, { token });
+    },
+    getUser: (token: string, id: string) => request<AdminUserDetail>(`/admin/users/${id}`, { token }),
+    blockUser: (token: string, id: string, reason?: string) =>
+      request<AdminUserDetail>(`/admin/users/${id}/block`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ reason }),
+      }),
+    unblockUser: (token: string, id: string) =>
+      request<AdminUserDetail>(`/admin/users/${id}/unblock`, { method: 'POST', token, body: JSON.stringify({}) }),
+    grantAdmin: (token: string, id: string) =>
+      request<AdminUserDetail>(`/admin/users/${id}/roles/system-admin`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({}),
+      }),
+    revokeAdmin: (token: string, id: string) =>
+      request<AdminUserDetail>(`/admin/users/${id}/roles/system-admin`, { method: 'DELETE', token }),
+    verifyUser: (token: string, id: string) =>
+      request<AdminUserDetail>(`/admin/users/${id}/verify`, { method: 'POST', token, body: JSON.stringify({}) }),
+    resendVerification: (token: string, id: string) =>
+      request<void>(`/admin/users/${id}/resend-verification`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({}),
+      }),
+    listAnnouncements: (token: string) => request<Announcement[]>('/admin/announcements', { token }),
+    createAnnouncement: (token: string, input: CreateAnnouncementInput) =>
+      request<Announcement>('/admin/announcements', { method: 'POST', token, body: JSON.stringify(input) }),
+    updateAnnouncement: (token: string, id: string, input: UpdateAnnouncementInput) =>
+      request<Announcement>(`/admin/announcements/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    publishAnnouncement: (token: string, id: string) =>
+      request<Announcement>(`/admin/announcements/${id}/publish`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({}),
+      }),
+    unpublishAnnouncement: (token: string, id: string) =>
+      request<Announcement>(`/admin/announcements/${id}/unpublish`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({}),
+      }),
+    deleteAnnouncement: (token: string, id: string) =>
+      request<void>(`/admin/announcements/${id}`, { method: 'DELETE', token }),
+    listDrills: (token: string, search?: string) =>
+      request<DrillTemplate[]>(`/admin/drill-templates${search ? `?search=${encodeURIComponent(search)}` : ''}`, {
+        token,
+      }),
+    setDrillVisibility: (token: string, id: string, visibility: 'private' | 'shared' | 'system') =>
+      request<DrillTemplate>(`/admin/drill-templates/${id}/visibility`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify({ visibility }),
+      }),
+    getStats: (token: string) => request<AdminStats>('/admin/stats', { token }),
   },
 };

@@ -38,7 +38,8 @@
     "externalData": "Внешние данные",
     "profile": "Профиль",
     "settings": "Настройки",
-    "more": "Ещё"
+    "more": "Ещё",
+    "admin": "Админ"
   },
   "systemDrills": {
     "templates": {
@@ -1643,5 +1644,75 @@
     "viewReports": "Перейти к отчётам",
     "linkError": "Источник уже подключён или неверная ссылка.",
     "genericError": "Ошибка подключения."
+  },
+  "admin": {
+    "title": "Администрирование",
+    "subtitle": "Пользователи, токены, упражнения и сообщения.",
+    "forbidden": "Доступ только для администраторов.",
+    "loading": "Загрузка…",
+    "loadError": "Не удалось загрузить данные.",
+    "actionError": "Действие не выполнено.",
+    "tabs": {
+      "stats": "Сводка",
+      "users": "Пользователи",
+      "announcements": "Сообщения",
+      "exercises": "Упражнения"
+    },
+    "stats": {
+      "totalUsers": "Пользователи",
+      "totalAdmins": "Админы",
+      "totalReports": "AI-отчёты",
+      "tokensThisMonth": "Токены за месяц",
+      "byStatus": "По статусам",
+      "recentSignups": "Недавние регистрации"
+    },
+    "users": {
+      "searchPlaceholder": "Поиск по email или имени",
+      "user": "Пользователь",
+      "status": "Статус",
+      "roles": "Роли",
+      "tokens": "Токены",
+      "actions": "Действия",
+      "total": "Всего: {count}",
+      "block": "Заблокировать",
+      "unblock": "Разблокировать",
+      "grantAdmin": "Сделать админом",
+      "revokeAdmin": "Снять админа",
+      "verify": "Подтвердить"
+    },
+    "announcements": {
+      "createTitle": "Новое сообщение",
+      "fieldTitle": "Заголовок",
+      "fieldBody": "Текст сообщения",
+      "fieldVersion": "Версия",
+      "publishNow": "Опубликовать сразу",
+      "create": "Создать",
+      "publish": "Опубликовать",
+      "unpublish": "Снять с публикации",
+      "delete": "Удалить",
+      "published": "Опубликовано",
+      "draft": "Черновик",
+      "type": {
+        "announcement": "Объявление",
+        "release_note": "Релиз-ноут",
+        "maintenance": "Тех. работы"
+      },
+      "severity": {
+        "info": "Инфо",
+        "warning": "Предупреждение",
+        "critical": "Критично"
+      }
+    },
+    "exercises": {
+      "searchPlaceholder": "Поиск упражнения",
+      "name": "Название",
+      "category": "Категория",
+      "visibility": "Видимость",
+      "visibilityOption": {
+        "private": "Личное",
+        "shared": "Общее",
+        "system": "Системное"
+      }
+    }
   }
 }

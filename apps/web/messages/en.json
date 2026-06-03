@@ -38,7 +38,8 @@
     "externalData": "External Data",
     "profile": "Profile",
     "settings": "Settings",
-    "more": "More"
+    "more": "More",
+    "admin": "Admin"
   },
   "systemDrills": {
     "templates": {
@@ -1643,5 +1644,75 @@
     "viewReports": "View reports",
     "linkError": "Source already connected or invalid URL.",
     "genericError": "Connection error."
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Users, tokens, exercises and announcements.",
+    "forbidden": "Administrators only.",
+    "loading": "Loading…",
+    "loadError": "Failed to load data.",
+    "actionError": "Action failed.",
+    "tabs": {
+      "stats": "Overview",
+      "users": "Users",
+      "announcements": "Announcements",
+      "exercises": "Exercises"
+    },
+    "stats": {
+      "totalUsers": "Users",
+      "totalAdmins": "Admins",
+      "totalReports": "AI reports",
+      "tokensThisMonth": "Tokens this month",
+      "byStatus": "By status",
+      "recentSignups": "Recent signups"
+    },
+    "users": {
+      "searchPlaceholder": "Search by email or name",
+      "user": "User",
+      "status": "Status",
+      "roles": "Roles",
+      "tokens": "Tokens",
+      "actions": "Actions",
+      "total": "Total: {count}",
+      "block": "Block",
+      "unblock": "Unblock",
+      "grantAdmin": "Make admin",
+      "revokeAdmin": "Revoke admin",
+      "verify": "Verify"
+    },
+    "announcements": {
+      "createTitle": "New announcement",
+      "fieldTitle": "Title",
+      "fieldBody": "Body",
+      "fieldVersion": "Version",
+      "publishNow": "Publish now",
+      "create": "Create",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "delete": "Delete",
+      "published": "Published",
+      "draft": "Draft",
+      "type": {
+        "announcement": "Announcement",
+        "release_note": "Release note",
+        "maintenance": "Maintenance"
+      },
+      "severity": {
+        "info": "Info",
+        "warning": "Warning",
+        "critical": "Critical"
+      }
+    },
+    "exercises": {
+      "searchPlaceholder": "Search exercise",
+      "name": "Name",
+      "category": "Category",
+      "visibility": "Visibility",
+      "visibilityOption": {
+        "private": "Private",
+        "shared": "Shared",
+        "system": "System"
+      }
+    }
   }
 }

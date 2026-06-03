@@ -38,7 +38,8 @@
     "externalData": "Зовнішні дані",
     "profile": "Профіль",
     "settings": "Налаштування",
-    "more": "Ще"
+    "more": "Ще",
+    "admin": "Адмін"
   },
   "systemDrills": {
     "templates": {
@@ -1643,5 +1644,75 @@
     "viewReports": "Перейти до звітів",
     "linkError": "Джерело вже підключено або невірне посилання.",
     "genericError": "Помилка підключення."
+  },
+  "admin": {
+    "title": "Адміністрування",
+    "subtitle": "Користувачі, токени, вправи та повідомлення.",
+    "forbidden": "Лише для адміністраторів.",
+    "loading": "Завантаження…",
+    "loadError": "Не вдалося завантажити дані.",
+    "actionError": "Дію не виконано.",
+    "tabs": {
+      "stats": "Зведення",
+      "users": "Користувачі",
+      "announcements": "Повідомлення",
+      "exercises": "Вправи"
+    },
+    "stats": {
+      "totalUsers": "Користувачі",
+      "totalAdmins": "Адміни",
+      "totalReports": "AI-звіти",
+      "tokensThisMonth": "Токени за місяць",
+      "byStatus": "За статусами",
+      "recentSignups": "Нещодавні реєстрації"
+    },
+    "users": {
+      "searchPlaceholder": "Пошук за email або імʼям",
+      "user": "Користувач",
+      "status": "Статус",
+      "roles": "Ролі",
+      "tokens": "Токени",
+      "actions": "Дії",
+      "total": "Усього: {count}",
+      "block": "Заблокувати",
+      "unblock": "Розблокувати",
+      "grantAdmin": "Зробити адміном",
+      "revokeAdmin": "Зняти адміна",
+      "verify": "Підтвердити"
+    },
+    "announcements": {
+      "createTitle": "Нове повідомлення",
+      "fieldTitle": "Заголовок",
+      "fieldBody": "Текст",
+      "fieldVersion": "Версія",
+      "publishNow": "Опублікувати одразу",
+      "create": "Створити",
+      "publish": "Опублікувати",
+      "unpublish": "Зняти з публікації",
+      "delete": "Видалити",
+      "published": "Опубліковано",
+      "draft": "Чернетка",
+      "type": {
+        "announcement": "Оголошення",
+        "release_note": "Реліз-ноут",
+        "maintenance": "Тех. роботи"
+      },
+      "severity": {
+        "info": "Інфо",
+        "warning": "Попередження",
+        "critical": "Критично"
+      }
+    },
+    "exercises": {
+      "searchPlaceholder": "Пошук вправи",
+      "name": "Назва",
+      "category": "Категорія",
+      "visibility": "Видимість",
+      "visibilityOption": {
+        "private": "Особисте",
+        "shared": "Спільне",
+        "system": "Системне"
+      }
+    }
   }
 }
