@@ -40,6 +40,15 @@ cookie is sent to `/api/auth/refresh` and `/api/auth/logout`.
 The API sets baseline security headers itself (`nosniff`, `DENY`, CSP,
 `no-referrer`, permissions policy, and HSTS in production). Keep equivalent
 nginx headers aligned rather than loosening them at the proxy.
+The web app sets its own headers too (`next.config.ts` → `securityHeaders`):
+a CSP (with `frame-ancestors 'none'` and a `connect-src` allowlist of `'self'`
++ the API origin), `X-Frame-Options: DENY`, `nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin`, a permissions policy, and
+HSTS in production. This matters because the SPA holds a short-lived access
+token in `localStorage`, so clickjacking and XSS exfiltration are the realistic
+browser-side threats to player data. In prod the API is same-origin (`/api`),
+so `connect-src 'self'` already covers it; dev also allows `ws:`/`'unsafe-eval'`
+for Fast Refresh. Don't strip these at nginx.
 
 ## Services
 
