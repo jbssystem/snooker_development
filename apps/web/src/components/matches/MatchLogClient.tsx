@@ -225,6 +225,14 @@ export function MatchLogClient() {
     setShowCreate(true);
   };
 
+  // Open the create form when arriving via the command palette (?new=1).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      openCreate('match');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const submitMatch = (values: MatchFormValues) => {
     if (editingMatchId) {
       updateMatch.mutate({ id: editingMatchId, data: toCreateMatchInput(values) });
@@ -306,9 +314,9 @@ export function MatchLogClient() {
           {pagedMatches.map((match) => (
             <button
               key={match.id}
-              className={`relative rounded-md border px-3 py-2 pr-16 text-left transition ${
+              className={`press relative rounded-lg border px-3 py-2 pr-16 text-left transition ${
                 match.id === activeMatch?.id
-                  ? 'border-brand-accent bg-background-elevated text-text-primary'
+                  ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-1'
                   : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
               }`}
               onClick={() => setActiveMatchId(match.id)}
@@ -628,7 +636,7 @@ function FrameMap({
   return (
     <div className="grid gap-3">
       {sides.map(({ side, name }) => (
-        <div key={side} className="rounded-lg border border-border-subtle bg-background-primary p-3">
+        <div key={side} className="sunken rounded-lg border border-border-subtle p-3">
           <p className="mb-2 text-xs font-medium text-text-secondary">{name}</p>
           <BallMap emptyLabel={t('scorer.mapEmpty')} runs={breakRunsFor(state, side)} size="sm" />
         </div>
@@ -755,8 +763,10 @@ function MatchDetail({
           </div>
           <div className="flex items-center gap-2">
             <div className="flex flex-col items-end">
-              <div className="rounded-md bg-background-elevated px-3 py-2 text-lg font-semibold text-text-primary">
-                {match.framesWon}:{match.framesLost}
+              <div className="rounded-lg bg-background-elevated px-4 py-2 text-2xl font-bold tabular-nums text-text-primary shadow-elev-2 ring-1 ring-border-subtle">
+                <span className={match.framesWon >= match.framesLost ? 'text-brand-accent' : undefined}>{match.framesWon}</span>
+                <span className="mx-1 text-text-disabled">:</span>
+                <span className={match.framesLost > match.framesWon ? 'text-brand-gold' : undefined}>{match.framesLost}</span>
               </div>
               {progress && (
                 <span className="mt-1 text-[11px] font-medium uppercase tracking-wide text-brand-accent">
@@ -790,7 +800,7 @@ function MatchDetail({
             { label: t('fields.tacticalErrors'), value: formatOptional(match.tacticalErrors) },
           ]}
         />
-        {match.notes && <p className="mt-4 rounded-md bg-background-primary p-3 text-sm text-text-secondary">{match.notes}</p>}
+        {match.notes && <p className="sunken mt-4 rounded-lg p-3 text-sm text-text-secondary">{match.notes}</p>}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -1006,7 +1016,7 @@ function ResultChip({
       ? 'border-state-success/40 bg-state-success/10 text-state-success'
       : result === 'opponent_win'
         ? 'border-state-error/40 bg-state-error/10 text-state-error'
-        : 'border-border-subtle bg-background-primary text-text-secondary';
+        : 'border-border-subtle bg-background-elevated text-text-secondary';
   return (
     <span className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold ${tone}`}>
       {t(`result.${result}`)}
@@ -1259,6 +1269,5 @@ function errorMessage(error: unknown, t: (key: string) => string): string {
   }
 }
 
-const inputClass =
-  'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
+const inputClass = 'input-field';
 const primaryButtonClass = 'btn-primary';

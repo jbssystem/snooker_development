@@ -16,6 +16,7 @@ import {
   type FrameScoreState,
   type ScoringBall,
 } from '@snooker/snooker-domain';
+import { useHotkey } from '@/lib/use-hotkeys';
 import { BALL_HEX, Ball, BallMap } from './ball-visuals';
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
@@ -30,6 +31,21 @@ export type ScorerResult = {
 
 const ALL_BALLS: ScoringBall[] = ['red', 'yellow', 'green', 'brown', 'blue', 'pink', 'black'];
 const FOUL_VALUES = [4, 5, 6, 7];
+
+// Point value doubles as the keyboard shortcut for potting each ball.
+const BALL_POINTS: Record<ScoringBall, number> = {
+  red: 1,
+  yellow: 2,
+  green: 3,
+  brown: 4,
+  blue: 5,
+  pink: 6,
+  black: 7,
+};
+// Light glance highlight to give each ball a glossy, 3D sphere look.
+function ballSheen(hex: string): string {
+  return `radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), rgba(255,255,255,0) 42%), radial-gradient(circle at 68% 78%, rgba(0,0,0,0.35), rgba(0,0,0,0) 55%), ${hex}`;
+}
 
 type Action =
   | { kind: 'pot'; ball: ScoringBall }
@@ -81,6 +97,23 @@ export function FrameScorer({
   const allowed = useMemo(() => new Set(ballOn(state)), [state]);
   const outcome = frameOutcome(state);
   const hasEvents = state.events.length > 0;
+  const live = !state.finished;
+
+  // Keyboard shortcuts: ball point value pots that ball, plus turn controls.
+  const potByPoints = (points: number) => {
+    const ball = ALL_BALLS.find((b) => BALL_POINTS[b] === points);
+    if (ball && allowed.has(ball) && live) dispatch({ kind: 'pot', ball });
+  };
+  useHotkey('1', () => potByPoints(1), { enabled: live });
+  useHotkey('2', () => potByPoints(2), { enabled: live });
+  useHotkey('3', () => potByPoints(3), { enabled: live });
+  useHotkey('4', () => potByPoints(4), { enabled: live });
+  useHotkey('5', () => potByPoints(5), { enabled: live });
+  useHotkey('6', () => potByPoints(6), { enabled: live });
+  useHotkey('7', () => potByPoints(7), { enabled: live });
+  useHotkey('s', () => dispatch({ kind: 'safety' }), { enabled: live });
+  useHotkey('e', () => dispatch({ kind: 'switch' }), { enabled: live });
+  useHotkey('u', () => hasEvents && dispatch({ kind: 'undo' }), { enabled: hasEvents });
 
   const sides = [
     { side: 'player' as const, name: playerName, score: state.scores.player, high: state.highBreaks.player },
@@ -96,8 +129,10 @@ export function FrameScorer({
           return (
             <div
               key={side}
-              className={`rounded-lg border p-3 transition ${
-                atTable ? 'border-brand-accent bg-background-elevated' : 'border-border-subtle bg-background-primary'
+              className={`rounded-xl border p-3 transition ${
+                atTable
+                  ? 'border-brand-accent bg-background-elevated shadow-elev-2 ring-1 ring-brand-accent/30'
+                  : 'border-border-subtle bg-background-secondary shadow-elev-1'
               }`}
             >
               <div className="flex items-center justify-between gap-2">
@@ -137,20 +172,22 @@ export function FrameScorer({
         )}
       </div>
 
-      {/* Ball palette */}
-      <div className="flex flex-wrap gap-2">
+      {/* Ball palette — glossy spheres labelled with their point value (= hotkey) */}
+      <div className="flex flex-wrap gap-2.5">
         {ALL_BALLS.map((ball) => {
           const enabled = allowed.has(ball) && !state.finished;
           return (
             <button
               key={ball}
-              className="flex h-12 w-12 items-center justify-center rounded-full font-semibold text-white shadow ring-1 ring-black/30 transition disabled:cursor-not-allowed disabled:opacity-25"
+              className="press flex h-12 w-12 items-center justify-center rounded-full text-base font-bold text-white shadow-elev-2 ring-1 ring-black/40 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-25 disabled:shadow-none"
               disabled={!enabled}
               onClick={() => dispatch({ kind: 'pot', ball })}
-              style={{ backgroundColor: BALL_HEX[ball] }}
-              title={t(`scorer.balls.${ball}`)}
+              style={{ background: ballSheen(BALL_HEX[ball]) }}
+              title={`${t(`scorer.balls.${ball}`)} (${BALL_POINTS[ball]})`}
               type="button"
-            />
+            >
+              <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{BALL_POINTS[ball]}</span>
+            </button>
           );
         })}
       </div>
@@ -177,18 +214,18 @@ export function FrameScorer({
           {t('scorer.freeBall')}
         </button>
         <button className={actionBtn} disabled={state.finished} onClick={() => dispatch({ kind: 'safety' })} type="button">
-          {t('scorer.safety')}
+          {t('scorer.safety')} <Kbd>S</Kbd>
         </button>
         <button
-          className="inline-flex items-center gap-1.5 rounded-md border border-brand-accent bg-brand-accent/15 px-3 py-1.5 font-semibold text-brand-accent transition hover:bg-brand-accent/25 disabled:opacity-40"
+          className="press inline-flex items-center gap-1.5 rounded-md border border-brand-accent bg-brand-accent/15 px-3 py-1.5 font-semibold text-brand-accent transition hover:bg-brand-accent/25 disabled:opacity-40"
           disabled={state.finished}
           onClick={() => dispatch({ kind: 'switch' })}
           type="button"
         >
-          {t('scorer.endTurn')} →
+          {t('scorer.endTurn')} → <Kbd>E</Kbd>
         </button>
         <button className={actionBtn} disabled={!hasEvents} onClick={() => dispatch({ kind: 'undo' })} type="button">
-          {t('scorer.undo')}
+          {t('scorer.undo')} <Kbd>U</Kbd>
         </button>
         <button className={actionBtn} disabled={!hasEvents} onClick={() => dispatch({ kind: 'reset' })} type="button">
           {t('scorer.rerack')}
@@ -198,7 +235,7 @@ export function FrameScorer({
       {/* Per-player ball-sequence map */}
       <div className="grid gap-3 sm:grid-cols-2">
         {sides.map(({ side, name }) => (
-          <div key={side} className="rounded-lg border border-border-subtle bg-background-primary p-3">
+          <div key={side} className="sunken rounded-lg border border-border-subtle p-3">
             <p className="mb-2 text-xs font-medium text-text-secondary">{name}</p>
             <BallMap emptyLabel={t('scorer.mapEmpty')} runs={breakRunsFor(state, side)} size="sm" />
           </div>
@@ -225,4 +262,10 @@ export function FrameScorer({
 }
 
 const actionBtn =
-  'rounded-md border border-border-subtle px-2.5 py-1.5 font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40';
+  'press inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1.5 font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40';
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="rounded border border-current px-1 text-[10px] font-medium opacity-60">{children}</kbd>
+  );
+}
