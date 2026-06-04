@@ -139,16 +139,24 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - All API error codes are mapped to translation keys under `errors.api.*`
   in the locale files. A missing translation falls back to the raw code so
   the UI never crashes on a new error.
-- For MVP, only the short-lived access token and user summary are persisted to
-  `localStorage` under `snooker.auth`. Refresh tokens live in the API-managed
-  httpOnly `snooker_refresh` cookie. Phase 2 will add SSR-aware session reads.
+- **Tokens.** The short-lived access token (a JWT) is held in memory only on the
+  zustand store and is **never** persisted — persisting it to `localStorage` made
+  it a long-lived XSS-exfiltration target. Only the lightweight `user` summary is
+  persisted under `snooker.auth` (persist v3); its presence is the "was
+  authenticated" signal. Refresh tokens live in the API-managed httpOnly
+  `snooker_refresh` cookie (`sameSite=strict`, path `/auth`). On a reload there is
+  no in-memory token yet, so the session is restored by refreshing against that
+  cookie — see the guard below.
 - The whole `(app)` route group is wrapped by `AuthGuard`
   (`src/components/auth/AuthGuard.tsx`) in `(app)/layout.tsx`. It waits for the
-  persisted store to hydrate, then redirects unauthenticated visitors to
-  `/login` instead of rendering protected content (a neutral spinner shows until
-  hydration finishes, so a logged-in reload never flashes the redirect). Because
-  auth state is client-only, this guard — not the i18n middleware — is what stops
-  direct navigation to protected URLs.
+  persisted store to hydrate, then: if an in-memory token exists it renders; if
+  the user had a session it mints a fresh access token from the `snooker_refresh`
+  cookie via `/auth/refresh` (`refreshAccessToken` in `api-client.ts`) and renders
+  on success or redirects to `/login` on failure; if there was never a session it
+  redirects to `/login`. A neutral spinner shows until this resolves, so a
+  logged-in reload never flashes the redirect. Because auth state is client-only,
+  this guard — not the i18n middleware — is what stops direct navigation to
+  protected URLs.
 
 ## Profile UI
 

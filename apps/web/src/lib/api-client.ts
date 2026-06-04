@@ -149,7 +149,13 @@ async function send<T>(path: string, opts: FetchOptions = {}): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function refreshAccessToken(): Promise<Tokens | null> {
+/**
+ * Mint a fresh access token from the httpOnly `snooker_refresh` cookie and store
+ * it in memory. Returns the tokens, or `null` if the refresh failed (no/expired
+ * cookie). Used both by the 401→refresh→retry path below and by `AuthGuard` on
+ * app load to restore an in-memory session without persisting the token.
+ */
+export async function refreshAccessToken(): Promise<Tokens | null> {
   try {
     const tokens = await send<Tokens>('/auth/refresh', {
       method: 'POST',

@@ -4,19 +4,20 @@ import { defineConfig, devices } from '@playwright/test';
  * Playwright config for Snooker Player OS web UI tests.
  *
  * Two projects:
- *  - `smoke` (default): API mocked via route interception + a seeded fake auth
- *    token. Fast, deterministic, needs only the Next.js dev server — no
- *    Postgres / Redis / API. This is what `pnpm test:ui` runs.
- *  - `e2e`: hits the real backend (API on :4000) and logs in with real
- *    credentials. Run only when the full stack is up (`pnpm test:ui:e2e`).
+ *  - `smoke` (default): API mocked via route interception + a seeded fake
+ *    "remembered session". Fast, deterministic, needs only the Next.js dev
+ *    server — no Postgres / Redis / API. This is what `pnpm test:ui` runs.
+ *  - `e2e`: hits the real backend (API on :4000). Auth is a **per-worker** real
+ *    login handled by the `authedContext` fixture in `support/test-base.ts`
+ *    (the access token is in-memory only and the refresh token is single-use,
+ *    so each worker logs in once and shares one context). Run only when the
+ *    full stack is up (`pnpm test:ui:e2e`), which caps workers to stay under
+ *    the /auth/login rate limit.
  *
  * The web dev server is started automatically and reused if already running.
  */
 const WEB_PORT = 3000;
 const baseURL = `http://localhost:${WEB_PORT}`;
-
-// Where the `e2e-setup` project stores the real-login session for reuse.
-export const E2E_AUTH_FILE = '.playwright/e2e-auth.json';
 
 export default defineConfig({
   testDir: './apps/web/e2e',
@@ -40,17 +41,10 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
-    // Logs in once against the real API and saves the session, so e2e tests
-    // don't each hit the rate-limited /auth/login endpoint.
-    {
-      name: 'e2e-setup',
-      testMatch: /global\.setup\.ts/,
-    },
     {
       name: 'e2e',
       testMatch: /.*\.spec\.ts/,
-      dependencies: ['e2e-setup'],
-      use: { ...devices['Desktop Chrome'], storageState: E2E_AUTH_FILE },
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 

@@ -1,21 +1,24 @@
 import type { Page } from '@playwright/test';
-import { adminUser, authTokens } from './fixtures';
+import { adminUser } from './fixtures';
 
-// NOTE: real-API login for the `e2e` project lives in `global.setup.ts`
-// (runs once and reuses the session via storageState).
+// NOTE: real-API login for the `e2e` project lives in `session.ts` + the
+// per-worker `authedContext` fixture in `test-base.ts`.
 
 /**
- * Route protection in this app is client-side: data queries are gated on
- * `Boolean(token)` from the zustand auth store (persisted to localStorage as
- * `snooker.auth`). Seeding that key before the page loads makes protected
- * pages render without going through the login flow.
+ * Seed a "remembered session" for the mocked `smoke` project.
  *
- * The persisted shape is zustand-persist v2: { state: { user, tokens }, version }.
+ * SECURITY: the access token is no longer persisted to localStorage — it lives
+ * only in memory. So we can't seed a token here. Instead we seed only the
+ * persisted `user` summary (the "was authenticated" signal). On load, AuthGuard
+ * calls `/auth/refresh` to obtain an in-memory access token; `mockApi` answers
+ * that with `fx.authTokens`, so protected pages render without a login flow.
+ *
+ * The persisted shape is zustand-persist v3: { state: { user }, version }.
  */
 export async function seedAuth(page: Page): Promise<void> {
   const value = JSON.stringify({
-    state: { user: adminUser, tokens: authTokens },
-    version: 2,
+    state: { user: adminUser },
+    version: 3,
   });
   await page.addInitScript(
     ([key, val]) => {

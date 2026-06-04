@@ -24,19 +24,18 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'snooker.auth',
       storage: createJSONStorage(() => localStorage),
-      version: 2,
-      partialize: (state) => ({ user: state.user, tokens: state.tokens }),
+      version: 3,
+      // SECURITY: the access token (a JWT) is NEVER persisted — it lives only in
+      // memory on the store. Persisting it to localStorage made it a long-lived
+      // XSS-exfiltration target. We persist only the lightweight user summary;
+      // its presence is the "was authenticated" signal that lets AuthGuard
+      // refresh-on-load from the httpOnly `snooker_refresh` cookie. See
+      // docs/ui-guidelines.md "Auth UI".
+      partialize: (state) => ({ user: state.user }),
       migrate: (persisted) => {
         const state = persisted as Partial<AuthState>;
-        return {
-          user: state.user ?? null,
-          tokens: state.tokens
-            ? {
-                accessToken: state.tokens.accessToken,
-                accessTokenExpiresAt: state.tokens.accessTokenExpiresAt,
-              }
-            : null,
-        };
+        // Drop any token persisted by an older version (v2 stored `tokens`).
+        return { user: state.user ?? null, tokens: null };
       },
     },
   ),

@@ -4,8 +4,8 @@ Fast UI safety net for the `apps/web` Next.js app. Two modes:
 
 | Project | Backend | Auth | Speed | Command |
 | ------- | ------- | ---- | ----- | ------- |
-| `smoke` (default) | **Mocked** (no Postgres/Redis/API needed) | Fake seeded admin token | Seconds | `pnpm test:ui` |
-| `e2e` | **Real** API on `:4000` | Real login (env creds) | Slower | `pnpm test:ui:e2e` |
+| `smoke` (default) | **Mocked** (no Postgres/Redis/API needed) | Seeded "remembered" admin session (refresh-on-load mocked) | Seconds | `pnpm test:ui` |
+| `e2e` | **Real** API on `:4000` | Per-worker real login (env creds) | Slower | `pnpm test:ui:e2e` |
 
 ## Запуск «по промту»
 
@@ -33,9 +33,15 @@ reused if already running.
 
 ## How it works
 
-- **`support/auth.ts`** — seeds a session into `localStorage` (`snooker.auth`)
-  before the page loads. Route protection is client-side, so this is enough to
-  render protected pages without the login flow. `e2e` does a real `/auth/login`.
+- **`support/auth.ts`** — (smoke) seeds only the remembered `user` summary into
+  `localStorage` (`snooker.auth`) before the page loads. The access token is
+  **not** persisted (it's in-memory only), so on load `AuthGuard` calls
+  `/auth/refresh` to mint one — mocked to `fx.authTokens` for `smoke`.
+- **`support/session.ts`** — (e2e) real `/auth/login` helper. Because the refresh
+  token is single-use, `test-base.ts` logs in **once per worker** and shares one
+  browser context across that worker's tests, so refresh-on-load rotation chains
+  forward instead of being replayed across isolated contexts. `pnpm test:ui:e2e`
+  caps `--workers` to stay under the `/auth/login` rate limit.
 - **`support/mockApi.ts`** + **`support/fixtures.ts`** — intercept every request
   to `http://localhost:4000/**` and answer with static fixtures. Unknown GETs
   default to `[]` so a page never crashes on a missing mock.
