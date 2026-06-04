@@ -15,7 +15,6 @@ import {
 } from 'recharts';
 import type { DashboardDrillProgress, PlayerDashboard } from '@snooker/shared';
 import { CoachInsightPanel } from '@/components/insights/CoachInsightPanel';
-import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillName } from '@/lib/drill-localization';
@@ -40,17 +39,6 @@ export function AnalyticsClient() {
     queryFn: () => api.dashboard.getPlayerDashboard(token ?? ''),
     enabled: Boolean(token),
   });
-
-  if (!token) {
-    return (
-      <main className="max-w-2xl">
-        <PageHeader subtitle={t('authRequired')} title={t('title')} />
-        <Link href="/login" className="btn-primary">
-          {t('loginCta')}
-        </Link>
-      </main>
-    );
-  }
 
   const dashboard = dashboardQuery.data;
 

@@ -12,7 +12,6 @@ import type {
   TrainingSession,
   TrainingSessionType,
 } from '@snooker/shared';
-import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
 import { Modal } from '@/components/layout/Modal';
 import { Field } from '@/components/ui';
@@ -168,21 +167,6 @@ export function TrainingSessionClient() {
     },
     onError: (e) => setServerError(errorMessage(e, tErr)),
   });
-
-  if (!token) {
-    return (
-      <main className="max-w-2xl">
-        <h1 className="text-3xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-3 text-text-secondary">{t('authRequired')}</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex rounded-md bg-brand-primary px-4 py-2 font-medium text-text-primary hover:bg-brand-accent"
-        >
-          {t('loginCta')}
-        </Link>
-      </main>
-    );
-  }
 
   const openNewSession = () => {
     setServerError(null);

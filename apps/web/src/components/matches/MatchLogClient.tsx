@@ -18,7 +18,7 @@ import type { ScoreEvent } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
 import { Modal } from '@/components/layout/Modal';
-import { CountryOptions, Field, PageHeader, PlusIcon } from '@/components/ui';
+import { CountryOptions, Field, PlusIcon } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { FrameScorer, type ScorerResult } from './FrameScorer';
@@ -252,17 +252,6 @@ export function MatchLogClient() {
     },
     onError: (error) => setServerError(errorMessage(error, tErr)),
   });
-
-  if (!token) {
-    return (
-      <main className="max-w-2xl">
-        <PageHeader subtitle={t('authRequired')} title={t('title')} />
-        <Link href="/login" className="btn-primary">
-          {t('loginCta')}
-        </Link>
-      </main>
-    );
-  }
 
   const profileMissing = profileQuery.data === null;
   const profile = profileQuery.data ?? null;

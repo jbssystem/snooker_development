@@ -192,17 +192,6 @@ export function CalendarFactorsClient() {
     [events, lifestyleFactors, locale, selectedItem, supplements, t],
   );
 
-  if (!token) {
-    return (
-      <main className="max-w-2xl">
-        <PageHeader subtitle={t('authRequired')} title={t('title')} />
-        <Link href="/login" className="btn-primary">
-          {t('loginCta')}
-        </Link>
-      </main>
-    );
-  }
-
   const profileMissing = profileQuery.data === null;
   const serverError = [createEvent.error, saveLifestyle.error, createSupplement.error]
     .filter(Boolean)

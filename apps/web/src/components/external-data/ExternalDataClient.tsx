@@ -49,21 +49,9 @@ type ExternalFrameNotes = {
 };
 
 export function ExternalDataClient() {
-  const t = useTranslations('externalData');
   const token = useAuthStore((state) => state.tokens?.accessToken ?? null);
 
-  if (!token) {
-    return (
-      <main className="max-w-2xl">
-        <PageHeader subtitle={t('authRequired')} title={t('title')} />
-        <Link href="/login" className="btn-primary">
-          {t('loginCta')}
-        </Link>
-      </main>
-    );
-  }
-
-  return <AuthenticatedView token={token} />;
+  return <AuthenticatedView token={token ?? ''} />;
 }
 
 function AuthenticatedView({ token }: { token: string }) {

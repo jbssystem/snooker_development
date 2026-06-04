@@ -14,7 +14,6 @@ import type {
   TableLayout,
   UserDrillVisibility,
 } from '@snooker/shared';
-import { Link } from '@/i18n/navigation';
 import { Modal } from '@/components/layout/Modal';
 import { ChevronDown } from '@/components/layout/ChevronDown';
 import { EmptyState, Field, InfoTooltip, PageHeader } from '@/components/ui';
@@ -270,17 +269,6 @@ export function DrillLibraryClient() {
       createTemplate.mutate(data);
     }
   };
-
-  if (!token) {
-    return (
-      <main className="max-w-2xl">
-        <PageHeader subtitle={t('authRequired')} title={t('title')} />
-        <Link href="/login" className="btn-primary">
-          {t('loginCta')}
-        </Link>
-      </main>
-    );
-  }
 
   return (
     <main className="min-w-0">
