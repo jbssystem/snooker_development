@@ -541,8 +541,26 @@ function BallShape({
       onTap={onSelect}
     >
       {selected && <Circle fill="rgba(200,164,93,0.18)" radius={radius + 7} stroke={HANDLE} strokeWidth={2} />}
-      <Circle fill={color.fill} radius={radius} stroke={color.stroke} strokeWidth={ball.color === 'white' ? 2 : 1.5} />
-      <Circle fill="rgba(255,255,255,0.28)" radius={radius * 0.28} x={-radius * 0.28} y={-radius * 0.28} />
+      {/* Soft cast shadow on the cloth gives the ball a sense of volume. */}
+      <Circle
+        fill={color.fill}
+        radius={radius}
+        shadowBlur={radius * 0.7}
+        shadowColor="#000000"
+        shadowOffsetY={radius * 0.32}
+        shadowOpacity={0.4}
+        stroke={color.stroke}
+        strokeWidth={ball.color === 'white' ? 2 : 1.5}
+      />
+      {/* Dark lower rim + glossy top highlight read as a lit sphere. */}
+      <Circle
+        fillRadialGradientColorStops={[0, 'rgba(255,255,255,0.55)', 0.5, 'rgba(255,255,255,0)']}
+        fillRadialGradientEndRadius={radius * 0.9}
+        fillRadialGradientStartPoint={{ x: -radius * 0.3, y: -radius * 0.3 }}
+        fillRadialGradientStartRadius={0}
+        radius={radius}
+      />
+      <Circle fill="rgba(255,255,255,0.55)" radius={radius * 0.22} x={-radius * 0.3} y={-radius * 0.32} />
     </Group>
   );
 }

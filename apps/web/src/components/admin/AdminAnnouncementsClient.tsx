@@ -151,8 +151,7 @@ export function AdminAnnouncementsClient() {
   );
 }
 
-const inputClass =
-  'w-full rounded-md border border-border-subtle bg-background-secondary px-3 py-2 text-sm text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
+const inputClass = 'input-field w-full';
 
 function ActionBtn({
   children,
@@ -167,7 +166,7 @@ function ActionBtn({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-md border px-2.5 py-1 text-xs transition ${
+      className={`press rounded-md border px-2.5 py-1 text-xs transition ${
         variant === 'danger'
           ? 'border-state-error/40 text-state-error hover:bg-state-error/10'
           : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'

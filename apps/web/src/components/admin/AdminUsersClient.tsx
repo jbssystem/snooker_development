@@ -7,6 +7,9 @@ import type { AdminUserListItem } from '@snooker/shared';
 import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api-client';
 
+type SortKey = 'user' | 'tokens';
+type SortDir = 'asc' | 'desc';
+
 export function AdminUsersClient() {
   const t = useTranslations('admin');
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
@@ -14,6 +17,8 @@ export function AdminUsersClient() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [sortKey, setSortKey] = useState<SortKey>('user');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
   const pageSize = 20;
 
   const query = useQuery({
@@ -33,6 +38,32 @@ export function AdminUsersClient() {
   const data = query.data;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1;
 
+  const sortedItems = data?.items
+    ? [...data.items].sort((a, b) => {
+        let cmp = 0;
+        if (sortKey === 'user') {
+          cmp = (a.email ?? '').localeCompare(b.email ?? '');
+        } else if (sortKey === 'tokens') {
+          cmp = a.tokenUsage.totalTokens - b.tokenUsage.totalTokens;
+        }
+        return sortDir === 'asc' ? cmp : -cmp;
+      })
+    : data?.items;
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  }
+
+  function SortIndicator({ col }: { col: SortKey }) {
+    if (sortKey !== col) return <span className="ml-1 opacity-30">▲</span>;
+    return <span className="ml-1">{sortDir === 'asc' ? '▲' : '▼'}</span>;
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
@@ -43,7 +74,7 @@ export function AdminUsersClient() {
             setPage(1);
           }}
           placeholder={t('users.searchPlaceholder')}
-          className="w-full max-w-xs rounded-md border border-border-subtle bg-background-secondary px-3 py-2 text-sm text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none"
+          className="input-field w-full max-w-xs"
         />
         {mutation.isError && <span className="text-sm text-state-error">{t('actionError')}</span>}
       </div>
@@ -51,19 +82,31 @@ export function AdminUsersClient() {
       {query.isLoading ? (
         <p className="text-sm text-text-secondary">{t('loading')}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border-subtle">
+        <div className="overflow-x-auto rounded-xl border border-border-subtle shadow-elev-1">
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="bg-background-secondary text-xs uppercase tracking-wide text-text-disabled">
+            <thead className="sunken sticky top-0 text-xs uppercase tracking-wide text-text-disabled">
               <tr>
-                <th className="px-3 py-2">{t('users.user')}</th>
+                <th
+                  className="cursor-pointer select-none px-3 py-2 hover:text-text-secondary"
+                  onClick={() => toggleSort('user')}
+                >
+                  {t('users.user')}
+                  <SortIndicator col="user" />
+                </th>
                 <th className="px-3 py-2">{t('users.status')}</th>
                 <th className="px-3 py-2">{t('users.roles')}</th>
-                <th className="px-3 py-2">{t('users.tokens')}</th>
+                <th
+                  className="cursor-pointer select-none px-3 py-2 hover:text-text-secondary"
+                  onClick={() => toggleSort('tokens')}
+                >
+                  {t('users.tokens')}
+                  <SortIndicator col="tokens" />
+                </th>
                 <th className="px-3 py-2">{t('users.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {data?.items.map((u) => (
+              {sortedItems?.map((u) => (
                 <UserRow
                   key={u.id}
                   user={u}
@@ -89,7 +132,7 @@ export function AdminUsersClient() {
             type="button"
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="rounded-md border border-border-subtle px-3 py-1.5 disabled:opacity-50"
+            className="press rounded-md border border-border-subtle px-3 py-1.5 disabled:opacity-50"
           >
             ‹
           </button>
@@ -100,7 +143,7 @@ export function AdminUsersClient() {
             type="button"
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded-md border border-border-subtle px-3 py-1.5 disabled:opacity-50"
+            className="press rounded-md border border-border-subtle px-3 py-1.5 disabled:opacity-50"
           >
             ›
           </button>
@@ -136,7 +179,7 @@ function UserRow({
   const isPending = user.status === 'PENDING_VERIFICATION';
 
   return (
-    <tr className="text-text-secondary">
+    <tr className="text-text-secondary transition odd:bg-white/[0.02] hover:bg-background-elevated/50">
       <td className="px-3 py-2">
         <div className="text-text-primary">{user.displayName}</div>
         <div className="text-xs text-text-disabled">{user.email}</div>
@@ -186,7 +229,7 @@ function ActionBtn({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-md border px-2.5 py-1 text-xs transition disabled:opacity-40 ${
+      className={`press rounded-md border px-2.5 py-1 text-xs transition disabled:opacity-40 ${
         variant === 'danger'
           ? 'border-state-error/40 text-state-error hover:bg-state-error/10'
           : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'

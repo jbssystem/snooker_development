@@ -166,7 +166,7 @@ export function ProfileClient() {
         <div className="surface mb-6 flex items-center gap-4 rounded-xl p-4 sm:p-5">
           <button
             aria-label={t('avatar.edit')}
-            className="group relative rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-active"
+            className="press group relative rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-active"
             onClick={() => setAvatarOpen(true)}
             type="button"
           >
@@ -358,7 +358,7 @@ export function ProfileClient() {
               <p className="text-sm text-text-secondary">{t('equipment.empty')}</p>
             )}
             {equipmentItems.map((item) => (
-              <article key={item.id} className="rounded-md border border-border-subtle bg-background-primary p-3">
+              <article key={item.id} className="rounded-md border border-border-subtle bg-background-raised p-3 shadow-elev-1">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-medium text-text-primary">{item.cueName || t('equipment.unnamed')}</h3>
@@ -367,7 +367,7 @@ export function ProfileClient() {
                     </p>
                   </div>
                   <button
-                    className="rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:border-state-error hover:text-state-error"
+                    className="press rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:border-state-error hover:text-state-error"
                     onClick={() => deleteEquipment.mutate(item.id)}
                     type="button"
                   >
@@ -412,9 +412,8 @@ function toProfilePayload(values: ProfileFormValues): UpsertPlayerProfileInput {
   };
 }
 
-const inputClass =
-  'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
-const primaryButtonClass = 'btn-primary';
+const inputClass = 'input-field';
+const primaryButtonClass = 'btn-primary press';
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (

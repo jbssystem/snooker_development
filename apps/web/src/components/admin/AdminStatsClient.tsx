@@ -27,13 +27,13 @@ export function AdminStatsClient() {
         <StatCard label={t('stats.tokensThisMonth')} value={s.tokensThisMonth.toLocaleString()} />
       </div>
 
-      <section className="surface rounded-xl p-5">
+      <section className="surface rounded-xl p-5 shadow-elev-1">
         <h2 className="mb-3 text-sm font-semibold text-text-primary">{t('stats.byStatus')}</h2>
         <div className="flex flex-wrap gap-2">
           {Object.entries(s.usersByStatus).map(([status, count]) => (
             <span
               key={status}
-              className="rounded-md border border-border-subtle bg-background-secondary px-3 py-1.5 text-xs text-text-secondary"
+              className="sunken rounded-md border border-border-subtle px-3 py-1.5 text-xs text-text-secondary"
             >
               {status}: <span className="text-text-primary">{count}</span>
             </span>
@@ -41,11 +41,11 @@ export function AdminStatsClient() {
         </div>
       </section>
 
-      <section className="surface rounded-xl p-5">
+      <section className="surface rounded-xl p-5 shadow-elev-1">
         <h2 className="mb-3 text-sm font-semibold text-text-primary">{t('stats.recentSignups')}</h2>
         <ul className="flex flex-col divide-y divide-border-subtle">
           {s.recentSignups.map((u) => (
-            <li key={u.id} className="flex items-center justify-between py-2 text-sm">
+            <li key={u.id} className="flex items-center justify-between px-2 py-2 text-sm transition odd:bg-white/[0.02] hover:bg-background-elevated/50">
               <span className="min-w-0 truncate">
                 <span className="text-text-primary">{u.displayName}</span>{' '}
                 <span className="text-text-disabled">{u.email}</span>

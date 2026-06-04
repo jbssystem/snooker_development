@@ -130,7 +130,11 @@ function AnalyticsContent({ dashboard }: { dashboard: PlayerDashboard }) {
       <section className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <SectionCard title={t('drills.title')}>
           <div className="grid gap-3">
-            {dashboard.drillProgress.map((drill) => <DrillProgressRow key={drill.drillTemplateId} drill={drill} />)}
+            {dashboard.drillProgress.map((drill, i) => (
+              <div key={drill.drillTemplateId} className="ui-rise-in" style={{ animationDelay: `${i * 60}ms` }}>
+                <DrillProgressRow drill={drill} />
+              </div>
+            ))}
             {dashboard.drillProgress.length === 0 && <p className="text-text-secondary">{t('drills.empty')}</p>}
           </div>
         </SectionCard>
@@ -152,7 +156,7 @@ function MiniStat({ label, value }: { label: string; value: number | string }) {
   const locale = useLocale();
   const displayValue = typeof value === 'number' ? formatNumber(value, locale) : value;
   return (
-    <div className="rounded-lg border border-border-subtle bg-background-primary px-3 py-3">
+    <div className="sunken rounded-lg border border-border-subtle px-3 py-3">
       <p className="text-xs uppercase tracking-wide text-text-disabled">{label}</p>
       <p className="mt-1.5 text-xl font-semibold text-text-primary">{displayValue}</p>
     </div>
@@ -166,7 +170,7 @@ function DrillProgressRow({ drill }: { drill: DashboardDrillProgress }) {
   const drillName = localizeDrillName(drill.drillTemplateId, drill.drillTemplateName, tSystemDrills) ?? drill.drillTemplateName;
 
   return (
-    <article className="grid gap-2 rounded-md border border-border-subtle bg-background-primary p-3">
+    <article className="grid gap-2 rounded-md border border-border-subtle bg-background-primary p-3 shadow-elev-1">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-medium text-text-primary">{drillName}</h3>
@@ -174,7 +178,7 @@ function DrillProgressRow({ drill }: { drill: DashboardDrillProgress }) {
         </div>
         <span className="rounded-md bg-background-elevated px-2 py-1 text-sm text-brand-gold">{drill.successRate}%</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-background-elevated">
+      <div className="sunken h-2 overflow-hidden rounded-full">
         <div className="h-full rounded-full bg-brand-accent" style={{ width: `${Math.min(100, drill.successRate)}%` }} />
       </div>
       <p className="text-sm text-text-secondary">
@@ -189,7 +193,7 @@ function AnalyticsTooltip({ active, payload, label }: { active?: boolean; payloa
 
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-sm shadow-glow">
+    <div className="glass rounded-lg px-3 py-2 text-sm shadow-elev-3">
       <p className="font-medium text-text-primary">{label}</p>
       {payload.map((item) => (
         <p key={item.name} className="text-text-secondary">

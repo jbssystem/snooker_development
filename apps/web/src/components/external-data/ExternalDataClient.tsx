@@ -71,6 +71,7 @@ function AuthenticatedView({ token }: { token: string }) {
   const locale = useLocale();
   const queryClient = useQueryClient();
   const [urlInput, setUrlInput] = useState('');
+  const [urlError, setUrlError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'matches' | 'sources'>('matches');
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
   const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(new Set());
@@ -186,26 +187,39 @@ function AuthenticatedView({ token }: { token: string }) {
         <h2 className="text-lg font-medium text-text-primary">{t('addSource')}</h2>
         <p className="mt-1 text-sm text-text-secondary">{t('addSourceHint')}</p>
         <form
-          className="mt-3 flex gap-2"
+          className="mt-3 flex flex-col gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            if (urlInput.trim()) createLink.mutate(urlInput.trim());
+            if (urlInput.trim() && !urlError) createLink.mutate(urlInput.trim());
           }}
         >
-          <input
-            type="url"
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            placeholder="https://cuetracker.net/players/... or https://www.wst.tv/players/..."
-            className="flex-1 rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-disabled focus:border-brand-accent focus:outline-none"
-          />
-          <button
-            type="submit"
-            disabled={createLink.isPending || !urlInput.trim()}
-            className="btn-primary text-sm"
-          >
-            {t('connect')}
-          </button>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={urlInput}
+              onChange={(e) => {
+                const val = e.target.value;
+                setUrlInput(val);
+                if (val.trim()) {
+                  setUrlError(isValidSourceUrl(val) ? null : t('urlInvalid'));
+                } else {
+                  setUrlError(null);
+                }
+              }}
+              placeholder="https://cuetracker.net/players/... or https://www.wst.tv/players/..."
+              className="input-field flex-1 text-sm"
+            />
+            <button
+              type="submit"
+              disabled={createLink.isPending || !urlInput.trim() || !!urlError}
+              className="btn-primary press text-sm"
+            >
+              {t('connect')}
+            </button>
+          </div>
+          {urlError && (
+            <p className="text-xs text-state-error">{urlError}</p>
+          )}
         </form>
         {createLink.isError && (
           <p className="mt-2 text-sm text-state-error">
@@ -302,7 +316,7 @@ function SourceCard({
   const sourceColor = link.source === 'wst' ? 'bg-green-900/30 text-green-400' : 'bg-blue-900/30 text-blue-400';
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-border-subtle bg-background-primary p-3">
+    <div className="flex items-center justify-between rounded-md border border-border-subtle bg-background-raised p-3 shadow-elev-1">
       <div className="flex items-center gap-3">
         <span className={`rounded px-2 py-0.5 text-xs font-medium ${sourceColor}`}>{sourceLabel}</span>
         <div>
@@ -318,13 +332,13 @@ function SourceCard({
         <button
           onClick={onSync}
           disabled={isSyncing}
-          className="rounded-md bg-brand-primary/20 px-3 py-1 text-xs font-medium text-brand-accent transition hover:bg-brand-primary/40 disabled:opacity-50"
+          className="press rounded-md bg-brand-primary/20 px-3 py-1 text-xs font-medium text-brand-accent transition hover:bg-brand-primary/40 disabled:opacity-50"
         >
           {t('sync')}
         </button>
         <button
           onClick={onDelete}
-          className="rounded-md bg-state-error/10 px-3 py-1 text-xs font-medium text-state-error transition hover:bg-state-error/20"
+          className="press rounded-md bg-state-error/10 px-3 py-1 text-xs font-medium text-state-error transition hover:bg-state-error/20"
         >
           {t('remove')}
         </button>
@@ -430,7 +444,7 @@ function MatchRow({
   return (
     <>
       <tr
-        className={`border-t border-border-subtle transition hover:bg-background-elevated ${isSelected ? 'bg-brand-primary/10' : ''}`}
+        className={`press border-t border-border-subtle transition hover:bg-background-elevated ${isSelected ? 'bg-brand-primary/10' : ''}`}
       >
         <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
           <input
@@ -551,7 +565,7 @@ function DetailItem({ label, value }: { label: string; value: string | number | 
 
 function BreakLine({ label, values }: { label: string; values: number[] }) {
   return (
-    <div className="rounded-md bg-background-secondary px-3 py-2">
+    <div className="sunken rounded-md px-3 py-2">
       <p className="text-xs text-text-disabled">{label}</p>
       <p className="mt-1 font-mono text-sm text-text-primary">{values.length > 0 ? values.join(', ') : '—'}</p>
     </div>
@@ -693,6 +707,16 @@ function JobRow({ job }: { job: ExternalImportJob }) {
       </div>
     </div>
   );
+}
+
+function isValidSourceUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+    return url.hostname.includes('cuetracker.net') || url.hostname.includes('wst.tv');
+  } catch {
+    return false;
+  }
 }
 
 function AiIcon() {

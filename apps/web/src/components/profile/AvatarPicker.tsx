@@ -65,7 +65,7 @@ export function AvatarPicker({
                   <button
                     key={id}
                     aria-label={id}
-                    className={`rounded-full ring-2 transition ${active ? 'ring-brand-accent' : 'ring-transparent hover:ring-border-active'}`}
+                    className={`press rounded-full ring-2 transition focus-ring ${active ? 'ring-brand-accent' : 'ring-transparent hover:ring-border-active active:ring-brand-accent/60'}`}
                     onClick={() => {
                       onChange(`preset:${id}`);
                       close();
@@ -81,7 +81,7 @@ export function AvatarPicker({
 
           <div>
             <input accept="image/*" className="hidden" onChange={handleFile} ref={fileRef} type="file" />
-            <button className="btn-primary w-full justify-center" onClick={() => fileRef.current?.click()} type="button">
+            <button className="btn-primary press w-full justify-center" onClick={() => fileRef.current?.click()} type="button">
               {t('avatar.upload')}
             </button>
             <p className="mt-2 text-xs text-text-disabled">{t('avatar.hint')}</p>

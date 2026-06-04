@@ -1588,7 +1588,9 @@
         "importing": "Recognising…",
         "hint": "Take a top-down photo of the table; recognised balls open here for fine-tuning.",
         "error": "Could not recognise the layout. Try a clearer, more top-down photo."
-      }
+      },
+      "undo": "Undo",
+      "redo": "Redo"
     },
     "balls": {
       "white": "White",
@@ -1687,7 +1689,8 @@
     "analysisError": "Could not queue AI analysis. Please try again.",
     "viewReports": "View reports",
     "linkError": "Source already connected or invalid URL.",
-    "genericError": "Connection error."
+    "genericError": "Connection error.",
+    "urlInvalid": "Enter a cuetracker.net or wst.tv link"
   },
   "admin": {
     "title": "Administration",

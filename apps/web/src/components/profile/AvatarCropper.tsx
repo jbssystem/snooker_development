@@ -87,9 +87,9 @@ export function AvatarCropper({
   };
 
   return (
-    <div className="grid gap-4">
+    <div className="glass grid gap-4 rounded-xl p-4">
       <div
-        className="relative mx-auto touch-none overflow-hidden rounded-lg bg-background-primary"
+        className="sunken relative mx-auto touch-none overflow-hidden rounded-lg"
         style={{ width: BOX, height: BOX, maxWidth: '100%' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -129,7 +129,7 @@ export function AvatarCropper({
         >
           {labels.cancel}
         </button>
-        <button className="btn-primary" onClick={confirm} type="button">
+        <button className="btn-primary press" onClick={confirm} type="button">
           {labels.save}
         </button>
       </div>

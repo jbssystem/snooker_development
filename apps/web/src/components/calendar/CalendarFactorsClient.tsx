@@ -546,7 +546,7 @@ function ReadinessLensPanel({ lens, t }: { lens: ReadinessLens; t: ReturnType<ty
         <p className="text-sm leading-6 text-text-secondary">
           {t(`insights.cards.${lens.bodyKey}.body`, lens.values)}
         </p>
-        <div className="rounded-md bg-background-primary px-3 py-2 text-sm text-text-secondary">
+        <div className="sunken rounded-md px-3 py-2 text-sm text-text-secondary">
           <p className="text-xs uppercase text-text-disabled">{t('insights.nextAction')}</p>
           <p className="mt-1 text-text-primary">{t(`insights.cards.${lens.actionKey}.action`, lens.values)}</p>
           <p className="mt-2 text-xs text-text-disabled">{t('insights.confidence', { confidence: lens.confidence })}</p>
@@ -717,7 +717,7 @@ function CalendarMonthView({
 
       <div className="mt-4 overflow-x-auto rounded-md border border-border-subtle">
         <div className="min-w-[760px]">
-          <div className="grid grid-cols-7 border-b border-border-subtle bg-background-primary">
+          <div className="grid grid-cols-7 border-b border-border-subtle sunken">
             {weekdays.map((weekday) => (
               <div key={weekday} className="px-3 py-2 text-xs font-medium uppercase text-text-disabled">
                 {weekday}
@@ -831,7 +831,7 @@ function QuickEntryTabs({
   const forms: QuickEntryForm[] = ['event', 'lifestyle', 'supplement'];
 
   return (
-    <div className="grid grid-cols-3 gap-1 border-b border-border-subtle bg-background-primary/60 p-2" role="tablist">
+    <div className="grid grid-cols-3 gap-1 border-b border-border-subtle sunken p-2" role="tablist">
       {forms.map((form) => (
         <button
           key={form}
@@ -864,7 +864,7 @@ function ViewModeSwitch({
   const options: CalendarViewMode[] = ['calendar', 'list'];
 
   return (
-    <div className="inline-flex rounded-md border border-border-subtle bg-background-primary p-1">
+    <div className="inline-flex rounded-md border border-border-subtle sunken p-1">
       {options.map((option) => (
         <button
           key={option}
@@ -919,14 +919,15 @@ function CalendarListView({
       <section>
         <h3 className="text-lg font-semibold text-text-primary">{t('events.listTitle')}</h3>
         <div className="mt-3 grid gap-3">
-          {eventItems.map((event) => (
-            <CalendarEventCard
-              key={event.id}
-              event={event}
-              locale={locale}
-              onSelect={() => onSelect({ id: event.id, kind: 'event' })}
-              selected={isSelected(selectedItem, { id: event.id, kind: 'event' })}
-            />
+          {eventItems.map((event, i) => (
+            <div key={event.id} className="ui-rise-in" style={{ animationDelay: `${i * 60}ms` }}>
+              <CalendarEventCard
+                event={event}
+                locale={locale}
+                onSelect={() => onSelect({ id: event.id, kind: 'event' })}
+                selected={isSelected(selectedItem, { id: event.id, kind: 'event' })}
+              />
+            </div>
           ))}
           {events.length === 0 && (
             <EmptyState loading={eventsLoading} loadingText={t('loading')} text={t('events.empty')} />
@@ -1025,7 +1026,7 @@ function CalendarDetailModal({
       role="dialog"
     >
       <section
-        className="relative w-full max-h-[90vh] overflow-y-auto rounded-t-xl border border-border-active/60 bg-background-primary p-5 shadow-glow ui-fade-in sm:max-w-2xl sm:rounded-xl"
+        className="relative w-full max-h-[90vh] overflow-y-auto rounded-t-xl border border-border-active/60 glass p-5 shadow-elev-3 ui-fade-in sm:max-w-2xl sm:rounded-xl"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -1069,7 +1070,7 @@ function CalendarDetailModal({
         {detail.rows.length > 0 && (
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
             {detail.rows.map((row) => (
-              <div key={row.label} className="rounded-md border border-border-subtle bg-background-secondary p-3">
+              <div key={row.label} className="sunken rounded-md border border-border-subtle p-3">
                 <dt className="text-xs text-text-disabled">{row.label}</dt>
                 <dd className="mt-1 text-text-primary">{row.value}</dd>
               </div>
@@ -1094,7 +1095,7 @@ function ShowMoreButton({
 
   return (
     <button
-      className="rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active"
+      className="press rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active"
       onClick={onClick}
       type="button"
     >
@@ -1139,8 +1140,8 @@ function CalendarEventCard({
   if (onSelect) {
     return (
       <button
-        className={`rounded-md border bg-background-primary p-4 text-left transition hover:border-brand-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active ${
-          selected ? 'border-brand-accent shadow-glow' : 'border-border-subtle'
+        className={`press rounded-md border bg-background-primary p-4 text-left transition hover:border-brand-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active ${
+          selected ? 'border-brand-accent shadow-elev-2' : 'border-border-subtle shadow-elev-1'
         }`}
         onClick={onSelect}
         type="button"
@@ -1197,8 +1198,8 @@ function LifestyleCard({
   if (onSelect) {
     return (
       <button
-        className={`rounded-md border bg-background-primary p-4 text-left transition hover:border-brand-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active ${
-          selected ? 'border-brand-accent shadow-glow' : 'border-border-subtle'
+        className={`press rounded-md border bg-background-primary p-4 text-left transition hover:border-brand-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active ${
+          selected ? 'border-brand-accent shadow-elev-2' : 'border-border-subtle shadow-elev-1'
         }`}
         onClick={onSelect}
         type="button"
@@ -1247,8 +1248,8 @@ function SupplementCard({
   if (onSelect) {
     return (
       <button
-        className={`rounded-md border bg-background-primary p-4 text-left transition hover:border-brand-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active ${
-          selected ? 'border-brand-accent shadow-glow' : 'border-border-subtle'
+        className={`press rounded-md border bg-background-primary p-4 text-left transition hover:border-brand-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active ${
+          selected ? 'border-brand-accent shadow-elev-2' : 'border-border-subtle shadow-elev-1'
         }`}
         onClick={onSelect}
         type="button"
@@ -1275,7 +1276,7 @@ function EmptyState({
   text: string;
 }) {
   return (
-    <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
+    <p className="sunken rounded-md border border-border-subtle p-4 text-sm text-text-secondary">
       {loading ? loadingText : text}
     </p>
   );
@@ -1283,7 +1284,7 @@ function EmptyState({
 
 function Checkbox({ label, register }: { label: string; register: UseFormRegisterReturn }) {
   return (
-    <label className="flex min-h-10 items-center gap-2 rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-sm text-text-secondary">
+    <label className="flex min-h-10 items-center gap-2 rounded-md border border-border-subtle sunken px-3 py-2 text-sm text-text-secondary">
       <input className="h-4 w-4 accent-brand-accent" type="checkbox" {...register} />
       <span>{label}</span>
     </label>
@@ -1302,7 +1303,7 @@ function SubmitButton({
   loadingLabel: string;
 }) {
   return (
-    <button className={primaryButtonClass} disabled={disabled} type="submit">
+    <button className={`${primaryButtonClass} press`} disabled={disabled} type="submit">
       {loading ? loadingLabel : label}
     </button>
   );
@@ -1674,8 +1675,7 @@ function errorMessage(error: unknown, t: (key: string) => string): string {
   }
 }
 
-const inputClass =
-  'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
+const inputClass = 'input-field';
 const primaryButtonClass = 'btn-primary';
 const monthButtonClass =
-  'inline-flex min-h-9 min-w-9 items-center justify-center rounded-md border border-border-subtle px-3 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active';
+  'press inline-flex min-h-9 min-w-9 items-center justify-center rounded-md border border-border-subtle px-3 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active';

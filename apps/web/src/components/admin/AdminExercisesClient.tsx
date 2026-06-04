@@ -2,18 +2,20 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { DrillVisibility } from '@snooker/shared';
 import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api-client';
 
 const VISIBILITIES: DrillVisibility[] = ['private', 'shared', 'system'];
+const PAGE_SIZE = 20;
 
 export function AdminExercisesClient() {
   const t = useTranslations('admin');
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   const query = useQuery({
     queryKey: ['admin-drills', token, search],
@@ -27,20 +29,30 @@ export function AdminExercisesClient() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-drills', token] }),
   });
 
+  const allItems = query.data ?? [];
+  const totalPages = Math.max(1, Math.ceil(allItems.length / PAGE_SIZE));
+  const pageItems = useMemo(
+    () => allItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [allItems, page],
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <input
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
         placeholder={t('exercises.searchPlaceholder')}
-        className="w-full max-w-xs rounded-md border border-border-subtle bg-background-secondary px-3 py-2 text-sm text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none"
+        className="input-field w-full max-w-xs"
       />
       {query.isLoading ? (
         <p className="text-sm text-text-secondary">{t('loading')}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border-subtle">
+        <div className="overflow-x-auto rounded-xl border border-border-subtle shadow-elev-1">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-background-secondary text-xs uppercase tracking-wide text-text-disabled">
+            <thead className="sunken sticky top-0 text-xs uppercase tracking-wide text-text-disabled">
               <tr>
                 <th className="px-3 py-2">{t('exercises.name')}</th>
                 <th className="px-3 py-2">{t('exercises.category')}</th>
@@ -48,8 +60,11 @@ export function AdminExercisesClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {query.data?.map((d) => (
-                <tr key={d.id} className="text-text-secondary">
+              {pageItems.map((d) => (
+                <tr
+                  key={d.id}
+                  className="text-text-secondary transition odd:bg-white/[0.02] hover:bg-background-elevated/50"
+                >
                   <td className="px-3 py-2 text-text-primary">{d.name}</td>
                   <td className="px-3 py-2 text-xs">{d.category}</td>
                   <td className="px-3 py-2">
@@ -59,7 +74,7 @@ export function AdminExercisesClient() {
                       onChange={(e) =>
                         setVisibility.mutate({ id: d.id, visibility: e.target.value as DrillVisibility })
                       }
-                      className="rounded-md border border-border-subtle bg-background-secondary px-2 py-1 text-xs text-text-primary focus:border-border-active focus:outline-none"
+                      className="input-field max-w-[180px] py-1 text-xs"
                     >
                       {VISIBILITIES.map((v) => (
                         <option key={v} value={v}>
@@ -74,6 +89,31 @@ export function AdminExercisesClient() {
           </table>
         </div>
       )}
+
+      <div className="flex items-center justify-between text-sm text-text-secondary">
+        <span>{allItems.length > 0 ? t('users.total', { count: allItems.length }) : ''}</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="press rounded-md border border-border-subtle px-3 py-1.5 disabled:opacity-50"
+          >
+            ‹
+          </button>
+          <span>
+            {page} / {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
+            className="press rounded-md border border-border-subtle px-3 py-1.5 disabled:opacity-50"
+          >
+            ›
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

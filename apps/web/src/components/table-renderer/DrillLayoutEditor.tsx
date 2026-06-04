@@ -47,6 +47,37 @@ export function DrillLayoutEditor({
   const canvasRef = useRef<SnookerTableCanvasHandle | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // Undo/redo history for discrete edits (adds, removals, presets, property
+  // changes). Continuous drags go straight to onChange to avoid flooding it.
+  const [past, setPast] = useState<TableLayout[]>([]);
+  const [future, setFuture] = useState<TableLayout[]>([]);
+  const commit = (next: TableLayout) => {
+    setPast((stack) => [...stack, value].slice(-50));
+    setFuture([]);
+    onChange(next);
+  };
+  const undo = () => {
+    setPast((stack) => {
+      if (stack.length === 0) return stack;
+      const prev = stack[stack.length - 1]!;
+      setFuture((f) => [value, ...f]);
+      onChange(prev);
+      return stack.slice(0, -1);
+    });
+    setSelectedIds([]);
+  };
+  const redo = () => {
+    setFuture((stack) => {
+      if (stack.length === 0) return stack;
+      const next = stack[0]!;
+      setPast((p) => [...p, value]);
+      onChange(next);
+      return stack.slice(1);
+    });
+    setSelectedIds([]);
+  };
+  const canUndo = past.length > 0;
+  const canRedo = future.length > 0;
   const [ballColor, setBallColor] = useState<BallColor>('white');
   const [jsonDraft, setJsonDraft] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -60,7 +91,7 @@ export function DrillLayoutEditor({
   const ballTotal = value.balls.length;
 
   return (
-    <section className="grid gap-4 rounded-md border border-border-subtle bg-background-primary p-3">
+    <section className="sunken grid gap-4 rounded-lg border border-border-subtle p-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h3 className="font-medium text-text-primary">{t('editor.title')}</h3>
@@ -91,7 +122,17 @@ export function DrillLayoutEditor({
             </>
           )}
         </div>
-        <span className="text-xs text-text-disabled">{t('editor.ballCount', { count: ballTotal })}</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <button aria-label={t('editor.undo')} className={iconStepperClass} disabled={!canUndo} onClick={undo} title={t('editor.undo')} type="button">
+              <UndoIcon />
+            </button>
+            <button aria-label={t('editor.redo')} className={iconStepperClass} disabled={!canRedo} onClick={redo} title={t('editor.redo')} type="button">
+              <UndoIcon flip />
+            </button>
+          </div>
+          <span className="text-xs text-text-disabled">{t('editor.ballCount', { count: ballTotal })}</span>
+        </div>
       </div>
       {onImportFromPhoto && importError && <span className="text-xs text-state-error">{importError}</span>}
 
@@ -102,7 +143,7 @@ export function DrillLayoutEditor({
             <button
               key={preset}
               className={chipButtonClass}
-              onClick={() => applyPreset(preset, value, onChange, setSelectedIds)}
+              onClick={() => applyPreset(preset, value, commit, setSelectedIds)}
               type="button"
             >
               {t(`editor.presets.${preset}`)}
@@ -140,7 +181,7 @@ export function DrillLayoutEditor({
             </span>
             <button
               className="rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary transition hover:border-state-error hover:text-state-error"
-              onClick={() => { removeSelected(value, onChange, selectedIds); setSelectedIds([]); }}
+              onClick={() => { removeSelected(value, commit, selectedIds); setSelectedIds([]); }}
               type="button"
             >
               {t('editor.delete')}
@@ -164,7 +205,7 @@ export function DrillLayoutEditor({
                     key={shape}
                     aria-pressed={zoneShapeOf(selected.element as TargetZone) === shape}
                     className={toggleButtonClass(zoneShapeOf(selected.element as TargetZone) === shape)}
-                    onClick={() => setZoneShape(value, onChange, selected.id, selected.element as TargetZone, shape)}
+                    onClick={() => setZoneShape(value, commit, selected.id, selected.element as TargetZone, shape)}
                     type="button"
                   >
                     {t(`editor.zoneShape.${shape}`)}
@@ -181,7 +222,7 @@ export function DrillLayoutEditor({
                   <button
                     aria-pressed={!hasCushion(selected.element as ShotPath)}
                     className={toggleButtonClass(!hasCushion(selected.element as ShotPath))}
-                    onClick={() => setPathBank(value, onChange, selected.id, selected.element as ShotPath, false)}
+                    onClick={() => setPathBank(value, commit, selected.id, selected.element as ShotPath, false)}
                     type="button"
                   >
                     {t('editor.pathKind.direct')}
@@ -189,7 +230,7 @@ export function DrillLayoutEditor({
                   <button
                     aria-pressed={hasCushion(selected.element as ShotPath)}
                     className={toggleButtonClass(hasCushion(selected.element as ShotPath))}
-                    onClick={() => setPathBank(value, onChange, selected.id, selected.element as ShotPath, true)}
+                    onClick={() => setPathBank(value, commit, selected.id, selected.element as ShotPath, true)}
                     type="button"
                   >
                     {t('editor.pathKind.bank')}
@@ -204,7 +245,7 @@ export function DrillLayoutEditor({
                       key={style}
                       aria-pressed={((selected.element as ShotPath).style ?? 'dashed') === style}
                       className={toggleButtonClass(((selected.element as ShotPath).style ?? 'dashed') === style)}
-                      onClick={() => updatePath(value, onChange, selected.id, { ...(selected.element as ShotPath), style })}
+                      onClick={() => updatePath(value, commit, selected.id, { ...(selected.element as ShotPath), style })}
                       type="button"
                     >
                       {t(`editor.pathStyle.${style}`)}
@@ -232,19 +273,19 @@ export function DrillLayoutEditor({
         <div className="flex flex-col gap-1">
           <span className="text-[11px] uppercase tracking-wide text-text-disabled">{t('editor.reds.title')}</span>
           <div className="flex items-center gap-1">
-            <button aria-label={t('editor.reds.decrease')} className={stepperButtonClass} disabled={reds <= 0} onClick={() => onChange(withReds(value, reds - 1))} type="button">
+            <button aria-label={t('editor.reds.decrease')} className={stepperButtonClass} disabled={reds <= 0} onClick={() => commit(withReds(value, reds - 1))} type="button">
               −
             </button>
             <input
               aria-label={t('editor.reds.title')}
-              className="w-11 rounded-md border border-border-subtle bg-background-secondary px-1 py-1.5 text-center text-text-primary focus:border-border-active focus:outline-none"
+              className="sunken w-11 rounded-md border border-border-subtle px-1 py-1.5 text-center text-text-primary focus:border-border-active focus:outline-none"
               max={MAX_REDS}
               min={0}
-              onChange={(event) => onChange(withReds(value, Number.parseInt(event.target.value, 10) || 0))}
+              onChange={(event) => commit(withReds(value, Number.parseInt(event.target.value, 10) || 0))}
               type="number"
               value={reds}
             />
-            <button aria-label={t('editor.reds.increase')} className={stepperButtonClass} disabled={reds >= MAX_REDS} onClick={() => onChange(withReds(value, reds + 1))} type="button">
+            <button aria-label={t('editor.reds.increase')} className={stepperButtonClass} disabled={reds >= MAX_REDS} onClick={() => commit(withReds(value, reds + 1))} type="button">
               +
             </button>
           </div>
@@ -258,7 +299,7 @@ export function DrillLayoutEditor({
                 <option key={color} value={color}>{t(`balls.${color}`)}</option>
               ))}
             </select>
-            <button className={compactButtonClass} onClick={() => addBall(value, onChange, ballColor)} type="button">
+            <button className={compactButtonClass} onClick={() => addBall(value, commit, ballColor)} type="button">
               + {t('editor.addBall')}
             </button>
           </div>
@@ -267,13 +308,13 @@ export function DrillLayoutEditor({
         <div className="flex flex-col gap-1">
           <span className="text-[11px] uppercase tracking-wide text-text-disabled">{t('editor.toolsGroup')}</span>
           <div className="flex flex-wrap items-center gap-1.5">
-            <button className={compactButtonClass} onClick={() => addTargetZone(value, onChange, setSelectedIds)} type="button">
+            <button className={compactButtonClass} onClick={() => addTargetZone(value, commit, setSelectedIds)} type="button">
               {t('editor.addZone')}
             </button>
-            <button className={compactButtonClass} onClick={() => addShotPath(value, onChange, selectedBall, setSelectedIds)} type="button">
+            <button className={compactButtonClass} onClick={() => addShotPath(value, commit, selectedBall, setSelectedIds)} type="button">
               {t('editor.addPath')}
             </button>
-            <button className={compactButtonClass} onClick={() => addAnnotation(value, onChange, setSelectedIds)} type="button">
+            <button className={compactButtonClass} onClick={() => addAnnotation(value, commit, setSelectedIds)} type="button">
               {t('editor.addAnnotation')}
             </button>
           </div>
@@ -296,7 +337,7 @@ export function DrillLayoutEditor({
           value={jsonDraft}
         />
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button className={compactButtonClass} onClick={() => loadJson(jsonDraft, onChange, setJsonError)} type="button">
+          <button className={compactButtonClass} onClick={() => loadJson(jsonDraft, commit, setJsonError)} type="button">
             {t('editor.loadJson')}
           </button>
           {jsonError && <span className="text-state-error">{t('editor.jsonError')}</span>}
@@ -306,12 +347,22 @@ export function DrillLayoutEditor({
   );
 }
 
-const inputClass =
-  'w-full rounded-md border border-border-subtle bg-background-secondary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
+const inputClass = 'input-field';
 const compactButtonClass =
-  'rounded-md border border-border-subtle px-2.5 py-1.5 text-xs text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-50';
+  'press rounded-md border border-border-subtle px-2.5 py-1.5 text-xs text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-50';
 const compactInputClass =
-  'rounded-md border border-border-subtle bg-background-secondary px-2 py-1.5 text-sm text-text-primary focus:border-border-active focus:outline-none';
+  'sunken rounded-md border border-border-subtle px-2 py-1.5 text-sm text-text-primary focus:border-border-active focus:outline-none';
+const iconStepperClass =
+  'press flex h-8 w-8 items-center justify-center rounded-md border border-border-subtle text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40';
+
+function UndoIcon({ flip = false }: { flip?: boolean }) {
+  return (
+    <svg aria-hidden className={`h-4 w-4 ${flip ? '-scale-x-100' : ''}`} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+      <path d="M9 14 4 9l5-5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 9h11a5 5 0 0 1 0 10h-4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 const chipButtonClass =
   'rounded-full border border-border-subtle px-3 py-1.5 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary';
 function toggleButtonClass(active: boolean): string {

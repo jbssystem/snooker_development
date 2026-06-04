@@ -142,8 +142,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   );
 }
 
-const inputClass =
-  'w-full rounded-md border border-border-subtle bg-background-secondary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
+const inputClass = 'input-field';
 
 function ResendButton({
   label,

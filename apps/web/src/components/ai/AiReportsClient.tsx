@@ -123,15 +123,16 @@ export function AiReportsClient() {
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
         <div className="mt-5 grid gap-2">
-          {reports.map((report) => (
+          {reports.map((report, i) => (
             <button
               key={report.id}
-              className={`rounded-md border px-3 py-2 text-left transition ${
+              className={`press ui-rise-in rounded-md border px-3 py-2 text-left transition ${
                 report.id === activeReport?.id
-                  ? 'border-brand-accent bg-background-elevated text-text-primary'
-                  : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                  ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-2'
+                  : 'border-border-subtle text-text-secondary shadow-elev-1 hover:border-brand-accent hover:text-text-primary'
               }`}
               onClick={() => setActiveReportId(report.id)}
+              style={{ animationDelay: `${i * 60}ms` }}
               type="button"
             >
               <span className="block truncate text-sm font-medium">{report.title ?? t('report.untitled')}</span>
@@ -142,7 +143,7 @@ export function AiReportsClient() {
             </button>
           ))}
           {reports.length === 0 && (
-            <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
+            <p className="sunken rounded-md border border-border-subtle p-4 text-sm text-text-secondary">
               {reportsQuery.isLoading ? t('loading') : t('empty')}
             </p>
           )}
@@ -177,7 +178,7 @@ export function AiReportsClient() {
               <input className={inputClass} type="date" {...form.register('periodEnd', { required: t('required') })} />
             </label>
             {serverError && <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">{serverError}</p>}
-            <button className={primaryButtonClass} disabled={generateReport.isPending || profileMissing} type="submit">
+            <button className={`${primaryButtonClass} press`} disabled={generateReport.isPending || profileMissing} type="submit">
               {generateReport.isPending ? t('saving') : t('generate.submit')}
             </button>
           </form>
@@ -237,13 +238,13 @@ function ReportDetail({ report }: { report: AiReport }) {
       {report.status === 'completed' && report.contentMarkdown && (
         <section>
           <h3 className="text-lg font-semibold text-text-primary">{t('report.content')}</h3>
-          <pre className="mt-3 whitespace-pre-wrap rounded-md border border-border-subtle bg-background-primary p-4 text-sm leading-6 text-text-secondary">
+          <pre className="sunken mt-3 whitespace-pre-wrap rounded-md border border-border-subtle p-4 text-sm leading-6 text-text-secondary">
             {report.contentMarkdown}
           </pre>
         </section>
       )}
       {(report.status === 'queued' || report.status === 'running') && (
-        <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
+        <p className="sunken rounded-md border border-border-subtle p-4 text-sm text-text-secondary">
           {t(`statusText.${report.status}`)}
         </p>
       )}
@@ -336,7 +337,7 @@ function ExternalReportVisuals({ sourceData }: { sourceData: ExternalReportSourc
 
 function ChartPanel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-lg border border-border-subtle bg-background-primary p-4">
+    <section className="rounded-lg border border-border-subtle bg-background-primary p-4 shadow-elev-1">
       <h4 className="text-base font-semibold text-text-primary">{title}</h4>
       <div className="mt-4">{children}</div>
     </section>
@@ -381,7 +382,7 @@ function FrameMapRow({ match, index }: { match: ExternalReportMatch; index: numb
 function ExternalTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name?: string; value?: number | string }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-xs shadow-xl">
+    <div className="glass rounded-lg px-3 py-2 text-xs shadow-elev-3">
       <p className="mb-1 font-medium text-text-primary">{label}</p>
       {payload.map((item) => (
         <p key={item.name} className="text-text-secondary">
@@ -404,7 +405,7 @@ function StatusBadge({ report }: { report: AiReport }) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-border-subtle bg-background-primary p-3">
+    <div className="sunken rounded-md border border-border-subtle p-3">
       <dt className="text-xs text-text-disabled">{label}</dt>
       <dd className="mt-1 break-words font-medium text-text-primary">{value}</dd>
     </div>
@@ -504,6 +505,5 @@ function parseJson<T>(value: string | null | undefined): T | null {
   }
 }
 
-const inputClass =
-  'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
+const inputClass = 'input-field';
 const primaryButtonClass = 'btn-primary';

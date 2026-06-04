@@ -42,7 +42,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               href={href as never}
               className={`min-h-10 rounded-t-md px-4 py-2 text-sm transition ${
                 active
-                  ? 'bg-background-elevated text-text-primary ring-1 ring-border-active'
+                  ? 'bg-background-elevated text-text-primary shadow-elev-1 ring-1 ring-border-active'
                   : 'text-text-secondary hover:bg-background-elevated hover:text-text-primary'
               }`}
             >

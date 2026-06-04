@@ -97,6 +97,13 @@ export function TrainingSessionClient() {
     }
   }, [activeSession, activeSessionId]);
 
+  // Open the new-session form when arriving via the command palette (?new=1).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      setShowNewSession(true);
+    }
+  }, []);
+
   const createSession = useMutation({
     mutationFn: (input: CreateTrainingSessionInput) => api.training.createSession(token ?? '', input),
     onSuccess: (session) => {
@@ -181,13 +188,6 @@ export function TrainingSessionClient() {
     setServerError(null);
     setShowNewSession(true);
   };
-
-  // Open the new-session form when arriving via the command palette (?new=1).
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('new') === '1') {
-      setShowNewSession(true);
-    }
-  }, []);
 
   return (
     <main className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
