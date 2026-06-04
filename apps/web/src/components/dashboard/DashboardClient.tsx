@@ -110,10 +110,16 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
       )}
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatTile icon={<TrainingIcon />} label={t('stats.sessions')} value={formatNumber(dashboard.totals.sessions, locale)} />
-        <StatTile icon={<ClockIcon />} label={t('stats.trainingMinutes')} unit={t('units.minutes')} value={formatNumber(dashboard.totals.trainingMinutes, locale)} />
-        <StatTile icon={<TargetIcon />} label={t('stats.attempts')} value={formatNumber(dashboard.totals.attempts, locale)} />
-        <StatTile icon={<PercentIcon />} label={t('stats.successRate')} tone="gold" unit="%" value={formatNumber(dashboard.totals.successRate, locale)} />
+        {[
+          <StatTile key="s" icon={<TrainingIcon />} label={t('stats.sessions')} value={formatNumber(dashboard.totals.sessions, locale)} />,
+          <StatTile key="m" icon={<ClockIcon />} label={t('stats.trainingMinutes')} unit={t('units.minutes')} value={formatNumber(dashboard.totals.trainingMinutes, locale)} />,
+          <StatTile key="a" icon={<TargetIcon />} label={t('stats.attempts')} value={formatNumber(dashboard.totals.attempts, locale)} />,
+          <StatTile key="r" icon={<PercentIcon />} label={t('stats.successRate')} tone="gold" unit="%" value={formatNumber(dashboard.totals.successRate, locale)} />,
+        ].map((tile, index) => (
+          <div className="ui-rise-in" key={tile.key} style={{ animationDelay: `${index * 60}ms` }}>
+            {tile}
+          </div>
+        ))}
       </section>
 
       {hasData && <CoachInsightPanel insights={insights} />}
@@ -166,13 +172,13 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
         <SectionCard title={t('recent.title')}>
           <div className="grid gap-3">
             {dashboard.recentSessions.map((session) => (
-              <article key={session.id} className="rounded-lg border border-border-subtle bg-background-primary p-3">
+              <article key={session.id} className="sunken rounded-lg border border-border-subtle p-3 transition hover:border-brand-accent/40">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="truncate font-medium text-text-primary">{session.title}</h3>
                     <p className="mt-1 text-xs text-text-disabled">{formatDate(session.startedAt, locale)}</p>
                   </div>
-                  <span className="shrink-0 rounded-md bg-background-elevated px-2 py-1 text-xs text-brand-gold">
+                  <span className="shrink-0 rounded-md bg-background-elevated px-2 py-1 text-xs text-brand-gold shadow-elev-1">
                     {session.successRate}%
                   </span>
                 </div>
@@ -193,7 +199,7 @@ function MiniStat({ label, value }: { label: string; value: number | string }) {
   const locale = useLocale();
   const displayValue = typeof value === 'number' ? formatNumber(value, locale) : value;
   return (
-    <div className="rounded-lg border border-border-subtle bg-background-primary px-3 py-3">
+    <div className="sunken rounded-lg border border-border-subtle px-3 py-3">
       <p className="text-xs uppercase tracking-wide text-text-disabled">{label}</p>
       <p className="mt-1.5 text-xl font-semibold text-text-primary">{displayValue}</p>
     </div>
@@ -206,7 +212,7 @@ function DrillProgressRow({ drill }: { drill: DashboardDrillProgress }) {
   const locale = useLocale();
   const drillName = localizeDrillName(drill.drillTemplateId, drill.drillTemplateName, tSystemDrills) ?? drill.drillTemplateName;
   return (
-    <article className="grid gap-2 rounded-md border border-border-subtle bg-background-primary p-3">
+    <article className="grid gap-2 rounded-md border border-border-subtle bg-background-secondary p-3 shadow-elev-1">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-medium text-text-primary">{drillName}</h3>
@@ -214,8 +220,8 @@ function DrillProgressRow({ drill }: { drill: DashboardDrillProgress }) {
         </div>
         <span className="rounded-md bg-background-elevated px-2 py-1 text-sm text-brand-gold">{drill.successRate}%</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-background-elevated">
-        <div className="h-full rounded-full bg-brand-accent" style={{ width: `${Math.min(100, drill.successRate)}%` }} />
+      <div className="sunken h-2 overflow-hidden rounded-full">
+        <div className="h-full rounded-full bg-gradient-to-r from-brand-accent to-brand-gold" style={{ width: `${Math.min(100, drill.successRate)}%` }} />
       </div>
       <p className="text-sm text-text-secondary">
         {t('drills.meta', { executions: drill.executions, attempts: drill.attempts })}
@@ -229,7 +235,7 @@ function DashboardTooltip({ active, payload, label }: { active?: boolean; payloa
 
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-sm shadow-glow">
+    <div className="glass rounded-lg px-3 py-2 text-sm">
       <p className="font-medium text-text-primary">{label}</p>
       {payload.map((item) => (
         <p key={item.name} className="text-text-secondary">
