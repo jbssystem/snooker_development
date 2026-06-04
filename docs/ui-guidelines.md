@@ -142,6 +142,13 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - For MVP, only the short-lived access token and user summary are persisted to
   `localStorage` under `snooker.auth`. Refresh tokens live in the API-managed
   httpOnly `snooker_refresh` cookie. Phase 2 will add SSR-aware session reads.
+- The whole `(app)` route group is wrapped by `AuthGuard`
+  (`src/components/auth/AuthGuard.tsx`) in `(app)/layout.tsx`. It waits for the
+  persisted store to hydrate, then redirects unauthenticated visitors to
+  `/login` instead of rendering protected content (a neutral spinner shows until
+  hydration finishes, so a logged-in reload never flashes the redirect). Because
+  auth state is client-only, this guard — not the i18n middleware — is what stops
+  direct navigation to protected URLs.
 
 ## Profile UI
 
@@ -150,6 +157,12 @@ Still to add under `packages/ui/src/components` as the design crystallises:
 - The left column edits the player profile (identity, country, dominant hand,
   level and season goal). The right column creates equipment profiles and
   lists historical equipment entries.
+- Player level is a select fed by a fixed `levelOptions` list
+  (beginner → professional); any legacy free-text level is preserved as an extra
+  option so saved data is never dropped. Player fields omit the `?` hint
+  tooltips — their labels and placeholders are self-explanatory.
+- The equipment form is laid out as a dense 2–3 column grid (cue name and notes
+  span full width) with no per-field hints, to keep it compact.
 - Equipment creation sits in a right-column accordion that is open by default
   for fast setup, while still allowing the user to collapse it when reviewing
   equipment history.
@@ -171,7 +184,10 @@ Still to add under `packages/ui/src/components` as the design crystallises:
   a usable drill without guessing how much detail each field needs.
 - The same form now embeds `DrillLayoutEditor`, which stores a visual
   `defaultTableLayout` with balls, target zones and shot paths. Drill cards
-  show a compact `TableLayoutPreview`.
+  show a compact `TableLayoutPreview` wrapped in a `TablePreview` control: it
+  scales up slightly on hover (pointer devices) and opens a full-size preview in
+  a modal on click/tap, so the small table stays readable on both mobile and
+  desktop.
 
 ## Training UI
 

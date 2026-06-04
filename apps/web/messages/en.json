@@ -1037,6 +1037,15 @@
       "RIGHT": "Right",
       "AMBIDEXTROUS": "Ambidextrous"
     },
+    "levels": {
+      "empty": "Not set",
+      "beginner": "Beginner",
+      "amateur": "Amateur",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "semiPro": "Semi-professional",
+      "professional": "Professional"
+    },
     "equipment": {
       "title": "Equipment",
       "subtitle": "Cue, tip, chalk and active periods.",
@@ -1112,6 +1121,7 @@
     "empty": "No drill templates have been added yet.",
     "newDrill": "New drill",
     "close": "Close",
+    "enlargePreview": "Enlarge table layout",
     "countLabel": "{count, plural, one {# drill} other {# drills}}",
     "required": "Required",
     "saving": "Saving…",

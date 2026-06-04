@@ -712,9 +712,11 @@ function TemplateCard({
 
       <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{localizedTemplate.description}</p>
 
-      <div className="sunken mt-4 rounded-lg border border-border-subtle p-2">
-        <TableLayoutPreview layout={localizedTemplate.defaultTableLayout ?? EMPTY_PREVIEW_LAYOUT} />
-      </div>
+      <TablePreview
+        layout={localizedTemplate.defaultTableLayout ?? EMPTY_PREVIEW_LAYOUT}
+        title={localizedTemplate.name}
+        t={t}
+      />
 
       <dl className="mt-4 grid gap-3 text-sm">
         <Meta label={t('fields.goal')} value={localizedTemplate.goal} />
@@ -755,6 +757,45 @@ function TemplateCard({
         )}
       </div>
     </article>
+  );
+}
+
+/**
+ * Drill table thumbnail that enlarges for a closer look. On pointer devices the
+ * thumbnail scales up on hover; on every device (incl. touch) tapping it opens a
+ * full-size preview in a modal — so the small table stays readable everywhere.
+ */
+function TablePreview({
+  layout,
+  title,
+  t,
+}: {
+  layout: TableLayout;
+  title: string;
+  t: (key: string) => string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        aria-label={t('enlargePreview')}
+        className="group/preview sunken mt-4 block w-full overflow-hidden rounded-lg border border-border-subtle p-2 transition focus-ring hover:border-brand-accent/60"
+        onClick={() => setOpen(true)}
+        title={t('enlargePreview')}
+        type="button"
+      >
+        <span className="block origin-center transition-transform duration-200 ease-out group-hover/preview:scale-[1.06]">
+          <TableLayoutPreview layout={layout} />
+        </span>
+      </button>
+
+      <Modal className="sm:max-w-3xl" closeLabel={t('close')} onClose={() => setOpen(false)} open={open} title={title}>
+        <div className="sunken rounded-lg border border-border-subtle p-2 sm:p-3">
+          <TableLayoutPreview layout={layout} />
+        </div>
+      </Modal>
+    </>
   );
 }
 

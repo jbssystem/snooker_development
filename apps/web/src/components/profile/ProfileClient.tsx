@@ -17,6 +17,10 @@ import { PlayerAvatar } from './PlayerAvatar';
 
 type ProfileTab = 'player' | 'equipment' | 'settings';
 
+// Predefined player skill levels offered in the profile dropdown. Stored as the
+// raw key string (the `level` field is free-form text in the schema).
+const levelOptions = ['beginner', 'amateur', 'intermediate', 'advanced', 'semiPro', 'professional'] as const;
+
 type PasswordFormValues = {
   currentPassword: string;
   newPassword: string;
@@ -185,6 +189,9 @@ export function ProfileClient() {
   const currentItems = useMemo(() => equipmentItems.filter((item) => !item.activeTo), [equipmentItems]);
   const historyItems = useMemo(() => equipmentItems.filter((item) => Boolean(item.activeTo)), [equipmentItems]);
   const avatarValue = profileForm.watch('avatar');
+  const levelValue = profileForm.watch('level');
+  // Keep legacy free-text levels selectable so saved profiles don't lose data.
+  const isCustomLevel = Boolean(levelValue) && !(levelOptions as readonly string[]).includes(levelValue);
   const fullName = [profileForm.watch('firstName'), profileForm.watch('lastName')]
     .filter(Boolean)
     .join(' ')
@@ -269,7 +276,6 @@ export function ProfileClient() {
         >
           <Field
             error={profileForm.formState.errors.firstName?.message}
-            hint={t('hints.firstName')}
             label={t('fields.firstName')}
           >
             <input
@@ -280,7 +286,6 @@ export function ProfileClient() {
           </Field>
           <Field
             error={profileForm.formState.errors.lastName?.message}
-            hint={t('hints.lastName')}
             label={t('fields.lastName')}
           >
             <input
@@ -289,15 +294,15 @@ export function ProfileClient() {
               {...profileForm.register('lastName', { required: t('required') })}
             />
           </Field>
-          <Field hint={t('hints.dateOfBirth')} label={t('fields.dateOfBirth')}>
+          <Field label={t('fields.dateOfBirth')}>
             <input className={inputClass} type="date" {...profileForm.register('dateOfBirth')} />
           </Field>
-          <Field hint={t('hints.country')} label={t('fields.country')}>
+          <Field label={t('fields.country')}>
             <select className={inputClass} {...profileForm.register('country')}>
               <CountryOptions placeholder={t('placeholders.country')} />
             </select>
           </Field>
-          <Field hint={t('hints.dominantHand')} label={t('fields.dominantHand')}>
+          <Field label={t('fields.dominantHand')}>
             <select className={inputClass} {...profileForm.register('dominantHand')}>
               <option value="">{t('dominantHand.empty')}</option>
               <option value="RIGHT">{t('dominantHand.RIGHT')}</option>
@@ -305,15 +310,20 @@ export function ProfileClient() {
               <option value="AMBIDEXTROUS">{t('dominantHand.AMBIDEXTROUS')}</option>
             </select>
           </Field>
-          <Field hint={t('hints.level')} label={t('fields.level')}>
-            <input
-              className={inputClass}
-              placeholder={t('placeholders.level')}
-              {...profileForm.register('level')}
-            />
+          <Field label={t('fields.level')}>
+            <select className={inputClass} {...profileForm.register('level')}>
+              <option value="">{t('levels.empty')}</option>
+              {levelOptions.map((option) => (
+                <option key={option} value={option}>
+                  {t(`levels.${option}`)}
+                </option>
+              ))}
+              {/* Preserve any legacy free-text level so it is not silently dropped. */}
+              {isCustomLevel && <option value={levelValue}>{levelValue}</option>}
+            </select>
           </Field>
           <div className="sm:col-span-2">
-            <Field hint={t('hints.seasonGoal')} label={t('fields.seasonGoal')}>
+            <Field label={t('fields.seasonGoal')}>
               <textarea
                 className={`${inputClass} min-h-28`}
                 placeholder={t('placeholders.seasonGoal')}
@@ -339,7 +349,7 @@ export function ProfileClient() {
           <h2 className="text-lg font-semibold text-text-primary">{t('equipment.title')}</h2>
           <p className="mt-1 text-sm text-text-secondary">{t('equipment.subtitle')}</p>
           <form
-            className="mt-4 grid gap-3"
+            className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-3"
             onSubmit={equipmentForm.handleSubmit((values) =>
               addEquipment.mutate({
                 cueName: values.cueName || undefined,
@@ -354,77 +364,79 @@ export function ProfileClient() {
               }),
             )}
           >
-            <Field hint={t('equipment.hints.cueName')} label={t('equipment.fields.cueName')}>
-              <input
-                className={inputClass}
-                placeholder={t('equipment.placeholders.cueName')}
-                {...equipmentForm.register('cueName')}
-              />
-            </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field hint={t('equipment.hints.cueWeight')} label={t('equipment.fields.cueWeight')}>
+            <div className="col-span-2 sm:col-span-3">
+              <Field label={t('equipment.fields.cueName')}>
                 <input
                   className={inputClass}
-                  inputMode="decimal"
-                  placeholder={t('equipment.placeholders.cueWeight')}
-                  {...equipmentForm.register('cueWeight')}
-                />
-              </Field>
-              <Field hint={t('equipment.hints.tipSize')} label={t('equipment.fields.tipSize')}>
-                <input
-                  className={inputClass}
-                  inputMode="decimal"
-                  placeholder={t('equipment.placeholders.tipSize')}
-                  {...equipmentForm.register('tipSize')}
+                  placeholder={t('equipment.placeholders.cueName')}
+                  {...equipmentForm.register('cueName')}
                 />
               </Field>
             </div>
-            <Field hint={t('equipment.hints.tipBrand')} label={t('equipment.fields.tipBrand')}>
+            <Field label={t('equipment.fields.cueWeight')}>
+              <input
+                className={inputClass}
+                inputMode="decimal"
+                placeholder={t('equipment.placeholders.cueWeight')}
+                {...equipmentForm.register('cueWeight')}
+              />
+            </Field>
+            <Field label={t('equipment.fields.tipSize')}>
+              <input
+                className={inputClass}
+                inputMode="decimal"
+                placeholder={t('equipment.placeholders.tipSize')}
+                {...equipmentForm.register('tipSize')}
+              />
+            </Field>
+            <Field label={t('equipment.fields.tipBrand')}>
               <input
                 className={inputClass}
                 placeholder={t('equipment.placeholders.tipBrand')}
                 {...equipmentForm.register('tipBrand')}
               />
             </Field>
-            <Field hint={t('equipment.hints.tipChangeDate')} label={t('equipment.fields.tipChangeDate')}>
+            <Field label={t('equipment.fields.extension')}>
+              <input
+                className={inputClass}
+                placeholder={t('equipment.placeholders.extension')}
+                {...equipmentForm.register('extension')}
+              />
+            </Field>
+            <Field label={t('equipment.fields.chalk')}>
+              <input
+                className={inputClass}
+                placeholder={t('equipment.placeholders.chalk')}
+                {...equipmentForm.register('chalk')}
+              />
+            </Field>
+            <Field label={t('equipment.fields.tipChangeDate')}>
               <input className={inputClass} type="date" {...equipmentForm.register('tipChangeDate')} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field hint={t('equipment.hints.extension')} label={t('equipment.fields.extension')}>
-                <input
-                  className={inputClass}
-                  placeholder={t('equipment.placeholders.extension')}
-                  {...equipmentForm.register('extension')}
-                />
-              </Field>
-              <Field hint={t('equipment.hints.chalk')} label={t('equipment.fields.chalk')}>
-                <input
-                  className={inputClass}
-                  placeholder={t('equipment.placeholders.chalk')}
-                  {...equipmentForm.register('chalk')}
+            <Field label={t('equipment.fields.activeFrom')}>
+              <input className={inputClass} type="date" {...equipmentForm.register('activeFrom')} />
+            </Field>
+            <div className="col-span-2 sm:col-span-3">
+              <Field label={t('equipment.fields.notes')}>
+                <textarea
+                  className={`${inputClass} min-h-16`}
+                  placeholder={t('equipment.placeholders.notes')}
+                  {...equipmentForm.register('notes')}
                 />
               </Field>
             </div>
-            <Field hint={t('equipment.hints.activeFrom')} label={t('equipment.fields.activeFrom')}>
-              <input className={inputClass} type="date" {...equipmentForm.register('activeFrom')} />
-            </Field>
-            <Field hint={t('equipment.hints.notes')} label={t('equipment.fields.notes')}>
-              <textarea
-                className={`${inputClass} min-h-20`}
-                placeholder={t('equipment.placeholders.notes')}
-                {...equipmentForm.register('notes')}
-              />
-            </Field>
-            <button
-              className={primaryButtonClass}
-              disabled={!profileQuery.data || addEquipment.isPending}
-              type="submit"
-            >
-              {addEquipment.isPending ? t('saving') : t('equipment.add')}
-            </button>
-            {!profileQuery.data && (
-              <p className="text-xs text-state-warning">{t('equipment.needsProfile')}</p>
-            )}
+            <div className="col-span-2 sm:col-span-3">
+              <button
+                className={primaryButtonClass}
+                disabled={!profileQuery.data || addEquipment.isPending}
+                type="submit"
+              >
+                {addEquipment.isPending ? t('saving') : t('equipment.add')}
+              </button>
+              {!profileQuery.data && (
+                <p className="mt-2 text-xs text-state-warning">{t('equipment.needsProfile')}</p>
+              )}
+            </div>
           </form>
 
           <div className="mt-5 border-t border-border-subtle/60 pt-4">

@@ -1037,6 +1037,15 @@
       "RIGHT": "Права",
       "AMBIDEXTROUS": "Обидві"
     },
+    "levels": {
+      "empty": "Не вказано",
+      "beginner": "Початківець",
+      "amateur": "Аматор",
+      "intermediate": "Середній",
+      "advanced": "Просунутий",
+      "semiPro": "Напівпрофесіонал",
+      "professional": "Професіонал"
+    },
     "equipment": {
       "title": "Спорядження",
       "subtitle": "Кий, наклейка, крейда та періоди використання.",
@@ -1112,6 +1121,7 @@
     "empty": "Шаблони вправ ще не додано.",
     "newDrill": "Нова вправа",
     "close": "Закрити",
+    "enlargePreview": "Збільшити розкладку столу",
     "countLabel": "{count, plural, one {# вправа} few {# вправи} many {# вправ} other {# вправ}}",
     "required": "Обов'язкове поле",
     "saving": "Збереження…",
