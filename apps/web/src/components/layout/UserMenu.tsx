@@ -13,11 +13,16 @@ import { ChevronDown } from './ChevronDown';
 export function UserMenu() {
   const t = useTranslations('auth');
   const tNav = useTranslations('nav');
+  const tShare = useTranslations('sharing');
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const clear = useAuthStore((s) => s.clear);
+  const accessibleProfiles = useAuthStore((s) => s.accessibleProfiles);
+  const activeProfileId = useAuthStore((s) => s.activeProfileId);
+  const setActiveProfile = useAuthStore((s) => s.setActiveProfile);
   const router = useRouter();
   const queryClient = useQueryClient();
+
   const profileQuery = useQuery({
     queryKey: ['player-profile', token],
     queryFn: () => api.players.getProfile(token ?? ''),
@@ -27,6 +32,19 @@ export function UserMenu() {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
   const containerRef = useDismissable<HTMLDivElement>(open, close);
+
+  const switchProfile = useCallback(
+    (profileId: string) => {
+      if (profileId !== activeProfileId) {
+        setActiveProfile(profileId);
+        // Query keys are not cabinet-scoped — drop the cache so every view
+        // reloads for the newly active cabinet.
+        queryClient.clear();
+      }
+      setOpen(false);
+    },
+    [activeProfileId, setActiveProfile, queryClient],
+  );
 
   const onLogout = async () => {
     try {
@@ -68,7 +86,39 @@ export function UserMenu() {
         <ChevronDown open={open} />
       </button>
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-48 overflow-hidden rounded-md border border-border-subtle bg-background-secondary py-1 shadow-glow" role="menu">
+        <div className="absolute right-0 z-30 mt-2 w-60 overflow-hidden rounded-md border border-border-subtle bg-background-secondary py-1 shadow-glow" role="menu">
+          {accessibleProfiles.length > 1 && (
+            <div className="border-b border-border-subtle/70 pb-1">
+              <p className="px-3 pb-1 pt-2 text-xs uppercase tracking-wide text-text-disabled">
+                {tShare('switcher.label')}
+              </p>
+              {accessibleProfiles.map((p) => {
+                const isActive = p.profileId === (activeProfileId ?? '');
+                return (
+                  <button
+                    key={p.profileId}
+                    onClick={() => switchProfile(p.profileId)}
+                    className="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-background-elevated"
+                    role="menuitemradio"
+                    aria-checked={isActive}
+                    type="button"
+                  >
+                    <PlayerAvatar avatar={p.avatar} className="h-6 w-6" name={p.displayName} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-text-primary">
+                        {p.isOwner ? tShare('switcher.own') : p.displayName}
+                      </span>
+                      <span className="block truncate text-xs text-text-secondary">
+                        {tShare(`relationships.${p.relationship}`)}
+                        {p.accessLevel === 'VIEW' ? ` · ${tShare('levels.VIEW')}` : ''}
+                      </span>
+                    </span>
+                    {isActive && <span className="text-brand-accent">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <Link
             href="/profile"
             className="block min-h-11 px-3 py-2.5 text-text-secondary transition hover:bg-background-elevated hover:text-text-primary"

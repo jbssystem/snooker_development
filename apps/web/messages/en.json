@@ -1668,6 +1668,18 @@
       "admin": {
         "lastAdmin": "Cannot remove the last administrator",
         "cannotBlockSelf": "You cannot block yourself"
+      },
+      "sharing": {
+        "profileAccessDenied": "No access to this cabinet",
+        "writeAccessDenied": "Not enough permissions to edit",
+        "ownerOnly": "Only the owner can do this",
+        "wellnessAccessDenied": "No access to wellness data",
+        "cannotInviteSelf": "You cannot invite yourself",
+        "alreadyMember": "This user already has access",
+        "invitationInvalid": "Invitation is invalid",
+        "invitationExpired": "Invitation has expired",
+        "invitationEmailMismatch": "Invitation was issued for a different email",
+        "noProfile": "Profile not found"
       }
     }
   },
@@ -1807,5 +1819,69 @@
     "newSession": "New training session",
     "newExercise": "New exercise",
     "newMatch": "Log a match"
+  },
+  "sharing": {
+    "switcher": {
+      "own": "My cabinet",
+      "viewing": "You are in cabinet",
+      "label": "Cabinets"
+    },
+    "banner": {
+      "readOnly": "View only",
+      "viewing": "You are viewing cabinet: {name}"
+    },
+    "access": {
+      "tab": "Access",
+      "title": "Cabinet access",
+      "subtitle": "Invite a coach, parent or guest and manage their permissions.",
+      "inviteTitle": "Invite",
+      "emailLabel": "Email",
+      "emailPlaceholder": "name@example.com",
+      "relationship": "Who is this",
+      "accessLevel": "Permissions",
+      "wellness": "Access to wellness data",
+      "wellnessHint": "Sleep, fatigue, stress, mood, injuries, supplements.",
+      "send": "Send invitation",
+      "sending": "Sending…",
+      "members": "Members",
+      "noMembers": "No members yet.",
+      "pending": "Pending invitations",
+      "noPending": "No active invitations.",
+      "remove": "Remove",
+      "revoke": "Revoke",
+      "incoming": "Invitations to me",
+      "accept": "Accept",
+      "decline": "Decline",
+      "inviteSent": "Invitation sent"
+    },
+    "relationships": {
+      "COACH": "Coach",
+      "PARENT": "Parent",
+      "GUEST": "Guest",
+      "OWNER": "Owner"
+    },
+    "levels": {
+      "VIEW": "View",
+      "EDIT": "Edit"
+    },
+    "invite": {
+      "title": "Cabinet invitation",
+      "intro": "{inviter} invites you to the cabinet \"{cabinet}\".",
+      "role": "Role",
+      "access": "Permissions",
+      "accept": "Accept",
+      "decline": "Decline",
+      "loginToAccept": "Log in to accept the invitation",
+      "registerToAccept": "Register to join",
+      "login": "Log in",
+      "register": "Register",
+      "mismatch": "This invitation is for {email}. Please sign in with that account.",
+      "accepted": "Invitation accepted",
+      "declined": "Invitation declined",
+      "invalid": "Invitation is invalid",
+      "expired": "Invitation has expired",
+      "loading": "Loading…",
+      "goToApp": "Go to app"
+    }
   }
 }

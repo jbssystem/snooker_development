@@ -15,6 +15,7 @@ import type {
 import { AccordionSection } from '@/components/layout/AccordionSection';
 import { Modal } from '@/components/layout/Modal';
 import { Field } from '@/components/ui';
+import { useCanEdit } from '@/lib/use-active-profile';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillName, localizeDrillTemplate } from '@/lib/drill-localization';
@@ -68,6 +69,7 @@ export function TrainingSessionClient() {
   const [finishFatigue, setFinishFatigue] = useState('');
   const [serverError, setServerError] = useState<string | null>(null);
   const [showNewSession, setShowNewSession] = useState(false);
+  const canEdit = useCanEdit();
 
   const sessionsQuery = useQuery({
     queryKey: ['training-sessions'],
@@ -178,9 +180,11 @@ export function TrainingSessionClient() {
       <aside className="surface rounded-xl p-4 sm:p-5">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
-        <button className={`${primaryButtonClass} mt-5 w-full`} onClick={openNewSession} type="button">
-          + {t('newSession.open')}
-        </button>
+        {canEdit && (
+          <button className={`${primaryButtonClass} mt-5 w-full`} onClick={openNewSession} type="button">
+            + {t('newSession.open')}
+          </button>
+        )}
         <div className="mt-4 grid gap-2">
           {sessions.map((session) => (
             <button

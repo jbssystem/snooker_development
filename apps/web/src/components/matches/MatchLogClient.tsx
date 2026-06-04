@@ -19,6 +19,7 @@ import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
 import { Modal } from '@/components/layout/Modal';
 import { CountryOptions, Field, PlusIcon } from '@/components/ui';
+import { useCanEdit } from '@/lib/use-active-profile';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { FrameScorer, type ScorerResult } from './FrameScorer';
@@ -104,6 +105,7 @@ export function MatchLogClient() {
   const frameForm = useForm<FrameFormValues>({ defaultValues: frameDefaultValues });
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const canEdit = useCanEdit();
   const [showCreate, setShowCreate] = useState(false);
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [editingFrameNumber, setEditingFrameNumber] = useState<number | null>(null);
@@ -264,20 +266,22 @@ export function MatchLogClient() {
       <aside className="surface rounded-xl p-5">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <button className="btn-primary justify-center" onClick={() => openCreate('match')} type="button">
-            <PlusIcon className="h-4 w-4" />
-            {t('type.match')}
-          </button>
-          <button
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border-subtle px-3 py-2 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
-            onClick={() => openCreate('sparring')}
-            type="button"
-          >
-            <PlusIcon className="h-4 w-4" />
-            {t('type.sparring')}
-          </button>
-        </div>
+        {canEdit && (
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <button className="btn-primary justify-center" onClick={() => openCreate('match')} type="button">
+              <PlusIcon className="h-4 w-4" />
+              {t('type.match')}
+            </button>
+            <button
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border-subtle px-3 py-2 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+              onClick={() => openCreate('sparring')}
+              type="button"
+            >
+              <PlusIcon className="h-4 w-4" />
+              {t('type.sparring')}
+            </button>
+          </div>
+        )}
         {matches.length > 0 && (
           <div className="relative mt-4">
             <input
