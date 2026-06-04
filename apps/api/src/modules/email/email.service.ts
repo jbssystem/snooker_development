@@ -65,6 +65,49 @@ export class EmailService {
     });
   }
 
+  /** Invitation to an existing account: prompt to join a shared cabinet. */
+  async sendCabinetInvitationExisting(
+    to: string,
+    inviterName: string,
+    cabinetName: string,
+    acceptUrl: string,
+  ): Promise<void> {
+    const subject = `Приглашение в кабинет «${cabinetName}» — Snooker Player OS`;
+    const text =
+      `Здравствуйте!\n\n` +
+      `${inviterName} приглашает вас присоединиться к кабинету «${cabinetName}» в Snooker Player OS.\n` +
+      `Чтобы принять приглашение, перейдите по ссылке:\n${acceptUrl}\n\n` +
+      `Ссылка действительна 14 дней. Если вы не ожидали это приглашение, проигнорируйте письмо.`;
+    const html =
+      `<p>Здравствуйте!</p>` +
+      `<p>${escapeHtml(inviterName)} приглашает вас присоединиться к кабинету «${escapeHtml(cabinetName)}» в Snooker Player OS.</p>` +
+      `<p><a href="${escapeAttr(acceptUrl)}">Принять приглашение</a></p>` +
+      `<p>Ссылка действительна 14 дней. Если вы не ожидали это приглашение, проигнорируйте письмо.</p>`;
+    await this.send({ to, subject, html, text });
+  }
+
+  /** Invitation to a new email: prompt to register, then auto-join the cabinet. */
+  async sendCabinetInvitationNew(
+    to: string,
+    inviterName: string,
+    cabinetName: string,
+    registerUrl: string,
+  ): Promise<void> {
+    const subject = `Приглашение в кабинет «${cabinetName}» — Snooker Player OS`;
+    const text =
+      `Здравствуйте!\n\n` +
+      `${inviterName} приглашает вас в кабинет «${cabinetName}» в Snooker Player OS.\n` +
+      `У вас ещё нет аккаунта — зарегистрируйтесь по ссылке, и доступ к кабинету откроется автоматически:\n${registerUrl}\n\n` +
+      `Ссылка действительна 14 дней. Если вы не ожидали это приглашение, проигнорируйте письмо.`;
+    const html =
+      `<p>Здравствуйте!</p>` +
+      `<p>${escapeHtml(inviterName)} приглашает вас в кабинет «${escapeHtml(cabinetName)}» в Snooker Player OS.</p>` +
+      `<p>У вас ещё нет аккаунта — зарегистрируйтесь, и доступ к кабинету откроется автоматически:</p>` +
+      `<p><a href="${escapeAttr(registerUrl)}">Зарегистрироваться и присоединиться</a></p>` +
+      `<p>Ссылка действительна 14 дней. Если вы не ожидали это приглашение, проигнорируйте письмо.</p>`;
+    await this.send({ to, subject, html, text });
+  }
+
   async sendEmailVerification(to: string, displayName: string, verifyUrl: string): Promise<void> {
     const subject = 'Подтвердите ваш email — Snooker Player OS';
     const text =

@@ -18,6 +18,7 @@ import {
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
 import { EmailService } from '../email/email.service';
+import { ProfileSharingService } from '../profiles/profile-sharing.service';
 import { publicTokens, TokensService } from './tokens.service';
 
 export type AuthSessionIssue = { session: AuthSession; refreshToken: string };
@@ -31,6 +32,7 @@ export class AuthService {
     private readonly tokens: TokensService,
     private readonly email: EmailService,
     private readonly config: ConfigService,
+    private readonly sharing: ProfileSharingService,
   ) {}
 
   async register(input: RegisterInput): Promise<RegisterResult> {
@@ -104,6 +106,8 @@ export class AuthService {
         include: { roles: true },
       });
     });
+    // A user who registered via an invite link implicitly joins those cabinets.
+    await this.sharing.autoAcceptForEmail(user.id, user.email);
     const tokens = await this.tokens.issuePair(user.id, meta);
     return { session: { user: this.toMe(user), tokens: publicTokens(tokens) }, refreshToken: tokens.refreshToken };
   }

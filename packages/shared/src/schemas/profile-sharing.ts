@@ -70,7 +70,7 @@ export type InvitationPreview = z.infer<typeof InvitationPreviewSchema>;
 
 /** An invitation addressed to the current user (pending, awaiting response). */
 export const IncomingInvitationSchema = z.object({
-  token: z.string(),
+  id: z.string().cuid(),
   cabinetName: z.string(),
   inviterName: z.string(),
   relationship: MembershipRelationshipSchema,
