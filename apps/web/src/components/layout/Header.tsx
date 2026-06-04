@@ -6,6 +6,7 @@ import { HeaderShell } from './HeaderShell';
 import { LocaleSwitcher } from './LocaleSwitcher';
 import { MainNav } from './MainNav';
 import { UserMenu } from './UserMenu';
+import { CommandPaletteButton } from './CommandPaletteButton';
 
 export async function Header({ locale }: { locale: Locale }) {
   const tCommon = await getTranslations({ locale, namespace: 'common' });
@@ -26,6 +27,7 @@ export async function Header({ locale }: { locale: Locale }) {
         </Link>
         <MainNav />
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          <CommandPaletteButton />
           <LocaleSwitcher />
           <UserMenu />
         </div>

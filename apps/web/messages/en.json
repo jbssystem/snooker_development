@@ -1757,5 +1757,16 @@
         "system": "System"
       }
     }
+  },
+  "command": {
+    "title": "Commands",
+    "placeholder": "Search sections and actions…",
+    "empty": "Nothing found",
+    "navigate": "Navigate",
+    "actions": "Quick actions",
+    "open": "Open command palette",
+    "newSession": "New training session",
+    "newExercise": "New exercise",
+    "newMatch": "Log a match"
   }
 }

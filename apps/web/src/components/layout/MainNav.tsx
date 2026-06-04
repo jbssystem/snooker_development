@@ -36,9 +36,9 @@ export function MainNav() {
           <Link
             key={key}
             href={href as never}
-            className={`min-h-10 shrink-0 rounded-md px-3 py-2 text-sm transition ${
+            className={`press focus-ring min-h-10 shrink-0 rounded-md px-3 py-2 text-sm transition ${
               active
-                ? 'bg-background-elevated text-text-primary ring-1 ring-border-active'
+                ? 'bg-background-elevated text-text-primary shadow-elev-1 ring-1 ring-border-active'
                 : 'text-text-secondary hover:bg-background-elevated hover:text-text-primary'
             }`}
           >
@@ -50,9 +50,9 @@ export function MainNav() {
         <button
           aria-expanded={open}
           aria-haspopup="menu"
-          className={`min-h-10 rounded-md px-3 py-2 text-sm transition ${
+          className={`press focus-ring min-h-10 rounded-md px-3 py-2 text-sm transition ${
             moreActive
-              ? 'bg-background-elevated text-text-primary ring-1 ring-border-active'
+              ? 'bg-background-elevated text-text-primary shadow-elev-1 ring-1 ring-border-active'
               : 'text-text-secondary hover:bg-background-elevated hover:text-text-primary'
           }`}
           onClick={() => setOpen((value) => !value)}
@@ -64,7 +64,7 @@ export function MainNav() {
           </span>
         </button>
         {open && (
-          <div className="absolute left-0 z-30 mt-2 w-44 overflow-hidden rounded-md border border-border-subtle bg-background-secondary py-1 shadow-glow" role="menu">
+          <div className="glass ui-pop-in absolute left-0 z-30 mt-2 w-44 overflow-hidden rounded-lg py-1" role="menu">
             {MORE_NAV_KEYS.map(({ key, href }) => {
               const active = pathname === href || pathname.startsWith(`${href}/`);
 

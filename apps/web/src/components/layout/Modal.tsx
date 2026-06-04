@@ -45,12 +45,12 @@ export function Modal({
       role="dialog"
     >
       <section
-        className={`relative max-h-[90vh] w-full overflow-y-auto rounded-t-xl border border-border-active/60 bg-background-primary p-5 shadow-glow ui-fade-in sm:rounded-xl ${className}`}
+        className={`glass relative max-h-[90vh] w-full overflow-y-auto rounded-t-2xl p-5 ui-pop-in sm:rounded-2xl ${className}`}
         onClick={(event) => event.stopPropagation()}
       >
         <button
           aria-label={closeLabel}
-          className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full border border-border-subtle bg-background-secondary text-lg text-text-secondary transition hover:border-brand-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active"
+          className="press absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full border border-border-subtle bg-background-secondary text-lg text-text-secondary transition hover:border-brand-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-active"
           onClick={onClose}
           type="button"
         >

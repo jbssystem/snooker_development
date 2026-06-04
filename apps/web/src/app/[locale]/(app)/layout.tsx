@@ -3,6 +3,7 @@ import { isLocale } from '@/i18n/config';
 import { Header } from '@/components/layout/Header';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import { AnnouncementBanner } from '@/components/layout/AnnouncementBanner';
+import { CommandPalette } from '@/components/layout/CommandPalette';
 
 type Props = {
   children: ReactNode;
@@ -19,6 +20,7 @@ export default async function AppLayout({ children, params }: Props) {
       <AnnouncementBanner />
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
       <MobileTabBar />
+      <CommandPalette />
     </div>
   );
 }

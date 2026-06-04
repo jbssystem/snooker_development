@@ -41,7 +41,7 @@ export function MobileTabBar() {
     <>
       <nav
         aria-label={t('dashboard')}
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border-subtle bg-background-secondary/95 backdrop-blur lg:hidden"
+        className="glass fixed inset-x-0 bottom-0 z-30 lg:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="mx-auto flex max-w-md items-stretch justify-around px-1">
@@ -108,7 +108,13 @@ function TabLink({
       }`}
       href={href as never}
     >
-      <span className="h-6 w-6">{icon}</span>
+      <span
+        className={`flex h-7 w-12 items-center justify-center rounded-full transition-all duration-200 ${
+          active ? 'bg-brand-accent/15 shadow-glow' : ''
+        }`}
+      >
+        <span className="h-6 w-6">{icon}</span>
+      </span>
       <span className="truncate">{label}</span>
     </Link>
   );
