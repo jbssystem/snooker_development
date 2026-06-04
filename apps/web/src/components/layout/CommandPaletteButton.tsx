@@ -15,7 +15,7 @@ export function CommandPaletteButton() {
   return (
     <button
       aria-label={t('open')}
-      className="press focus-ring inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-background-sunken px-2.5 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+      className="press focus-ring inline-flex min-h-11 items-center gap-2 rounded-md border border-border-subtle bg-background-sunken px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
       onClick={() => window.dispatchEvent(new Event('commandpalette:open'))}
       type="button"
     >
