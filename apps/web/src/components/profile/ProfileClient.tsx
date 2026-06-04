@@ -11,10 +11,12 @@ import { CountryOptions, Field, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { isLocale, locales, type Locale } from '@/i18n/config';
+import { useActiveProfile } from '@/lib/use-active-profile';
 import { AvatarPicker } from './AvatarPicker';
 import { PlayerAvatar } from './PlayerAvatar';
+import { AccessTab } from './AccessTab';
 
-type ProfileTab = 'player' | 'equipment' | 'settings';
+type ProfileTab = 'player' | 'equipment' | 'settings' | 'access';
 
 // Predefined player skill levels offered in the profile dropdown. Stored as the
 // raw key string (the `level` field is free-form text in the schema).
@@ -83,6 +85,10 @@ export function ProfileClient() {
   const [tab, setTab] = useState<ProfileTab>('player');
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSaved, setPasswordSaved] = useState(false);
+  const tAccess = useTranslations('sharing.access');
+  // Access management is only for the owner of the active cabinet.
+  const activeProfile = useActiveProfile();
+  const isOwner = Boolean(activeProfile?.isOwner);
 
   // Language switching (relocated here from the header / user menu).
   const tCommon = useTranslations('common');
@@ -207,6 +213,7 @@ export function ProfileClient() {
     { id: 'player', label: t('tabs.player') },
     { id: 'equipment', label: t('tabs.equipment'), count: currentItems.length },
     { id: 'settings', label: t('tabs.settings') },
+    ...(isOwner ? [{ id: 'access' as const, label: tAccess('tab') }] : []),
   ];
 
   return (
@@ -544,6 +551,12 @@ export function ProfileClient() {
           </form>
         </div>
       </section>
+
+      {isOwner && (
+        <section className={tab === 'access' ? '' : 'hidden'}>
+          {token && <AccessTab token={token} />}
+        </section>
+      )}
 
       <AvatarPicker
         name={fullName}

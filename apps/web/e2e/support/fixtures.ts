@@ -74,6 +74,53 @@ export const playerProfile = {
   avatar: null,
 };
 
+export const accessibleProfiles = [
+  {
+    profileId: 'prof_own_000000000000000',
+    displayName: 'Mark Selby',
+    avatar: null,
+    isOwner: true,
+    relationship: 'OWNER',
+    accessLevel: 'EDIT',
+    canAccessWellness: true,
+  },
+  {
+    profileId: 'prof_shared_00000000000000',
+    displayName: 'Judd Trump',
+    avatar: null,
+    isOwner: false,
+    relationship: 'COACH',
+    accessLevel: 'VIEW',
+    canAccessWellness: true,
+  },
+];
+
+export const cabinetMembers = [
+  {
+    userId: 'usr_member_0000000000000',
+    displayName: 'Coach Carter',
+    email: 'coach@snooker.test',
+    avatar: null,
+    relationship: 'COACH',
+    accessLevel: 'EDIT',
+    canAccessWellness: true,
+    createdAt: ISO_NOW,
+  },
+];
+
+export const cabinetInvitations = [
+  {
+    id: 'inv_pending_000000000000',
+    email: 'parent@snooker.test',
+    relationship: 'PARENT',
+    accessLevel: 'VIEW',
+    canAccessWellness: true,
+    status: 'PENDING',
+    expiresAt: ISO_LATER,
+    createdAt: ISO_NOW,
+  },
+];
+
 export const equipment = [
   {
     id: 'eqp_1',
