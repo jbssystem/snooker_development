@@ -70,6 +70,14 @@ export interface BreakRun {
   points: number;
 }
 
+// A single side's frame story in chronological order: their breaks interleaved
+// with the fouls they conceded and the visits they ended (safety/miss/switch).
+// Lets the scoreboard show the whole sequence, not just potted balls.
+export type FrameTimelineItem =
+  | { kind: 'break'; balls: ScoringBall[]; points: number }
+  | { kind: 'foul'; value: number }
+  | { kind: 'endTurn'; reason: 'safety' | 'miss' | 'switch' };
+
 export interface FrameOutcome {
   playerScore: number;
   opponentScore: number;

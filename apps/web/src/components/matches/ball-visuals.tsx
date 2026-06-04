@@ -1,6 +1,6 @@
 'use client';
 
-import type { BreakRun, ScoringBall } from '@snooker/snooker-domain';
+import type { BreakRun, FrameTimelineItem, ScoringBall } from '@snooker/snooker-domain';
 import type { MatchType } from '@snooker/shared';
 
 // Cushion-cloth-accurate ball colours. Kept here (not Tailwind) because the
@@ -69,6 +69,68 @@ export function BallMap({
           <span className="ml-0.5 text-[11px] font-semibold text-text-secondary">{run.points}</span>
         </span>
       ))}
+    </div>
+  );
+}
+
+// The same per-side view as BallMap, but it also threads in the fouls a player
+// conceded and the visits they ended (safety/miss/switch) — so the scoreboard
+// reads as the full sequence of the frame, not just the balls that dropped.
+export function FrameTimeline({
+  items,
+  emptyLabel,
+  labels,
+  size = 'sm',
+}: {
+  items: FrameTimelineItem[];
+  emptyLabel: string;
+  labels: { foul: string; safety: string; miss: string; switch: string };
+  size?: 'sm' | 'md';
+}) {
+  if (items.length === 0) {
+    return <p className="text-xs text-text-disabled">{emptyLabel}</p>;
+  }
+  const turnLabel: Record<'safety' | 'miss' | 'switch', string> = {
+    safety: labels.safety,
+    miss: labels.miss,
+    switch: labels.switch,
+  };
+  return (
+    <div className="flex flex-wrap items-start gap-1.5">
+      {items.map((item, index) => {
+        if (item.kind === 'break') {
+          return (
+            <span
+              key={index}
+              className="flex max-w-full flex-wrap items-center gap-1 rounded-md border border-border-subtle bg-background-primary px-1.5 py-1"
+            >
+              {item.balls.map((ball, ballIndex) => (
+                <Ball key={ballIndex} ball={ball} size={size} />
+              ))}
+              <span className="ml-0.5 text-[11px] font-semibold text-text-secondary">{item.points}</span>
+            </span>
+          );
+        }
+        if (item.kind === 'foul') {
+          return (
+            <span
+              key={index}
+              className="inline-flex items-center rounded-md border border-state-error/40 bg-state-error/10 px-1.5 py-1 text-[11px] font-semibold text-state-error"
+            >
+              {labels.foul} {item.value}
+            </span>
+          );
+        }
+        return (
+          <span
+            key={index}
+            className="inline-flex items-center gap-1 rounded-md border border-border-subtle bg-background-primary px-1.5 py-1 text-[11px] font-medium text-text-disabled"
+          >
+            {item.reason === 'switch' && <span aria-hidden>→</span>}
+            {turnLabel[item.reason]}
+          </span>
+        );
+      })}
     </div>
   );
 }

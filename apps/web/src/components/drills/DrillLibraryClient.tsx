@@ -347,7 +347,7 @@ export function DrillLibraryClient() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {templatesQuery.isLoading &&
           Array.from({ length: 6 }).map((_, index) => <TemplateCardSkeleton key={index} />)}
         {!templatesQuery.isLoading &&

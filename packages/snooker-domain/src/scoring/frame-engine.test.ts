@@ -11,6 +11,7 @@ import {
   breakRunsFor,
   createFrame,
   frameOutcome,
+  frameTimelineFor,
   replay,
   undo,
 } from './frame-engine';
@@ -156,6 +157,26 @@ describe('visual map helpers', () => {
     expect(playerRuns).toHaveLength(1);
     expect(playerRuns[0]!.points).toBe(1 + 7 + 1 + 6);
     expect(breakRunsFor(state, 'opponent')).toHaveLength(1);
+  });
+
+  it('builds a per-side timeline interleaving breaks, fouls and turn-ends', () => {
+    let state = createFrame();
+    state = potMany(state, ['red', 'black']); // player break of 8
+    state = applySafety(state); // player ends the visit with a safety
+    state = applyFoul(state, 5); // opponent fouls (5 to player)
+    state = applyPot(state, 'red'); // player pots again
+    state = applySafety(state); // player ends visit
+
+    const playerTimeline = frameTimelineFor(state, 'player');
+    expect(playerTimeline).toEqual([
+      { kind: 'break', balls: ['red', 'black'], points: 8 },
+      { kind: 'endTurn', reason: 'safety' },
+      { kind: 'break', balls: ['red'], points: 1 },
+      { kind: 'endTurn', reason: 'safety' },
+    ]);
+
+    // The opponent's only action this frame was the foul they conceded.
+    expect(frameTimelineFor(state, 'opponent')).toEqual([{ kind: 'foul', value: 5 }]);
   });
 });
 

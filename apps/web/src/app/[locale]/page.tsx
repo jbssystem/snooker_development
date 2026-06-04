@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { Wordmark } from '@/components/brand/Wordmark';
+import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher';
 import { AiIcon, AnalyticsIcon, CalendarIcon, TrainingIcon } from '@/components/ui/icons';
 
 type Props = { params: Promise<{ locale: string }> };
@@ -21,7 +22,8 @@ export default async function HomePage({ params }: Props) {
   const sections = ['training', 'analytics', 'ai', 'continuity'] as const;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-14 px-6 py-16 sm:py-20">
+    <main className="relative mx-auto flex min-h-screen max-w-5xl flex-col gap-14 px-6 py-16 sm:py-20">
+      <LocaleSwitcher className="absolute right-4 top-4 sm:right-6 sm:top-6" />
       <header className="flex flex-col gap-6">
         <Wordmark label={tCommon('appName')} />
         <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{tCommon('appName')}</p>

@@ -12,6 +12,7 @@ import {
   type FrameOutcome,
   type FrameScoreState,
   type FrameSide,
+  type FrameTimelineItem,
   type ScoreEvent,
   type ScoringBall,
 } from './types';
@@ -222,6 +223,34 @@ export function breakRunsFor(state: FrameScoreState, side: FrameSide): BreakRun[
     }
   }
   return runs.filter((run) => run.side === side);
+}
+
+// A side's full chronological timeline: their breaks plus the fouls they
+// conceded and the turn-ending visits (safety/miss/switch). Unlike
+// `breakRunsFor`, this keeps the non-scoring events so the UI can show the
+// whole rhythm of a player's frame, not just the balls they potted.
+export function frameTimelineFor(state: FrameScoreState, side: FrameSide): FrameTimelineItem[] {
+  const items: FrameTimelineItem[] = [];
+  let open: Extract<FrameTimelineItem, { kind: 'break' }> | null = null;
+  for (const event of state.events) {
+    if (event.type === 'pot' && event.player === side) {
+      if (!open) {
+        open = { kind: 'break', balls: [], points: 0 };
+        items.push(open);
+      }
+      open.balls.push(event.ball);
+      open.points += event.points;
+      continue;
+    }
+    // Any other event (incl. the opponent acting) closes this side's open break.
+    open = null;
+    if (event.type === 'foul' && event.player === side) {
+      items.push({ kind: 'foul', value: event.value });
+    } else if (event.type === 'endTurn' && event.player === side) {
+      items.push({ kind: 'endTurn', reason: event.kind });
+    }
+  }
+  return items;
 }
 
 export function frameOutcome(state: FrameScoreState): FrameOutcome {

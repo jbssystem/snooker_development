@@ -8,16 +8,16 @@ import {
   applyPot,
   applySafety,
   ballOn,
-  breakRunsFor,
   createFrame,
   frameOutcome,
+  frameTimelineFor,
   switchPlayer,
   undo,
   type FrameScoreState,
   type ScoringBall,
 } from '@snooker/snooker-domain';
 import { useHotkey } from '@/lib/use-hotkeys';
-import { BALL_HEX, Ball, BallMap } from './ball-visuals';
+import { BALL_HEX, Ball, FrameTimeline } from './ball-visuals';
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
@@ -232,12 +232,22 @@ export function FrameScorer({
         </button>
       </div>
 
-      {/* Per-player ball-sequence map */}
+      {/* Per-player frame timeline: breaks, fouls and turn-ends in sequence. */}
       <div className="grid gap-3 sm:grid-cols-2">
         {sides.map(({ side, name }) => (
           <div key={side} className="sunken rounded-lg border border-border-subtle p-3">
             <p className="mb-2 text-xs font-medium text-text-secondary">{name}</p>
-            <BallMap emptyLabel={t('scorer.mapEmpty')} runs={breakRunsFor(state, side)} size="sm" />
+            <FrameTimeline
+              emptyLabel={t('scorer.mapEmpty')}
+              items={frameTimelineFor(state, side)}
+              labels={{
+                foul: t('scorer.foul'),
+                safety: t('scorer.safety'),
+                miss: t('scorer.miss'),
+                switch: t('scorer.endTurn'),
+              }}
+              size="sm"
+            />
           </div>
         ))}
       </div>

@@ -5,4 +5,5 @@ export * from './InfoTooltip';
 export * from './PageHeader';
 export * from './StatTile';
 export * from './EmptyState';
+export * from './FlagIcon';
 export * from './icons';
