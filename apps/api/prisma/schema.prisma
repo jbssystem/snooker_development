@@ -172,6 +172,7 @@ model User {
   dismissedAnnouncements  AnnouncementDismissal[]
   adminAuditLogs          AdminAuditLog[]         @relation("AdminAuditActor")
   sensitiveAccessLogs     SensitiveDataAccessLog[] @relation("SensitiveDataActor")
+  profileMemberships      ProfileMembership[]
 }
 
 model EmailVerificationToken {
@@ -246,6 +247,8 @@ model PlayerProfile {
   aiReports         AiReport[]
   externalLinks     ExternalPlayerLink[]
   sensitiveAccessLogs SensitiveDataAccessLog[]
+  memberships       ProfileMembership[]
+  invitations       ProfileInvitation[]
 }
 
 model EquipmentProfile {
@@ -708,6 +711,74 @@ model SensitiveDataAccessLog {
   @@index([actorUserId])
   @@index([dataType])
   @@index([createdAt])
+}
+
+// --- Profile sharing / delegated access (roles & permissions) -------------
+// A PlayerProfile is a "cabinet". Its owner (PlayerProfile.userId) can invite
+// other users (coach / parent / guest) to view or edit the cabinet's data.
+// Sensitive wellness data is gated by an extra `canAccessWellness` flag.
+
+enum MembershipRelationship {
+  COACH
+  PARENT
+  GUEST
+}
+
+enum AccessLevel {
+  VIEW
+  EDIT
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+  EXPIRED
+}
+
+// A user's standing access to another player's cabinet.
+model ProfileMembership {
+  id                String                 @id @default(cuid())
+  playerProfileId   String
+  userId            String
+  relationship      MembershipRelationship
+  accessLevel       AccessLevel            @default(VIEW)
+  canAccessWellness Boolean                @default(false)
+  invitedByUserId   String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([playerProfileId, userId])
+  @@index([userId])
+  @@index([playerProfileId])
+}
+
+// A pending (or resolved) invitation to join a cabinet, delivered by email.
+model ProfileInvitation {
+  id                String                 @id @default(cuid())
+  playerProfileId   String
+  email             String
+  relationship      MembershipRelationship
+  accessLevel       AccessLevel            @default(VIEW)
+  canAccessWellness Boolean                @default(false)
+  tokenHash         String                 @unique
+  status            InvitationStatus       @default(PENDING)
+  invitedByUserId   String
+  expiresAt         DateTime
+  acceptedByUserId  String?
+  acceptedAt        DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([playerProfileId])
+  @@index([email])
+  @@index([status])
 }
 
 // NOTE: Shot-by-shot, AI insights and external imports will be added in

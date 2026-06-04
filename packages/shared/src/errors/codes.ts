@@ -19,6 +19,18 @@ export const ErrorCodes = {
     LastAdmin: 'admin.lastAdmin',
     CannotBlockSelf: 'admin.cannotBlockSelf',
   },
+  Sharing: {
+    ProfileAccessDenied: 'sharing.profileAccessDenied',
+    WriteAccessDenied: 'sharing.writeAccessDenied',
+    OwnerOnly: 'sharing.ownerOnly',
+    WellnessAccessDenied: 'sharing.wellnessAccessDenied',
+    CannotInviteSelf: 'sharing.cannotInviteSelf',
+    AlreadyMember: 'sharing.alreadyMember',
+    InvitationInvalid: 'sharing.invitationInvalid',
+    InvitationExpired: 'sharing.invitationExpired',
+    InvitationEmailMismatch: 'sharing.invitationEmailMismatch',
+    NoProfile: 'sharing.noProfile',
+  },
   Validation: {
     Failed: 'validation.failed',
   },
@@ -35,6 +47,7 @@ export const ErrorCodes = {
 export type ApiErrorCode =
   | (typeof ErrorCodes.Auth)[keyof typeof ErrorCodes.Auth]
   | (typeof ErrorCodes.Admin)[keyof typeof ErrorCodes.Admin]
+  | (typeof ErrorCodes.Sharing)[keyof typeof ErrorCodes.Sharing]
   | (typeof ErrorCodes.Validation)[keyof typeof ErrorCodes.Validation]
   | (typeof ErrorCodes.Drills)[keyof typeof ErrorCodes.Drills]
   | (typeof ErrorCodes.Generic)[keyof typeof ErrorCodes.Generic];

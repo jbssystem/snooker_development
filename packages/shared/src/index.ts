@@ -1,5 +1,6 @@
 export * from './schemas/player';
 export * from './schemas/auth';
+export * from './schemas/profile-sharing';
 export * from './schemas/dashboard';
 export * from './schemas/drill';
 export * from './schemas/match';
