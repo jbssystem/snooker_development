@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { HealthController } from './modules/health/health.controller';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ProfilesModule } from './modules/profiles/profiles.module';
 import { PlayersModule } from './modules/players/players.module';
 import { DrillsModule } from './modules/drills/drills.module';
 import { TrainingModule } from './modules/training/training.module';
@@ -22,6 +23,7 @@ import { AnnouncementsModule } from './modules/announcements/announcements.modul
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     PrismaModule,
     AuthModule,
+    ProfilesModule,
     PlayersModule,
     TrainingModule,
     DrillsModule,
