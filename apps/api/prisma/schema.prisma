@@ -171,6 +171,7 @@ model User {
   authoredAnnouncements   Announcement[]          @relation("AuthoredAnnouncements")
   dismissedAnnouncements  AnnouncementDismissal[]
   adminAuditLogs          AdminAuditLog[]         @relation("AdminAuditActor")
+  sensitiveAccessLogs     SensitiveDataAccessLog[] @relation("SensitiveDataActor")
 }
 
 model EmailVerificationToken {
@@ -244,6 +245,7 @@ model PlayerProfile {
   supplementEvents  SupplementEvent[]
   aiReports         AiReport[]
   externalLinks     ExternalPlayerLink[]
+  sensitiveAccessLogs SensitiveDataAccessLog[]
 }
 
 model EquipmentProfile {
@@ -669,6 +671,42 @@ model AdminAuditLog {
 
   @@index([actorUserId])
   @@index([action])
+  @@index([createdAt])
+}
+
+enum SensitiveDataType {
+  LIFESTYLE
+  SUPPLEMENT
+}
+
+enum SensitiveDataAccessAction {
+  READ
+  CREATE
+  UPDATE
+  DELETE
+}
+
+// Audit trail for access to sensitive wellness/supplement data (per TZ §16.3).
+// Records who (actor) touched whose (player profile) sensitive data, how, and
+// when — including AI report generation that ships this data to a provider.
+model SensitiveDataAccessLog {
+  id              String                    @id @default(cuid())
+  actorUserId     String
+  playerProfileId String
+  dataType        SensitiveDataType
+  action          SensitiveDataAccessAction
+  targetId        String?
+  metadataJson    Json?
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime                  @default(now())
+
+  actor   User          @relation("SensitiveDataActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+  profile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([playerProfileId])
+  @@index([actorUserId])
+  @@index([dataType])
   @@index([createdAt])
 }
 

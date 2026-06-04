@@ -17,6 +17,7 @@ import {
   type GenerateWeeklyAiReportJob,
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
+import { SensitiveDataAuditService } from '../audit/sensitive-data-audit.service';
 
 type AiReportEntity = Prisma.AiReportGetPayload<Record<string, never>>;
 type ProfileEntity = Prisma.PlayerProfileGetPayload<Record<string, never>>;
@@ -41,6 +42,7 @@ export class AiService implements OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly sensitiveAudit: SensitiveDataAuditService,
   ) {}
 
   async onModuleDestroy(): Promise<void> {
@@ -89,6 +91,10 @@ export class AiService implements OnModuleDestroy {
       },
     });
 
+    // A weekly report bundles wellness/supplement data and ships it to the AI
+    // provider, so the egress is itself sensitive-data access (TZ §16.3).
+    await this.recordSensitiveEgress(userId, profile.id, report.id, runtime.provider, dataSources);
+
     try {
       await this.getQueue().add(
         GENERATE_WEEKLY_AI_REPORT_JOB,
@@ -114,6 +120,31 @@ export class AiService implements OnModuleDestroy {
     }
 
     return toAiReport(report);
+  }
+
+  /** Audits any wellness/supplement data leaving in an AI report payload. */
+  private async recordSensitiveEgress(
+    userId: string,
+    playerProfileId: string,
+    reportId: string,
+    provider: AiProvider,
+    dataSources: AiReportDataSources,
+  ): Promise<void> {
+    const common = { actorUserId: userId, playerProfileId, action: 'READ' as const, targetId: reportId };
+    if (dataSources.lifestyleFactors > 0) {
+      await this.sensitiveAudit.record({
+        ...common,
+        dataType: 'LIFESTYLE',
+        metadata: { via: 'ai_report', provider, count: dataSources.lifestyleFactors },
+      });
+    }
+    if (dataSources.supplementEvents > 0) {
+      await this.sensitiveAudit.record({
+        ...common,
+        dataType: 'SUPPLEMENT',
+        metadata: { via: 'ai_report', provider, count: dataSources.supplementEvents },
+      });
+    }
   }
 
   async generateExternalMatchReport(userId: string, input: GenerateExternalMatchReportInput): Promise<AiReport> {

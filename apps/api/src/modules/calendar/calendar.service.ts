@@ -19,6 +19,7 @@ import {
   type UpdateSupplementEventInput,
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
+import { SensitiveDataAuditService } from '../audit/sensitive-data-audit.service';
 
 type CalendarEventEntity = Prisma.CalendarEventGetPayload<Record<string, never>>;
 type LifestyleFactorEntity = Prisma.LifestyleFactorGetPayload<Record<string, never>>;
@@ -27,7 +28,10 @@ type ProfileRef = { id: string };
 
 @Injectable()
 export class CalendarService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly sensitiveAudit: SensitiveDataAuditService,
+  ) {}
 
   async listCalendarEvents(userId: string): Promise<CalendarEvent[]> {
     const profile = await this.findProfile(userId);
@@ -95,11 +99,26 @@ export class CalendarService {
       orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       take: 60,
     });
+    await this.sensitiveAudit.record({
+      actorUserId: userId,
+      playerProfileId: profile.id,
+      dataType: 'LIFESTYLE',
+      action: 'READ',
+      metadata: { count: factors.length },
+    });
     return factors.map(toLifestyleFactor);
   }
 
   async getLifestyleFactor(userId: string, id: string): Promise<LifestyleFactor> {
-    return toLifestyleFactor(await this.findLifestyleFactorOrThrow(userId, id));
+    const factor = await this.findLifestyleFactorOrThrow(userId, id);
+    await this.sensitiveAudit.record({
+      actorUserId: userId,
+      playerProfileId: factor.playerProfileId,
+      dataType: 'LIFESTYLE',
+      action: 'READ',
+      targetId: factor.id,
+    });
+    return toLifestyleFactor(factor);
   }
 
   async saveLifestyleFactor(
@@ -114,6 +133,13 @@ export class CalendarService {
       create: toLifestyleFactorCreateData(profile.id, date, input),
       update: data,
     });
+    await this.sensitiveAudit.record({
+      actorUserId: userId,
+      playerProfileId: profile.id,
+      dataType: 'LIFESTYLE',
+      action: 'CREATE',
+      targetId: factor.id,
+    });
     return toLifestyleFactor(factor);
   }
 
@@ -127,6 +153,13 @@ export class CalendarService {
     if (input.date !== undefined) data.date = startOfDay(parseDate(input.date));
 
     const factor = await this.prisma.lifestyleFactor.update({ where: { id: existing.id }, data });
+    await this.sensitiveAudit.record({
+      actorUserId: userId,
+      playerProfileId: factor.playerProfileId,
+      dataType: 'LIFESTYLE',
+      action: 'UPDATE',
+      targetId: factor.id,
+    });
     return toLifestyleFactor(factor);
   }
 
@@ -139,11 +172,26 @@ export class CalendarService {
       orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
       take: 50,
     });
+    await this.sensitiveAudit.record({
+      actorUserId: userId,
+      playerProfileId: profile.id,
+      dataType: 'SUPPLEMENT',
+      action: 'READ',
+      metadata: { count: events.length },
+    });
     return events.map(toSupplementEvent);
   }
 
   async getSupplementEvent(userId: string, id: string): Promise<SupplementEvent> {
-    return toSupplementEvent(await this.findSupplementEventOrThrow(userId, id));
+    const event = await this.findSupplementEventOrThrow(userId, id);
+    await this.sensitiveAudit.record({
+      actorUserId: userId,
+      playerProfileId: event.playerProfileId,
+      dataType: 'SUPPLEMENT',
+      action: 'READ',
+      targetId: event.id,
+    });
+    return toSupplementEvent(event);
   }
 
   async createSupplementEvent(
@@ -153,6 +201,13 @@ export class CalendarService {
     const profile = await this.findProfileOrThrow(userId);
     const event = await this.prisma.supplementEvent.create({
       data: toSupplementEventCreateData(profile.id, userId, input),
+    });
+    await this.sensitiveAudit.record({
+      actorUserId: userId,
+      playerProfileId: profile.id,
+      dataType: 'SUPPLEMENT',
+      action: 'CREATE',
+      targetId: event.id,
     });
     return toSupplementEvent(event);
   }
@@ -166,6 +221,13 @@ export class CalendarService {
     const event = await this.prisma.supplementEvent.update({
       where: { id: existing.id },
       data: toSupplementEventData(input),
+    });
+    await this.sensitiveAudit.record({
+      actorUserId: userId,
+      playerProfileId: event.playerProfileId,
+      dataType: 'SUPPLEMENT',
+      action: 'UPDATE',
+      targetId: event.id,
     });
     return toSupplementEvent(event);
   }

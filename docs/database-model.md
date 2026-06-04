@@ -253,10 +253,25 @@ Each new entity ships with:
   match stats and rounds played. This keeps rich external analytics available
   without adding a separate statistics table yet.
 
+### SensitiveDataAccessLog
+
+- `id`, `actorUserId`, `playerProfileId`, `dataType` (`LIFESTYLE` |
+  `SUPPLEMENT`), `action` (`READ` | `CREATE` | `UPDATE` | `DELETE`), optional
+  `targetId`, optional `metadataJson`, optional `ipAddress`/`userAgent`,
+  `createdAt`. Indexed by `playerProfileId`, `actorUserId`, `dataType`,
+  `createdAt`.
+- Append-only audit trail (TZ §16.3): the service writes but never updates or
+  deletes rows. Cascades on `User` (actor) and `PlayerProfile` deletion.
+- Written by `CalendarService` for every lifestyle/supplement read and write,
+  and by `AiService` when a generated report ships wellness/supplement data to
+  an AI provider (`metadataJson.via = "ai_report"`). Audit failures are logged
+  and swallowed so they never break the observed operation.
+
 ## Sensitive data
 
 `LifestyleFactor`, `SupplementEvent`, wellness-tagged `CalendarEvent` rows and
 AI report source snapshots that include those rows are sensitive. PH-1-009 and
-PH-1-010 expose them only to the current player's own account. Coach sharing
-will require explicit `wellness:read` permission and audit logging before
-shared coach views are introduced. See TZ §16.3.
+PH-1-010 expose them only to the current player's own account. Every access to
+lifestyle/supplement data is recorded in `SensitiveDataAccessLog`. Coach sharing
+will require explicit `wellness:read` permission (the audit trail is already in
+place) before shared coach views are introduced. See TZ §16.3.
