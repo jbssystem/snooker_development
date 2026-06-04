@@ -34,6 +34,12 @@ export const ResendVerificationSchema = z.object({
 });
 export type ResendVerificationInput = z.infer<typeof ResendVerificationSchema>;
 
+export const ChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: PasswordSchema,
+});
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
+
 export const RegisterResultSchema = z.object({
   status: z.literal('pending_verification'),
   email: z.string().email(),

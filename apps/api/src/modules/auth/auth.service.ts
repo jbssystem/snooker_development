@@ -11,6 +11,7 @@ import {
   ErrorCodes,
   type AuthMe,
   type AuthSession,
+  type ChangePasswordInput,
   type LoginInput,
   type RegisterInput,
   type RegisterResult,
@@ -118,6 +119,19 @@ export class AuthService {
       data: { usedAt: new Date() },
     });
     await this.issueVerification(user.id, user.email, user.displayName);
+  }
+
+  async changePassword(userId: string, input: ChangePasswordInput): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.status !== 'ACTIVE') {
+      throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.Unauthorized } });
+    }
+    const valid = await argon2.verify(user.passwordHash, input.currentPassword);
+    if (!valid) {
+      throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.InvalidCredentials } });
+    }
+    const passwordHash = await argon2.hash(input.newPassword, { type: argon2.argon2id });
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
   }
 
   async me(userId: string): Promise<AuthMe> {

@@ -40,6 +40,7 @@ import type {
   RegisterResult,
   VerifyEmailInput,
   ResendVerificationInput,
+  ChangePasswordInput,
   CreateLifestyleFactorInput,
   CreateSupplementEventInput,
   LifestyleFactor,
@@ -182,6 +183,8 @@ export const api = {
         body: JSON.stringify({}),
       }),
     me: (token: string) => request<AuthMe>('/auth/me', { token }),
+    changePassword: (token: string, input: ChangePasswordInput) =>
+      request<void>('/auth/change-password', { method: 'POST', token, body: JSON.stringify(input) }),
   },
   players: {
     getProfile: (token: string) => request<PlayerProfile | null>('/players/me/profile', { token }),

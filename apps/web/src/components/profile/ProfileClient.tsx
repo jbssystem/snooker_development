@@ -1,18 +1,27 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { CreateEquipmentProfileInput, EquipmentProfile, UpsertPlayerProfileInput } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
+import { AccordionSection } from '@/components/layout/AccordionSection';
 import { CountryOptions, Field, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { isLocale, locales, type Locale } from '@/i18n/config';
 import { AvatarPicker } from './AvatarPicker';
 import { PlayerAvatar } from './PlayerAvatar';
 
-type ProfileTab = 'player' | 'current' | 'history';
+type ProfileTab = 'player' | 'equipment' | 'settings';
+
+type PasswordFormValues = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
 
 type ProfileFormValues = {
   firstName: string;
@@ -69,9 +78,21 @@ export function ProfileClient() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [tab, setTab] = useState<ProfileTab>('player');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
+  // Language switching (relocated here from the header / user menu).
+  const tCommon = useTranslations('common');
+  const locale = useLocale() as Locale;
+  const rawPathname = usePathname() ?? `/${locale}`;
+  const normalizedPathname = useMemo(() => withoutLocalePrefix(rawPathname), [rawPathname]);
+  const userEmail = useAuthStore((s) => s.user?.email ?? '');
 
   const profileForm = useForm<ProfileFormValues>({ defaultValues: profileDefaults });
   const equipmentForm = useForm<EquipmentFormValues>({ defaultValues: equipmentDefaults });
+  const passwordForm = useForm<PasswordFormValues>({
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
 
   const profileQuery = useQuery({
     queryKey: ['player-profile', token],
@@ -135,6 +156,30 @@ export function ProfileClient() {
     onError: (e) => setServerError(errorMessage(e, tErr)),
   });
 
+  const changePassword = useMutation({
+    mutationFn: (input: { currentPassword: string; newPassword: string }) =>
+      api.auth.changePassword(token ?? '', input),
+    onSuccess: () => {
+      setPasswordError(null);
+      setPasswordSaved(true);
+      passwordForm.reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    },
+    onError: (e) => {
+      setPasswordSaved(false);
+      setPasswordError(errorMessage(e, tErr));
+    },
+  });
+
+  const submitPassword = (values: PasswordFormValues) => {
+    setPasswordSaved(false);
+    if (values.newPassword !== values.confirmPassword) {
+      setPasswordError(t('settings.password.mismatch'));
+      return;
+    }
+    setPasswordError(null);
+    changePassword.mutate({ currentPassword: values.currentPassword, newPassword: values.newPassword });
+  };
+
   const equipmentItems = useMemo(() => equipmentQuery.data ?? [], [equipmentQuery.data]);
   // "Current" = still in use (no end date); "history" = retired items.
   const currentItems = useMemo(() => equipmentItems.filter((item) => !item.activeTo), [equipmentItems]);
@@ -165,8 +210,8 @@ export function ProfileClient() {
 
   const tabs: Array<{ id: ProfileTab; label: string; count?: number }> = [
     { id: 'player', label: t('tabs.player') },
-    { id: 'current', label: t('tabs.currentEquipment'), count: currentItems.length },
-    { id: 'history', label: t('tabs.equipmentHistory'), count: historyItems.length },
+    { id: 'equipment', label: t('tabs.equipment'), count: currentItems.length },
+    { id: 'settings', label: t('tabs.settings') },
   ];
 
   return (
@@ -289,7 +334,7 @@ export function ProfileClient() {
         </form>
       </section>
 
-      <section className={tab === 'current' ? '' : 'hidden'}>
+      <section className={tab === 'equipment' ? '' : 'hidden'}>
         <div className="surface rounded-xl p-5" data-testid="profile-equipment-form">
           <h2 className="text-lg font-semibold text-text-primary">{t('equipment.title')}</h2>
           <p className="mt-1 text-sm text-text-secondary">{t('equipment.subtitle')}</p>
@@ -394,19 +439,109 @@ export function ProfileClient() {
             </div>
           </div>
         </div>
+
+        {/* Equipment history lives in a collapsed accordion to keep the tab tidy. */}
+        <div className="mt-4">
+          <AccordionSection
+            subtitle={t('equipment.history')}
+            title={`${t('tabs.equipmentHistory')}${historyItems.length ? ` (${historyItems.length})` : ''}`}
+          >
+            <div className="flex flex-col gap-3">
+              {historyItems.length === 0 && (
+                <p className="text-sm text-text-secondary">{t('equipment.empty')}</p>
+              )}
+              {historyItems.map((item) => (
+                <EquipmentCard key={item.id} item={item} onDelete={() => deleteEquipment.mutate(item.id)} t={t} />
+              ))}
+            </div>
+          </AccordionSection>
+        </div>
       </section>
 
-      <section className={tab === 'history' ? '' : 'hidden'}>
+      <section className={tab === 'settings' ? '' : 'hidden'}>
         <div className="surface rounded-xl p-5">
-          <h2 className="text-lg font-semibold text-text-primary">{t('equipment.history')}</h2>
-          <div className="mt-4 flex flex-col gap-3">
-            {historyItems.length === 0 && (
-              <p className="text-sm text-text-secondary">{t('equipment.empty')}</p>
-            )}
-            {historyItems.map((item) => (
-              <EquipmentCard key={item.id} item={item} onDelete={() => deleteEquipment.mutate(item.id)} t={t} />
-            ))}
+          <h2 className="text-lg font-semibold text-text-primary">{t('settings.title')}</h2>
+          <p className="mt-1 text-sm text-text-secondary">{t('settings.subtitle')}</p>
+
+          {/* Language */}
+          <div className="mt-5">
+            <p className="text-sm font-medium text-text-secondary">{t('settings.language')}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {locales.map((l) => (
+                <a
+                  key={l}
+                  aria-current={l === locale ? 'true' : undefined}
+                  className={`press flex min-h-11 items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition ${
+                    l === locale
+                      ? 'border-brand-accent bg-brand-accent/10 text-text-primary'
+                      : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                  }`}
+                  href={`/${l}${normalizedPathname}`}
+                  onClick={() => {
+                    document.cookie = `NEXT_LOCALE=${l}; path=/; max-age=31536000; samesite=lax`;
+                  }}
+                >
+                  <FlagIcon locale={l} />
+                  <span>{tCommon(`languages.${l}`)}</span>
+                </a>
+              ))}
+            </div>
           </div>
+
+          {/* Notification email (read-only) */}
+          <div className="mt-6">
+            <p className="text-sm font-medium text-text-secondary">{t('settings.notificationsEmail')}</p>
+            <p className="sunken mt-2 rounded-lg px-3 py-2 text-sm text-text-primary">{userEmail || '—'}</p>
+            <p className="mt-1.5 text-xs text-text-disabled">{t('settings.notificationsEmailHint')}</p>
+          </div>
+
+          {/* Change password */}
+          <form
+            className="mt-6 grid max-w-md gap-3 border-t border-border-subtle/60 pt-5"
+            onSubmit={passwordForm.handleSubmit(submitPassword)}
+          >
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">{t('settings.password.title')}</h3>
+            <Field label={t('settings.password.current')}>
+              <input
+                autoComplete="current-password"
+                className={inputClass}
+                type="password"
+                {...passwordForm.register('currentPassword', { required: true })}
+              />
+            </Field>
+            <Field
+              error={passwordForm.formState.errors.newPassword ? t('settings.password.tooShort') : undefined}
+              label={t('settings.password.new')}
+            >
+              <input
+                autoComplete="new-password"
+                className={inputClass}
+                type="password"
+                {...passwordForm.register('newPassword', { required: true, minLength: 8 })}
+              />
+            </Field>
+            <Field label={t('settings.password.confirm')}>
+              <input
+                autoComplete="new-password"
+                className={inputClass}
+                type="password"
+                {...passwordForm.register('confirmPassword', { required: true })}
+              />
+            </Field>
+            {passwordError && (
+              <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">
+                {passwordError}
+              </p>
+            )}
+            {passwordSaved && (
+              <p className="rounded-md border border-state-success/40 bg-state-success/10 px-3 py-2 text-sm text-state-success">
+                {t('settings.password.success')}
+              </p>
+            )}
+            <button className={primaryButtonClass} disabled={changePassword.isPending} type="submit">
+              {changePassword.isPending ? t('saving') : t('settings.password.submit')}
+            </button>
+          </form>
         </div>
       </section>
 
@@ -481,6 +616,36 @@ function Meta({ label, value }: { label: string; value: string }) {
       <dt className="text-text-disabled">{label}</dt>
       <dd className="text-text-secondary">{value}</dd>
     </div>
+  );
+}
+
+function withoutLocalePrefix(pathname: string): string {
+  const segments = pathname.split('/').filter(Boolean);
+  while (isLocale(segments[0])) {
+    segments.shift();
+  }
+  return segments.length > 0 ? `/${segments.join('/')}` : '';
+}
+
+function FlagIcon({ locale }: { locale: Locale }) {
+  const commonClass = 'inline-block h-4 w-6 shrink-0 overflow-hidden rounded-[2px] border border-border-subtle shadow-sm';
+  if (locale === 'ru') {
+    return (
+      <span aria-hidden="true" className={commonClass} style={{ background: 'linear-gradient(to bottom, #fff 0 33.33%, #1c57a7 33.33% 66.66%, #d52b1e 66.66% 100%)' }} />
+    );
+  }
+  if (locale === 'uk') {
+    return (
+      <span aria-hidden="true" className={commonClass} style={{ background: 'linear-gradient(to bottom, #0057b7 0 50%, #ffd700 50% 100%)' }} />
+    );
+  }
+  return (
+    <span aria-hidden="true" className={`${commonClass} relative bg-[#012169]`}>
+      <span className="absolute left-1/2 top-0 h-full w-1 -translate-x-1/2 bg-white" />
+      <span className="absolute left-0 top-1/2 h-1 w-full -translate-y-1/2 bg-white" />
+      <span className="absolute left-1/2 top-0 h-full w-0.5 -translate-x-1/2 bg-[#c8102e]" />
+      <span className="absolute left-0 top-1/2 h-0.5 w-full -translate-y-1/2 bg-[#c8102e]" />
+    </span>
   );
 }
 

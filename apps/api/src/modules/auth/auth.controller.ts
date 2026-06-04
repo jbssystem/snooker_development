@@ -15,6 +15,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import {
+  ChangePasswordSchema,
   ErrorCodes,
   LoginSchema,
   RefreshSchema,
@@ -23,6 +24,7 @@ import {
   VerifyEmailSchema,
   type AuthMe,
   type AuthSession,
+  type ChangePasswordInput,
   type LoginInput,
   type RefreshInput,
   type RegisterInput,
@@ -123,6 +125,18 @@ export class AuthController {
       await this.tokens.revoke(refreshToken);
     }
     clearRefreshCookie(res);
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async changePassword(
+    @CurrentUserId() userId: string,
+    @Body(new ZodValidationPipe(ChangePasswordSchema)) body: ChangePasswordInput,
+  ): Promise<void> {
+    await this.auth.changePassword(userId, body);
   }
 
   @Get('me')

@@ -13,17 +13,20 @@ export async function Header({ locale }: { locale: Locale }) {
   return (
     <HeaderShell>
         <MobileNav />
-        <Link href="/dashboard" locale={locale as Locale} className="flex min-w-0 shrink-0 items-center gap-3">
+        <Link href="/dashboard" locale={locale as Locale} className="flex min-w-0 shrink-0 items-center gap-3" aria-label={tCommon('appName')}>
+          {/* Desktop: icon + wordmark. Mobile (with the hamburger): wordmark only. */}
           <Image
             src="/icon-192.png"
-            alt={tCommon('appName')}
+            alt=""
+            aria-hidden
             width={32}
             height={32}
-            className="h-8 w-8 rounded"
+            className="hidden h-8 w-8 rounded lg:block"
             priority
           />
-          <span className="hidden max-w-[180px] truncate text-sm font-semibold tracking-wide text-text-primary sm:inline lg:max-w-none">
-            {tCommon('appName')}
+          <span className="truncate text-lg font-semibold tracking-tight sm:text-xl">
+            <span className="text-text-primary">Snooker </span>
+            <span className="text-gradient">Player OS</span>
           </span>
         </Link>
         <MainNav />

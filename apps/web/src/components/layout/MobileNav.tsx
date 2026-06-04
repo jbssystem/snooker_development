@@ -11,10 +11,10 @@ import {
   DrillsIcon,
   ExternalIcon,
   MatchesIcon,
-  ProfileIcon,
   TrainingIcon,
 } from '@/components/ui/icons';
 
+// Profile is intentionally omitted — it lives in the top-right avatar menu.
 const NAV = [
   { key: 'dashboard', href: '/dashboard', Icon: DashboardIcon },
   { key: 'training', href: '/training', Icon: TrainingIcon },
@@ -23,7 +23,6 @@ const NAV = [
   { key: 'calendar', href: '/calendar', Icon: CalendarIcon },
   { key: 'ai', href: '/ai', Icon: AiIcon },
   { key: 'externalData', href: '/external-data', Icon: ExternalIcon },
-  { key: 'profile', href: '/profile', Icon: ProfileIcon },
 ] as const;
 
 /** Hamburger trigger + slide-in navigation drawer for small screens. */

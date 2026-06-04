@@ -1082,7 +1082,26 @@
     "tabs": {
       "player": "Player",
       "currentEquipment": "Current equipment",
-      "equipmentHistory": "Equipment history"
+      "equipmentHistory": "Equipment history",
+      "equipment": "Equipment",
+      "settings": "Settings"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Language, notifications and security.",
+      "language": "Interface language",
+      "notificationsEmail": "Notification email",
+      "notificationsEmailHint": "Notifications will be sent to this address.",
+      "password": {
+        "title": "Change password",
+        "current": "Current password",
+        "new": "New password",
+        "confirm": "Repeat new password",
+        "submit": "Change password",
+        "success": "Password updated",
+        "mismatch": "Passwords do not match",
+        "tooShort": "At least 8 characters"
+      }
     }
   },
   "drills": {

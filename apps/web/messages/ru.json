@@ -1082,7 +1082,26 @@
     "tabs": {
       "player": "Игрок",
       "currentEquipment": "Текущая экипировка",
-      "equipmentHistory": "История экипировки"
+      "equipmentHistory": "История экипировки",
+      "equipment": "Экипировка",
+      "settings": "Настройки"
+    },
+    "settings": {
+      "title": "Настройки",
+      "subtitle": "Язык, уведомления и безопасность.",
+      "language": "Язык интерфейса",
+      "notificationsEmail": "Email для уведомлений",
+      "notificationsEmailHint": "На этот адрес будут приходить уведомления.",
+      "password": {
+        "title": "Смена пароля",
+        "current": "Текущий пароль",
+        "new": "Новый пароль",
+        "confirm": "Повторите новый пароль",
+        "submit": "Сменить пароль",
+        "success": "Пароль обновлён",
+        "mismatch": "Пароли не совпадают",
+        "tooShort": "Минимум 8 символов"
+      }
     }
   },
   "drills": {

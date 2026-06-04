@@ -1082,7 +1082,26 @@
     "tabs": {
       "player": "Гравець",
       "currentEquipment": "Поточна екіпіровка",
-      "equipmentHistory": "Історія екіпіровки"
+      "equipmentHistory": "Історія екіпіровки",
+      "equipment": "Екіпіровка",
+      "settings": "Налаштування"
+    },
+    "settings": {
+      "title": "Налаштування",
+      "subtitle": "Мова, сповіщення та безпека.",
+      "language": "Мова інтерфейсу",
+      "notificationsEmail": "Email для сповіщень",
+      "notificationsEmailHint": "На цю адресу надходитимуть сповіщення.",
+      "password": {
+        "title": "Зміна пароля",
+        "current": "Поточний пароль",
+        "new": "Новий пароль",
+        "confirm": "Повторіть новий пароль",
+        "submit": "Змінити пароль",
+        "success": "Пароль оновлено",
+        "mismatch": "Паролі не збігаються",
+        "tooShort": "Щонайменше 8 символів"
+      }
     }
   },
   "drills": {
