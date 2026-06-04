@@ -1,4 +1,11 @@
 import type {
+  AccessibleProfile,
+  CreateInvitationInput,
+  IncomingInvitation,
+  InvitationPreview,
+  ProfileInvitationSummary,
+  ProfileMember,
+  UpdateMemberAccessInput,
   AuthMe,
   AuthSession,
   ActiveAnnouncement,
@@ -124,12 +131,16 @@ async function requestWithRefresh<T>(path: string, opts: FetchOptions, retryOnUn
 
 async function send<T>(path: string, opts: FetchOptions = {}): Promise<T> {
   const { token, headers, ...rest } = opts;
+  // Tell the API which cabinet the request acts in. Only sent on authenticated
+  // requests; the backend resolves access (owner / shared) from it.
+  const activeProfileId = token ? useAuthStore.getState().activeProfileId : null;
   const res = await fetch(`${BASE_URL}${path}`, {
     ...rest,
     credentials: rest.credentials ?? 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(activeProfileId ? { 'X-Active-Profile': activeProfileId } : {}),
       ...headers,
     },
   });
@@ -191,6 +202,45 @@ export const api = {
     me: (token: string) => request<AuthMe>('/auth/me', { token }),
     changePassword: (token: string, input: ChangePasswordInput) =>
       request<void>('/auth/change-password', { method: 'POST', token, body: JSON.stringify(input) }),
+  },
+  profiles: {
+    // Cabinets the user can switch between (own + shared).
+    accessible: (token: string) => request<AccessibleProfile[]>('/profiles/accessible', { token }),
+    // Owner-only management of the active cabinet's access.
+    listMembers: (token: string) => request<ProfileMember[]>('/profiles/me/members', { token }),
+    updateMember: (token: string, userId: string, input: UpdateMemberAccessInput) =>
+      request<ProfileMember>(`/profiles/me/members/${userId}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    removeMember: (token: string, userId: string) =>
+      request<void>(`/profiles/me/members/${userId}`, { method: 'DELETE', token }),
+    listInvitations: (token: string) =>
+      request<ProfileInvitationSummary[]>('/profiles/me/invitations', { token }),
+    invite: (token: string, input: CreateInvitationInput) =>
+      request<ProfileInvitationSummary>('/profiles/me/invitations', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(input),
+      }),
+    revokeInvitation: (token: string, id: string) =>
+      request<void>(`/profiles/me/invitations/${id}`, { method: 'DELETE', token }),
+  },
+  invitations: {
+    // In-app invitations addressed to the logged-in user.
+    incoming: (token: string) => request<IncomingInvitation[]>('/invitations/incoming', { token }),
+    acceptIncoming: (token: string, id: string) =>
+      request<void>(`/invitations/incoming/${id}/accept`, { method: 'POST', token }),
+    declineIncoming: (token: string, id: string) =>
+      request<void>(`/invitations/incoming/${id}/decline`, { method: 'POST', token }),
+    // Email-link flow: preview is public; accept/decline need auth.
+    preview: (inviteToken: string) =>
+      request<InvitationPreview>(`/invitations/token/${inviteToken}`),
+    acceptToken: (token: string, inviteToken: string) =>
+      request<void>(`/invitations/token/${inviteToken}/accept`, { method: 'POST', token }),
+    declineToken: (token: string, inviteToken: string) =>
+      request<void>(`/invitations/token/${inviteToken}/decline`, { method: 'POST', token }),
   },
   players: {
     getProfile: (token: string) => request<PlayerProfile | null>('/players/me/profile', { token }),
