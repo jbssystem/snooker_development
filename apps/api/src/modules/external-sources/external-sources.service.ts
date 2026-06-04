@@ -30,23 +30,19 @@ export class ExternalSourcesService implements OnModuleDestroy {
     await this.queue?.close();
   }
 
-  async listLinks(userId: string): Promise<ExternalPlayerLink[]> {
-    const profile = await this.findProfile(userId);
-    if (!profile) return [];
-
+  async listLinks(profileId: string): Promise<ExternalPlayerLink[]> {
     const links = await this.prisma.externalPlayerLink.findMany({
-      where: { playerProfileId: profile.id },
+      where: { playerProfileId: profileId },
       orderBy: { createdAt: 'desc' },
     });
     return links.map(toLink);
   }
 
-  async createLink(userId: string, input: CreateExternalLinkInput): Promise<ExternalPlayerLink> {
-    const profile = await this.findProfileOrThrow(userId);
+  async createLink(profileId: string, input: CreateExternalLinkInput): Promise<ExternalPlayerLink> {
     const { source, externalId, externalUrl, displayName } = parseUrl(input.url);
 
     const existing = await this.prisma.externalPlayerLink.findUnique({
-      where: { playerProfileId_source: { playerProfileId: profile.id, source: toPrismaSource(source) } },
+      where: { playerProfileId_source: { playerProfileId: profileId, source: toPrismaSource(source) } },
     });
     if (existing) {
       throw new BadRequestException(ErrorCodes.Validation.Failed);
@@ -54,7 +50,7 @@ export class ExternalSourcesService implements OnModuleDestroy {
 
     const link = await this.prisma.externalPlayerLink.create({
       data: {
-        playerProfileId: profile.id,
+        playerProfileId: profileId,
         source: toPrismaSource(source),
         externalId,
         externalUrl,
@@ -65,12 +61,12 @@ export class ExternalSourcesService implements OnModuleDestroy {
 
     if (source === 'wst') {
       await this.prisma.playerProfile.update({
-        where: { id: profile.id },
+        where: { id: profileId },
         data: { wstId: externalId },
       });
     } else if (source === 'cuetracker') {
       await this.prisma.playerProfile.update({
-        where: { id: profile.id },
+        where: { id: profileId },
         data: { cuetrackerId: externalId },
       });
     }
@@ -78,13 +74,13 @@ export class ExternalSourcesService implements OnModuleDestroy {
     return toLink(link);
   }
 
-  async deleteLink(userId: string, id: string): Promise<void> {
-    const link = await this.findLinkOrThrow(userId, id);
+  async deleteLink(profileId: string, id: string): Promise<void> {
+    const link = await this.findLinkOrThrow(profileId, id);
     await this.prisma.externalPlayerLink.delete({ where: { id: link.id } });
   }
 
-  async triggerSync(userId: string, id: string): Promise<ExternalImportJob> {
-    const link = await this.findLinkOrThrow(userId, id);
+  async triggerSync(profileId: string, id: string): Promise<ExternalImportJob> {
+    const link = await this.findLinkOrThrow(profileId, id);
 
     const job = await this.prisma.externalImportJob.create({
       data: {
@@ -102,8 +98,8 @@ export class ExternalSourcesService implements OnModuleDestroy {
     return toJob(job);
   }
 
-  async listJobs(userId: string, linkId: string): Promise<ExternalImportJob[]> {
-    await this.findLinkOrThrow(userId, linkId);
+  async listJobs(profileId: string, linkId: string): Promise<ExternalImportJob[]> {
+    await this.findLinkOrThrow(profileId, linkId);
 
     const jobs = await this.prisma.externalImportJob.findMany({
       where: { externalPlayerLinkId: linkId },
@@ -113,13 +109,10 @@ export class ExternalSourcesService implements OnModuleDestroy {
     return jobs.map(toJob);
   }
 
-  async listImportedMatches(userId: string) {
-    const profile = await this.findProfile(userId);
-    if (!profile) return [];
-
+  async listImportedMatches(profileId: string) {
     const matches = await this.prisma.match.findMany({
       where: {
-        playerProfileId: profile.id,
+        playerProfileId: profileId,
         source: 'EXTERNAL',
       },
       include: { frames: { orderBy: { frameNumber: 'asc' } } },
@@ -156,20 +149,9 @@ export class ExternalSourcesService implements OnModuleDestroy {
     }));
   }
 
-  private async findProfile(userId: string) {
-    return this.prisma.playerProfile.findUnique({ where: { userId } });
-  }
-
-  private async findProfileOrThrow(userId: string) {
-    const profile = await this.findProfile(userId);
-    if (!profile) throw new BadRequestException(ErrorCodes.Validation.Failed);
-    return profile;
-  }
-
-  private async findLinkOrThrow(userId: string, linkId: string) {
-    const profile = await this.findProfileOrThrow(userId);
+  private async findLinkOrThrow(profileId: string, linkId: string) {
     const link = await this.prisma.externalPlayerLink.findFirst({
-      where: { id: linkId, playerProfileId: profile.id },
+      where: { id: linkId, playerProfileId: profileId },
     });
     if (!link) throw new NotFoundException(ErrorCodes.Generic.NotFound);
     return link;

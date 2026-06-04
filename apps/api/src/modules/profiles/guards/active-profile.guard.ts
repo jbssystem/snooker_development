@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { ErrorCodes } from '@snooker/shared';
 import { ProfileAccessService } from '../profile-access.service';
 import type { ProfileAwareRequest } from '../profile-context';
-import { OWNER_ONLY_KEY, WRITE_ACCESS_KEY } from '../decorators/access.decorators';
+import { OWNER_ONLY_KEY, WELLNESS_KEY, WRITE_ACCESS_KEY } from '../decorators/access.decorators';
 
 /**
  * Resolves the active cabinet from the `X-Active-Profile` header (falling back
@@ -29,6 +29,7 @@ export class ActiveProfileGuard implements CanActivate {
     const targets = [context.getHandler(), context.getClass()];
     const requiresOwner = this.reflector.getAllAndOverride<boolean>(OWNER_ONLY_KEY, targets);
     const requiresEdit = this.reflector.getAllAndOverride<boolean>(WRITE_ACCESS_KEY, targets);
+    const requiresWellness = this.reflector.getAllAndOverride<boolean>(WELLNESS_KEY, targets);
 
     if (requiresOwner) {
       if (!profile || !profile.isOwner) {
@@ -38,6 +39,9 @@ export class ActiveProfileGuard implements CanActivate {
       if (!profile || profile.accessLevel !== 'EDIT') {
         throw new ForbiddenException({ error: { code: ErrorCodes.Sharing.WriteAccessDenied } });
       }
+    }
+    if (requiresWellness && (!profile || !profile.canAccessWellness)) {
+      throw new ForbiddenException({ error: { code: ErrorCodes.Sharing.WellnessAccessDenied } });
     }
     return true;
   }

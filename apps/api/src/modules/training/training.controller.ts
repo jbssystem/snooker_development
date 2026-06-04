@@ -28,85 +28,99 @@ import {
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { CuidValidationPipe } from '../../common/pipes/cuid-validation.pipe';
-import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ActiveProfileGuard } from '../profiles/guards/active-profile.guard';
+import {
+  ActiveProfile,
+  CurrentProfile,
+  CurrentProfileId,
+} from '../profiles/decorators/active-profile.decorator';
+import { WriteAccess } from '../profiles/decorators/access.decorators';
+import type { ProfileContext } from '../profiles/profile-context';
 import { TrainingService } from './training.service';
 
 @ApiTags('training')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ActiveProfileGuard)
 @Controller()
 export class TrainingController {
   constructor(private readonly training: TrainingService) {}
 
   @Get('training-sessions')
-  list(@CurrentUserId() userId: string): Promise<TrainingSession[]> {
-    return this.training.listSessions(userId);
+  list(@ActiveProfile() ctx: ProfileContext | null): Promise<TrainingSession[]> {
+    return ctx ? this.training.listSessions(ctx.profileId) : Promise.resolve([]);
   }
 
   @Get('training-sessions/:id')
-  get(@CurrentUserId() userId: string, @Param('id', CuidValidationPipe) id: string): Promise<TrainingSession> {
-    return this.training.getSession(userId, id);
+  get(@CurrentProfileId() profileId: string, @Param('id', CuidValidationPipe) id: string): Promise<TrainingSession> {
+    return this.training.getSession(profileId, id);
   }
 
   @Post('training-sessions')
+  @WriteAccess()
   create(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Body(new ZodValidationPipe(CreateTrainingSessionSchema)) body: CreateTrainingSessionInput,
   ): Promise<TrainingSession> {
-    return this.training.createSession(userId, body);
+    return this.training.createSession(ctx, body);
   }
 
   @Patch('training-sessions/:id')
+  @WriteAccess()
   update(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateTrainingSessionSchema)) body: UpdateTrainingSessionInput,
   ): Promise<TrainingSession> {
-    return this.training.updateSession(userId, id, body);
+    return this.training.updateSession(profileId, id, body);
   }
 
   @Post('training-sessions/:id/finish')
+  @WriteAccess()
   finishSession(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(FinishTrainingSessionSchema)) body: FinishTrainingSessionInput,
   ): Promise<TrainingSession> {
-    return this.training.finishSession(userId, id, body);
+    return this.training.finishSession(profileId, id, body);
   }
 
   @Post('training-sessions/:id/drills')
+  @WriteAccess()
   addDrill(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(AddDrillExecutionSchema)) body: AddDrillExecutionInput,
   ): Promise<DrillExecution> {
-    return this.training.addDrill(userId, id, body);
+    return this.training.addDrill(ctx, id, body);
   }
 
   @Post('drill-executions/:id/attempts')
+  @WriteAccess()
   addAttempt(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(CreateDrillAttemptSchema)) body: CreateDrillAttemptInput,
   ): Promise<DrillAttempt> {
-    return this.training.addAttempt(userId, id, body);
+    return this.training.addAttempt(profileId, id, body);
   }
 
   @Delete('drill-executions/:id/attempts/last')
+  @WriteAccess()
   removeLastAttempt(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
   ): Promise<DrillExecution> {
-    return this.training.removeLastAttempt(userId, id);
+    return this.training.removeLastAttempt(profileId, id);
   }
 
   @Patch('drill-executions/:id/finish')
+  @WriteAccess()
   finishDrill(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(FinishDrillExecutionSchema)) body: FinishDrillExecutionInput,
   ): Promise<DrillExecution> {
-    return this.training.finishDrill(userId, id, body);
+    return this.training.finishDrill(profileId, id, body);
   }
 }

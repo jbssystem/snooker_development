@@ -18,6 +18,7 @@ import {
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
 import { SensitiveDataAuditService } from '../audit/sensitive-data-audit.service';
+import type { ProfileContext } from '../profiles/profile-context';
 
 type AiReportEntity = Prisma.AiReportGetPayload<Record<string, never>>;
 type ProfileEntity = Prisma.PlayerProfileGetPayload<Record<string, never>>;
@@ -49,24 +50,22 @@ export class AiService implements OnModuleDestroy {
     await this.queue?.close();
   }
 
-  async listReports(userId: string): Promise<AiReport[]> {
-    const profile = await this.findProfile(userId);
-    if (!profile) return [];
-
+  async listReports(profileId: string): Promise<AiReport[]> {
     const reports = await this.prisma.aiReport.findMany({
-      where: { playerProfileId: profile.id },
+      where: { playerProfileId: profileId },
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
     return reports.map(toAiReport);
   }
 
-  async getReport(userId: string, id: string): Promise<AiReport> {
-    return toAiReport(await this.findReportOrThrow(userId, id));
+  async getReport(profileId: string, id: string): Promise<AiReport> {
+    return toAiReport(await this.findReportOrThrow(profileId, id));
   }
 
-  async generateWeeklyReport(userId: string, input: GenerateWeeklyAiReportInput): Promise<AiReport> {
-    const profile = await this.findProfileOrThrow(userId);
+  async generateWeeklyReport(ctx: ProfileContext, input: GenerateWeeklyAiReportInput): Promise<AiReport> {
+    const userId = ctx.userId;
+    const profile = await this.loadProfileOrThrow(ctx.profileId);
     const period = resolvePeriod(input);
     const runtime = resolveAiRuntime(this.config);
     const rawSourceData = await this.collectSourceData(profile, period.from, period.to);
@@ -147,8 +146,9 @@ export class AiService implements OnModuleDestroy {
     }
   }
 
-  async generateExternalMatchReport(userId: string, input: GenerateExternalMatchReportInput): Promise<AiReport> {
-    const profile = await this.findProfileOrThrow(userId);
+  async generateExternalMatchReport(ctx: ProfileContext, input: GenerateExternalMatchReportInput): Promise<AiReport> {
+    const userId = ctx.userId;
+    const profile = await this.loadProfileOrThrow(ctx.profileId);
     const matches = await this.prisma.match.findMany({
       where: { id: { in: input.matchIds }, playerProfileId: profile.id, source: 'EXTERNAL' },
       include: { frames: { orderBy: { frameNumber: 'asc' } } },
@@ -258,21 +258,16 @@ export class AiService implements OnModuleDestroy {
     return toAiReport(report);
   }
 
-  private async findProfile(userId: string): Promise<ProfileEntity | null> {
-    return this.prisma.playerProfile.findUnique({ where: { userId } });
-  }
-
-  private async findProfileOrThrow(userId: string): Promise<ProfileEntity> {
-    const profile = await this.findProfile(userId);
+  private async loadProfileOrThrow(profileId: string): Promise<ProfileEntity> {
+    const profile = await this.prisma.playerProfile.findUnique({ where: { id: profileId } });
     if (!profile) {
       throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
     }
     return profile;
   }
 
-  private async findReportOrThrow(userId: string, id: string): Promise<AiReportEntity> {
-    const profile = await this.findProfileOrThrow(userId);
-    const report = await this.prisma.aiReport.findFirst({ where: { id, playerProfileId: profile.id } });
+  private async findReportOrThrow(profileId: string, id: string): Promise<AiReportEntity> {
+    const report = await this.prisma.aiReport.findFirst({ where: { id, playerProfileId: profileId } });
     if (!report) {
       throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
     }

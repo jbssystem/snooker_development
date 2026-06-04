@@ -13,10 +13,21 @@ export const ActiveProfile = createParamDecorator(
 /** The active cabinet's profile id; throws NoProfile when none is available. */
 export const CurrentProfileId = createParamDecorator(
   (_: unknown, ctx: ExecutionContext): string => {
-    const req = ctx.switchToHttp().getRequest<ProfileAwareRequest>();
-    if (!req.profile) {
-      throw new NotFoundException({ error: { code: ErrorCodes.Sharing.NoProfile } });
-    }
-    return req.profile.profileId;
+    return requireProfile(ctx).profileId;
   },
 );
+
+/** The full active cabinet context; throws NoProfile when none is available. */
+export const CurrentProfile = createParamDecorator(
+  (_: unknown, ctx: ExecutionContext): ProfileContext => {
+    return requireProfile(ctx);
+  },
+);
+
+function requireProfile(ctx: ExecutionContext): ProfileContext {
+  const req = ctx.switchToHttp().getRequest<ProfileAwareRequest>();
+  if (!req.profile) {
+    throw new NotFoundException({ error: { code: ErrorCodes.Sharing.NoProfile } });
+  }
+  return req.profile;
+}

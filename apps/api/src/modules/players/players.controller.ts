@@ -28,64 +28,76 @@ import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { CuidValidationPipe } from '../../common/pipes/cuid-validation.pipe';
 import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ActiveProfileGuard } from '../profiles/guards/active-profile.guard';
+import {
+  ActiveProfile,
+  CurrentProfileId,
+} from '../profiles/decorators/active-profile.decorator';
+import { WriteAccess } from '../profiles/decorators/access.decorators';
+import type { ProfileContext } from '../profiles/profile-context';
 import { PlayersService } from './players.service';
 
 @ApiTags('players')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ActiveProfileGuard)
 @Controller('players/me')
 export class PlayersController {
   constructor(private readonly players: PlayersService) {}
 
   @Get('profile')
-  getProfile(@CurrentUserId() userId: string): Promise<PlayerProfile | null> {
-    return this.players.getProfile(userId);
+  getProfile(@ActiveProfile() ctx: ProfileContext | null): Promise<PlayerProfile | null> {
+    return this.players.getProfile(ctx);
   }
 
   @Put('profile')
   upsertProfile(
     @CurrentUserId() userId: string,
+    @ActiveProfile() ctx: ProfileContext | null,
     @Body(new ZodValidationPipe(UpsertPlayerProfileSchema)) body: UpsertPlayerProfileInput,
   ): Promise<PlayerProfile> {
-    return this.players.upsertProfile(userId, body);
+    return this.players.upsertProfile(userId, ctx, body);
   }
 
   @Patch('profile/avatar')
+  @WriteAccess()
   updateAvatar(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Body(new ZodValidationPipe(UpdateAvatarSchema)) body: UpdateAvatarInput,
   ): Promise<PlayerProfile> {
-    return this.players.updateAvatar(userId, body.avatar);
+    return this.players.updateAvatar(profileId, body.avatar);
   }
 
   @Get('equipment-profiles')
-  listEquipment(@CurrentUserId() userId: string): Promise<EquipmentProfile[]> {
-    return this.players.listEquipment(userId);
+  listEquipment(@ActiveProfile() ctx: ProfileContext | null): Promise<EquipmentProfile[]> {
+    return ctx ? this.players.listEquipment(ctx.profileId) : Promise.resolve([]);
   }
 
   @Post('equipment-profiles')
+  @WriteAccess()
   createEquipment(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Body(new ZodValidationPipe(CreateEquipmentProfileSchema)) body: CreateEquipmentProfileInput,
   ): Promise<EquipmentProfile> {
-    return this.players.createEquipment(userId, body);
+    return this.players.createEquipment(profileId, body);
   }
 
   @Patch('equipment-profiles/:id')
+  @WriteAccess()
   updateEquipment(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateEquipmentProfileSchema)) body: UpdateEquipmentProfileInput,
   ): Promise<EquipmentProfile> {
-    return this.players.updateEquipment(userId, id, body);
+    return this.players.updateEquipment(profileId, id, body);
   }
 
   @Delete('equipment-profiles/:id')
+  @WriteAccess()
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteEquipment(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
   ): Promise<void> {
-    await this.players.deleteEquipment(userId, id);
+    await this.players.deleteEquipment(profileId, id);
   }
 }

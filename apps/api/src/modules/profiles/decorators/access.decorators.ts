@@ -9,3 +9,8 @@ export const WriteAccess = (): MethodDecorator & ClassDecorator =>
 export const OWNER_ONLY_KEY = 'sharing:requiresOwner';
 export const OwnerOnly = (): MethodDecorator & ClassDecorator =>
   SetMetadata(OWNER_ONLY_KEY, true);
+
+/** Route touches sensitive wellness data; requires canAccessWellness. */
+export const WELLNESS_KEY = 'sharing:requiresWellness';
+export const RequiresWellness = (): MethodDecorator & ClassDecorator =>
+  SetMetadata(WELLNESS_KEY, true);

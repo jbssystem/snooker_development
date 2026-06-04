@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type {
   EquipmentProfile as PrismaEquipmentProfile,
   PlayerProfile as PrismaPlayerProfile,
@@ -13,18 +13,38 @@ import {
   type UpdateEquipmentProfileInput,
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
+import type { ProfileContext } from '../profiles/profile-context';
 
 @Injectable()
 export class PlayersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getProfile(userId: string): Promise<PlayerProfile | null> {
-    const profile = await this.prisma.playerProfile.findUnique({ where: { userId } });
+  async getProfile(ctx: ProfileContext | null): Promise<PlayerProfile | null> {
+    if (!ctx) return null;
+    const profile = await this.prisma.playerProfile.findUnique({ where: { id: ctx.profileId } });
     return profile ? toPlayerProfile(profile) : null;
   }
 
-  async upsertProfile(userId: string, input: UpsertPlayerProfileInput): Promise<PlayerProfile> {
+  /**
+   * Creates the acting user's own profile (bootstrap), or edits the active
+   * cabinet's profile when an editor is acting in a shared cabinet.
+   */
+  async upsertProfile(
+    userId: string,
+    ctx: ProfileContext | null,
+    input: UpsertPlayerProfileInput,
+  ): Promise<PlayerProfile> {
     const data = toPlayerProfileData(input);
+    if (ctx && !ctx.isOwner) {
+      if (ctx.accessLevel !== 'EDIT') {
+        throw new ForbiddenException({ error: { code: ErrorCodes.Sharing.WriteAccessDenied } });
+      }
+      const profile = await this.prisma.playerProfile.update({
+        where: { id: ctx.profileId },
+        data,
+      });
+      return toPlayerProfile(profile);
+    }
     const profile = await this.prisma.playerProfile.upsert({
       where: { userId },
       create: { userId, ...data },
@@ -33,39 +53,35 @@ export class PlayersService {
     return toPlayerProfile(profile);
   }
 
-  async updateAvatar(userId: string, avatar: string): Promise<PlayerProfile> {
-    await this.findProfileOrThrow(userId);
+  async updateAvatar(profileId: string, avatar: string): Promise<PlayerProfile> {
     const profile = await this.prisma.playerProfile.update({
-      where: { userId },
+      where: { id: profileId },
       data: { avatar },
     });
     return toPlayerProfile(profile);
   }
 
-  async listEquipment(userId: string): Promise<EquipmentProfile[]> {
-    const profile = await this.findProfileOrThrow(userId);
+  async listEquipment(profileId: string): Promise<EquipmentProfile[]> {
     const equipment = await this.prisma.equipmentProfile.findMany({
-      where: { playerProfileId: profile.id },
+      where: { playerProfileId: profileId },
       orderBy: [{ activeTo: 'asc' }, { activeFrom: 'desc' }],
     });
     return equipment.map(toEquipmentProfile);
   }
 
-  async createEquipment(userId: string, input: CreateEquipmentProfileInput): Promise<EquipmentProfile> {
-    const profile = await this.findProfileOrThrow(userId);
+  async createEquipment(profileId: string, input: CreateEquipmentProfileInput): Promise<EquipmentProfile> {
     const equipment = await this.prisma.equipmentProfile.create({
-      data: toEquipmentProfileCreateData(profile.id, input),
+      data: toEquipmentProfileCreateData(profileId, input),
     });
     return toEquipmentProfile(equipment);
   }
 
   async updateEquipment(
-    userId: string,
+    profileId: string,
     id: string,
     input: UpdateEquipmentProfileInput,
   ): Promise<EquipmentProfile> {
-    const profile = await this.findProfileOrThrow(userId);
-    await this.findEquipmentOrThrow(profile.id, id);
+    await this.findEquipmentOrThrow(profileId, id);
     const equipment = await this.prisma.equipmentProfile.update({
       where: { id },
       data: toEquipmentProfileData(input),
@@ -73,18 +89,9 @@ export class PlayersService {
     return toEquipmentProfile(equipment);
   }
 
-  async deleteEquipment(userId: string, id: string): Promise<void> {
-    const profile = await this.findProfileOrThrow(userId);
-    await this.findEquipmentOrThrow(profile.id, id);
+  async deleteEquipment(profileId: string, id: string): Promise<void> {
+    await this.findEquipmentOrThrow(profileId, id);
     await this.prisma.equipmentProfile.delete({ where: { id } });
-  }
-
-  private async findProfileOrThrow(userId: string): Promise<PrismaPlayerProfile> {
-    const profile = await this.prisma.playerProfile.findUnique({ where: { userId } });
-    if (!profile) {
-      throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
-    }
-    return profile;
   }
 
   private async findEquipmentOrThrow(

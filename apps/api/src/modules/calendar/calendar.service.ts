@@ -20,11 +20,23 @@ import {
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
 import { SensitiveDataAuditService } from '../audit/sensitive-data-audit.service';
+import type { ProfileContext } from '../profiles/profile-context';
 
 type CalendarEventEntity = Prisma.CalendarEventGetPayload<Record<string, never>>;
 type LifestyleFactorEntity = Prisma.LifestyleFactorGetPayload<Record<string, never>>;
 type SupplementEventEntity = Prisma.SupplementEventGetPayload<Record<string, never>>;
-type ProfileRef = { id: string };
+
+// Wellness-sensitive calendar event types — hidden from members without
+// wellness access (training/tournament/match stay visible).
+const WELLNESS_EVENT_TYPES: PrismaCalendarEventType[] = [
+  'ILLNESS',
+  'INJURY',
+  'SLEEP_ISSUE',
+  'SUPPLEMENT_START',
+  'SUPPLEMENT_END',
+  'SCHOOL_WORKLOAD',
+  'CUSTOM_FACTOR',
+];
 
 @Injectable()
 export class CalendarService {
@@ -33,30 +45,33 @@ export class CalendarService {
     private readonly sensitiveAudit: SensitiveDataAuditService,
   ) {}
 
-  async listCalendarEvents(userId: string): Promise<CalendarEvent[]> {
-    const profile = await this.findProfile(userId);
-    if (!profile) return [];
-
+  async listCalendarEvents(ctx: ProfileContext): Promise<CalendarEvent[]> {
     const events = await this.prisma.calendarEvent.findMany({
-      where: { playerProfileId: profile.id },
+      where: {
+        playerProfileId: ctx.profileId,
+        ...(ctx.canAccessWellness ? {} : { eventType: { notIn: WELLNESS_EVENT_TYPES } }),
+      },
       orderBy: [{ startAt: 'desc' }, { createdAt: 'desc' }],
       take: 100,
     });
     return events.map(toCalendarEvent);
   }
 
-  async getCalendarEvent(userId: string, id: string): Promise<CalendarEvent> {
-    return toCalendarEvent(await this.findCalendarEventOrThrow(userId, id));
+  async getCalendarEvent(ctx: ProfileContext, id: string): Promise<CalendarEvent> {
+    const event = await this.findCalendarEventOrThrow(ctx.profileId, id);
+    if (!ctx.canAccessWellness && WELLNESS_EVENT_TYPES.includes(event.eventType)) {
+      throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
+    }
+    return toCalendarEvent(event);
   }
 
   async createCalendarEvent(
-    userId: string,
+    ctx: ProfileContext,
     input: CreateCalendarEventInput,
   ): Promise<CalendarEvent> {
-    const profile = await this.findProfileOrThrow(userId);
     const data: Prisma.CalendarEventUncheckedCreateInput = {
-      playerProfileId: profile.id,
-      createdByUserId: userId,
+      playerProfileId: ctx.profileId,
+      createdByUserId: ctx.userId,
       eventType: toPrismaCalendarEventType(input.eventType),
       title: input.title,
       source: 'MANUAL',
@@ -72,11 +87,11 @@ export class CalendarService {
   }
 
   async updateCalendarEvent(
-    userId: string,
+    ctx: ProfileContext,
     id: string,
     input: UpdateCalendarEventInput,
   ): Promise<CalendarEvent> {
-    const existing = await this.findCalendarEventOrThrow(userId, id);
+    const existing = await this.findCalendarEventOrThrow(ctx.profileId, id);
     const data: Prisma.CalendarEventUpdateInput = {};
 
     if (input.eventType !== undefined) data.eventType = toPrismaCalendarEventType(input.eventType);
@@ -90,18 +105,15 @@ export class CalendarService {
     return toCalendarEvent(event);
   }
 
-  async listLifestyleFactors(userId: string): Promise<LifestyleFactor[]> {
-    const profile = await this.findProfile(userId);
-    if (!profile) return [];
-
+  async listLifestyleFactors(ctx: ProfileContext): Promise<LifestyleFactor[]> {
     const factors = await this.prisma.lifestyleFactor.findMany({
-      where: { playerProfileId: profile.id },
+      where: { playerProfileId: ctx.profileId },
       orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       take: 60,
     });
     await this.sensitiveAudit.record({
-      actorUserId: userId,
-      playerProfileId: profile.id,
+      actorUserId: ctx.userId,
+      playerProfileId: ctx.profileId,
       dataType: 'LIFESTYLE',
       action: 'READ',
       metadata: { count: factors.length },
@@ -109,10 +121,10 @@ export class CalendarService {
     return factors.map(toLifestyleFactor);
   }
 
-  async getLifestyleFactor(userId: string, id: string): Promise<LifestyleFactor> {
-    const factor = await this.findLifestyleFactorOrThrow(userId, id);
+  async getLifestyleFactor(ctx: ProfileContext, id: string): Promise<LifestyleFactor> {
+    const factor = await this.findLifestyleFactorOrThrow(ctx.profileId, id);
     await this.sensitiveAudit.record({
-      actorUserId: userId,
+      actorUserId: ctx.userId,
       playerProfileId: factor.playerProfileId,
       dataType: 'LIFESTYLE',
       action: 'READ',
@@ -122,20 +134,19 @@ export class CalendarService {
   }
 
   async saveLifestyleFactor(
-    userId: string,
+    ctx: ProfileContext,
     input: CreateLifestyleFactorInput,
   ): Promise<LifestyleFactor> {
-    const profile = await this.findProfileOrThrow(userId);
     const date = startOfDay(parseDate(input.date));
     const data = toLifestyleFactorData(input);
     const factor = await this.prisma.lifestyleFactor.upsert({
-      where: { playerProfileId_date: { playerProfileId: profile.id, date } },
-      create: toLifestyleFactorCreateData(profile.id, date, input),
+      where: { playerProfileId_date: { playerProfileId: ctx.profileId, date } },
+      create: toLifestyleFactorCreateData(ctx.profileId, date, input),
       update: data,
     });
     await this.sensitiveAudit.record({
-      actorUserId: userId,
-      playerProfileId: profile.id,
+      actorUserId: ctx.userId,
+      playerProfileId: ctx.profileId,
       dataType: 'LIFESTYLE',
       action: 'CREATE',
       targetId: factor.id,
@@ -144,17 +155,17 @@ export class CalendarService {
   }
 
   async updateLifestyleFactor(
-    userId: string,
+    ctx: ProfileContext,
     id: string,
     input: UpdateLifestyleFactorInput,
   ): Promise<LifestyleFactor> {
-    const existing = await this.findLifestyleFactorOrThrow(userId, id);
+    const existing = await this.findLifestyleFactorOrThrow(ctx.profileId, id);
     const data = toLifestyleFactorData(input);
     if (input.date !== undefined) data.date = startOfDay(parseDate(input.date));
 
     const factor = await this.prisma.lifestyleFactor.update({ where: { id: existing.id }, data });
     await this.sensitiveAudit.record({
-      actorUserId: userId,
+      actorUserId: ctx.userId,
       playerProfileId: factor.playerProfileId,
       dataType: 'LIFESTYLE',
       action: 'UPDATE',
@@ -163,18 +174,15 @@ export class CalendarService {
     return toLifestyleFactor(factor);
   }
 
-  async listSupplementEvents(userId: string): Promise<SupplementEvent[]> {
-    const profile = await this.findProfile(userId);
-    if (!profile) return [];
-
+  async listSupplementEvents(ctx: ProfileContext): Promise<SupplementEvent[]> {
     const events = await this.prisma.supplementEvent.findMany({
-      where: { playerProfileId: profile.id },
+      where: { playerProfileId: ctx.profileId },
       orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
       take: 50,
     });
     await this.sensitiveAudit.record({
-      actorUserId: userId,
-      playerProfileId: profile.id,
+      actorUserId: ctx.userId,
+      playerProfileId: ctx.profileId,
       dataType: 'SUPPLEMENT',
       action: 'READ',
       metadata: { count: events.length },
@@ -182,10 +190,10 @@ export class CalendarService {
     return events.map(toSupplementEvent);
   }
 
-  async getSupplementEvent(userId: string, id: string): Promise<SupplementEvent> {
-    const event = await this.findSupplementEventOrThrow(userId, id);
+  async getSupplementEvent(ctx: ProfileContext, id: string): Promise<SupplementEvent> {
+    const event = await this.findSupplementEventOrThrow(ctx.profileId, id);
     await this.sensitiveAudit.record({
-      actorUserId: userId,
+      actorUserId: ctx.userId,
       playerProfileId: event.playerProfileId,
       dataType: 'SUPPLEMENT',
       action: 'READ',
@@ -195,16 +203,15 @@ export class CalendarService {
   }
 
   async createSupplementEvent(
-    userId: string,
+    ctx: ProfileContext,
     input: CreateSupplementEventInput,
   ): Promise<SupplementEvent> {
-    const profile = await this.findProfileOrThrow(userId);
     const event = await this.prisma.supplementEvent.create({
-      data: toSupplementEventCreateData(profile.id, userId, input),
+      data: toSupplementEventCreateData(ctx.profileId, ctx.userId, input),
     });
     await this.sensitiveAudit.record({
-      actorUserId: userId,
-      playerProfileId: profile.id,
+      actorUserId: ctx.userId,
+      playerProfileId: ctx.profileId,
       dataType: 'SUPPLEMENT',
       action: 'CREATE',
       targetId: event.id,
@@ -213,17 +220,17 @@ export class CalendarService {
   }
 
   async updateSupplementEvent(
-    userId: string,
+    ctx: ProfileContext,
     id: string,
     input: UpdateSupplementEventInput,
   ): Promise<SupplementEvent> {
-    const existing = await this.findSupplementEventOrThrow(userId, id);
+    const existing = await this.findSupplementEventOrThrow(ctx.profileId, id);
     const event = await this.prisma.supplementEvent.update({
       where: { id: existing.id },
       data: toSupplementEventData(input),
     });
     await this.sensitiveAudit.record({
-      actorUserId: userId,
+      actorUserId: ctx.userId,
       playerProfileId: event.playerProfileId,
       dataType: 'SUPPLEMENT',
       action: 'UPDATE',
@@ -232,22 +239,9 @@ export class CalendarService {
     return toSupplementEvent(event);
   }
 
-  private async findProfile(userId: string): Promise<ProfileRef | null> {
-    return this.prisma.playerProfile.findUnique({ where: { userId }, select: { id: true } });
-  }
-
-  private async findProfileOrThrow(userId: string): Promise<ProfileRef> {
-    const profile = await this.findProfile(userId);
-    if (!profile) {
-      throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
-    }
-    return profile;
-  }
-
-  private async findCalendarEventOrThrow(userId: string, id: string): Promise<CalendarEventEntity> {
-    const profile = await this.findProfileOrThrow(userId);
+  private async findCalendarEventOrThrow(profileId: string, id: string): Promise<CalendarEventEntity> {
     const event = await this.prisma.calendarEvent.findFirst({
-      where: { id, playerProfileId: profile.id },
+      where: { id, playerProfileId: profileId },
     });
     if (!event) {
       throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
@@ -256,12 +250,11 @@ export class CalendarService {
   }
 
   private async findLifestyleFactorOrThrow(
-    userId: string,
+    profileId: string,
     id: string,
   ): Promise<LifestyleFactorEntity> {
-    const profile = await this.findProfileOrThrow(userId);
     const factor = await this.prisma.lifestyleFactor.findFirst({
-      where: { id, playerProfileId: profile.id },
+      where: { id, playerProfileId: profileId },
     });
     if (!factor) {
       throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
@@ -270,12 +263,11 @@ export class CalendarService {
   }
 
   private async findSupplementEventOrThrow(
-    userId: string,
+    profileId: string,
     id: string,
   ): Promise<SupplementEventEntity> {
-    const profile = await this.findProfileOrThrow(userId);
     const event = await this.prisma.supplementEvent.findFirst({
-      where: { id, playerProfileId: profile.id },
+      where: { id, playerProfileId: profileId },
     });
     if (!event) {
       throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });

@@ -19,104 +19,124 @@ import {
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { CuidValidationPipe } from '../../common/pipes/cuid-validation.pipe';
-import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ActiveProfileGuard } from '../profiles/guards/active-profile.guard';
+import {
+  ActiveProfile,
+  CurrentProfile,
+} from '../profiles/decorators/active-profile.decorator';
+import { RequiresWellness, WriteAccess } from '../profiles/decorators/access.decorators';
+import type { ProfileContext } from '../profiles/profile-context';
 import { CalendarService } from './calendar.service';
 
 @ApiTags('calendar')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ActiveProfileGuard)
 @Controller()
 export class CalendarController {
   constructor(private readonly calendar: CalendarService) {}
 
   @Get('calendar-events')
-  listCalendarEvents(@CurrentUserId() userId: string): Promise<CalendarEvent[]> {
-    return this.calendar.listCalendarEvents(userId);
+  listCalendarEvents(@ActiveProfile() ctx: ProfileContext | null): Promise<CalendarEvent[]> {
+    return ctx ? this.calendar.listCalendarEvents(ctx) : Promise.resolve([]);
   }
 
   @Get('calendar-events/:id')
   getCalendarEvent(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Param('id', CuidValidationPipe) id: string,
   ): Promise<CalendarEvent> {
-    return this.calendar.getCalendarEvent(userId, id);
+    return this.calendar.getCalendarEvent(ctx, id);
   }
 
   @Post('calendar-events')
+  @WriteAccess()
   createCalendarEvent(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Body(new ZodValidationPipe(CreateCalendarEventSchema)) body: CreateCalendarEventInput,
   ): Promise<CalendarEvent> {
-    return this.calendar.createCalendarEvent(userId, body);
+    return this.calendar.createCalendarEvent(ctx, body);
   }
 
   @Patch('calendar-events/:id')
+  @WriteAccess()
   updateCalendarEvent(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateCalendarEventSchema)) body: UpdateCalendarEventInput,
   ): Promise<CalendarEvent> {
-    return this.calendar.updateCalendarEvent(userId, id, body);
+    return this.calendar.updateCalendarEvent(ctx, id, body);
   }
 
   @Get('lifestyle-factors')
-  listLifestyleFactors(@CurrentUserId() userId: string): Promise<LifestyleFactor[]> {
-    return this.calendar.listLifestyleFactors(userId);
+  @RequiresWellness()
+  listLifestyleFactors(@CurrentProfile() ctx: ProfileContext): Promise<LifestyleFactor[]> {
+    return this.calendar.listLifestyleFactors(ctx);
   }
 
   @Get('lifestyle-factors/:id')
+  @RequiresWellness()
   getLifestyleFactor(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Param('id', CuidValidationPipe) id: string,
   ): Promise<LifestyleFactor> {
-    return this.calendar.getLifestyleFactor(userId, id);
+    return this.calendar.getLifestyleFactor(ctx, id);
   }
 
   @Post('lifestyle-factors')
+  @RequiresWellness()
+  @WriteAccess()
   saveLifestyleFactor(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Body(new ZodValidationPipe(CreateLifestyleFactorSchema)) body: CreateLifestyleFactorInput,
   ): Promise<LifestyleFactor> {
-    return this.calendar.saveLifestyleFactor(userId, body);
+    return this.calendar.saveLifestyleFactor(ctx, body);
   }
 
   @Patch('lifestyle-factors/:id')
+  @RequiresWellness()
+  @WriteAccess()
   updateLifestyleFactor(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateLifestyleFactorSchema)) body: UpdateLifestyleFactorInput,
   ): Promise<LifestyleFactor> {
-    return this.calendar.updateLifestyleFactor(userId, id, body);
+    return this.calendar.updateLifestyleFactor(ctx, id, body);
   }
 
   @Get('supplement-events')
-  listSupplementEvents(@CurrentUserId() userId: string): Promise<SupplementEvent[]> {
-    return this.calendar.listSupplementEvents(userId);
+  @RequiresWellness()
+  listSupplementEvents(@CurrentProfile() ctx: ProfileContext): Promise<SupplementEvent[]> {
+    return this.calendar.listSupplementEvents(ctx);
   }
 
   @Get('supplement-events/:id')
+  @RequiresWellness()
   getSupplementEvent(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Param('id', CuidValidationPipe) id: string,
   ): Promise<SupplementEvent> {
-    return this.calendar.getSupplementEvent(userId, id);
+    return this.calendar.getSupplementEvent(ctx, id);
   }
 
   @Post('supplement-events')
+  @RequiresWellness()
+  @WriteAccess()
   createSupplementEvent(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Body(new ZodValidationPipe(CreateSupplementEventSchema)) body: CreateSupplementEventInput,
   ): Promise<SupplementEvent> {
-    return this.calendar.createSupplementEvent(userId, body);
+    return this.calendar.createSupplementEvent(ctx, body);
   }
 
   @Patch('supplement-events/:id')
+  @RequiresWellness()
+  @WriteAccess()
   updateSupplementEvent(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Param('id', CuidValidationPipe) id: string,
     @Body(new ZodValidationPipe(UpdateSupplementEventSchema)) body: UpdateSupplementEventInput,
   ): Promise<SupplementEvent> {
-    return this.calendar.updateSupplementEvent(userId, id, body);
+    return this.calendar.updateSupplementEvent(ctx, id, body);
   }
 }

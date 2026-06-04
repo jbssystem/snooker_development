@@ -4,58 +4,67 @@ import { Throttle } from '@nestjs/throttler';
 import { CreateExternalLinkInputSchema, type CreateExternalLinkInput, type ExternalImportJob, type ExternalPlayerLink } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { CuidValidationPipe } from '../../common/pipes/cuid-validation.pipe';
-import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ActiveProfileGuard } from '../profiles/guards/active-profile.guard';
+import {
+  ActiveProfile,
+  CurrentProfileId,
+} from '../profiles/decorators/active-profile.decorator';
+import { WriteAccess } from '../profiles/decorators/access.decorators';
+import type { ProfileContext } from '../profiles/profile-context';
 import { ExternalSourcesService } from './external-sources.service';
 
 @ApiTags('external-sources')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ActiveProfileGuard)
 @Controller('external-links')
 export class ExternalSourcesController {
   constructor(private readonly service: ExternalSourcesService) {}
 
   @Get()
-  list(@CurrentUserId() userId: string): Promise<ExternalPlayerLink[]> {
-    return this.service.listLinks(userId);
+  list(@ActiveProfile() ctx: ProfileContext | null): Promise<ExternalPlayerLink[]> {
+    return ctx ? this.service.listLinks(ctx.profileId) : Promise.resolve([]);
   }
 
   @Post()
+  @WriteAccess()
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   create(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Body(new ZodValidationPipe(CreateExternalLinkInputSchema)) body: CreateExternalLinkInput,
   ): Promise<ExternalPlayerLink> {
-    return this.service.createLink(userId, body);
+    return this.service.createLink(profileId, body);
   }
 
   @Delete(':id')
+  @WriteAccess()
   delete(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
   ): Promise<void> {
-    return this.service.deleteLink(userId, id);
+    return this.service.deleteLink(profileId, id);
   }
 
   @Post(':id/sync')
+  @WriteAccess()
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   sync(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
   ): Promise<ExternalImportJob> {
-    return this.service.triggerSync(userId, id);
+    return this.service.triggerSync(profileId, id);
   }
 
   @Get(':id/jobs')
   listJobs(
-    @CurrentUserId() userId: string,
+    @CurrentProfileId() profileId: string,
     @Param('id', CuidValidationPipe) id: string,
   ): Promise<ExternalImportJob[]> {
-    return this.service.listJobs(userId, id);
+    return this.service.listJobs(profileId, id);
   }
 
   @Get('imported-matches')
-  listImportedMatches(@CurrentUserId() userId: string) {
-    return this.service.listImportedMatches(userId);
+  listImportedMatches(@ActiveProfile() ctx: ProfileContext | null) {
+    return ctx ? this.service.listImportedMatches(ctx.profileId) : Promise.resolve([]);
   }
 }

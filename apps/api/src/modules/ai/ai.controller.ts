@@ -10,42 +10,51 @@ import {
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { CuidValidationPipe } from '../../common/pipes/cuid-validation.pipe';
-import { CurrentUserId } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ActiveProfileGuard } from '../profiles/guards/active-profile.guard';
+import {
+  CurrentProfile,
+  CurrentProfileId,
+} from '../profiles/decorators/active-profile.decorator';
+import { RequiresWellness } from '../profiles/decorators/access.decorators';
+import type { ProfileContext } from '../profiles/profile-context';
 import { AiService } from './ai.service';
 
+// AI reports bundle wellness/supplement data, so the whole module is gated by
+// wellness access (owner always has it; guests need it granted explicitly).
 @ApiTags('ai')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ActiveProfileGuard)
+@RequiresWellness()
 @Controller('ai/reports')
 export class AiController {
   constructor(private readonly ai: AiService) {}
 
   @Get()
-  list(@CurrentUserId() userId: string): Promise<AiReport[]> {
-    return this.ai.listReports(userId);
+  list(@CurrentProfileId() profileId: string): Promise<AiReport[]> {
+    return this.ai.listReports(profileId);
   }
 
   @Get(':id')
-  get(@CurrentUserId() userId: string, @Param('id', CuidValidationPipe) id: string): Promise<AiReport> {
-    return this.ai.getReport(userId, id);
+  get(@CurrentProfileId() profileId: string, @Param('id', CuidValidationPipe) id: string): Promise<AiReport> {
+    return this.ai.getReport(profileId, id);
   }
 
   @Post('generate')
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   generateWeekly(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Body(new ZodValidationPipe(GenerateWeeklyAiReportSchema)) body: GenerateWeeklyAiReportInput,
   ): Promise<AiReport> {
-    return this.ai.generateWeeklyReport(userId, body);
+    return this.ai.generateWeeklyReport(ctx, body);
   }
 
   @Post('generate-external')
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   generateExternal(
-    @CurrentUserId() userId: string,
+    @CurrentProfile() ctx: ProfileContext,
     @Body(new ZodValidationPipe(GenerateExternalMatchReportSchema)) body: GenerateExternalMatchReportInput,
   ): Promise<AiReport> {
-    return this.ai.generateExternalMatchReport(userId, body);
+    return this.ai.generateExternalMatchReport(ctx, body);
   }
 }

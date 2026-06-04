@@ -22,22 +22,18 @@ import {
 } from '@snooker/shared';
 import { frameOutcome, replay, type ScoreEvent as DomainScoreEvent } from '@snooker/snooker-domain';
 import { PrismaService } from '../prisma/prisma.module';
+import type { ProfileContext } from '../profiles/profile-context';
 
 type MatchWithFrames = Prisma.MatchGetPayload<{ include: typeof matchInclude }>;
 type MatchFrameEntity = Prisma.MatchFrameGetPayload<Record<string, never>>;
-
-type ProfileRef = { id: string };
 
 @Injectable()
 export class MatchesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(userId: string): Promise<Match[]> {
-    const profile = await this.findProfile(userId);
-    if (!profile) return [];
-
+  async list(profileId: string): Promise<Match[]> {
     const matches = await this.prisma.match.findMany({
-      where: { playerProfileId: profile.id },
+      where: { playerProfileId: profileId },
       include: matchInclude,
       orderBy: [{ matchDate: 'desc' }, { createdAt: 'desc' }],
       take: 50,
@@ -46,17 +42,16 @@ export class MatchesService {
     return matches.map(toMatch);
   }
 
-  async get(userId: string, id: string): Promise<Match> {
-    return toMatch(await this.findMatchOrThrow(userId, id));
+  async get(profileId: string, id: string): Promise<Match> {
+    return toMatch(await this.findMatchOrThrow(profileId, id));
   }
 
-  async create(userId: string, input: CreateMatchInput): Promise<Match> {
-    const profile = await this.findProfileOrThrow(userId);
+  async create(ctx: ProfileContext, input: CreateMatchInput): Promise<Match> {
     const framesWon = input.framesWon ?? 0;
     const framesLost = input.framesLost ?? 0;
     const data: Prisma.MatchUncheckedCreateInput = {
-      playerProfileId: profile.id,
-      createdByUserId: userId,
+      playerProfileId: ctx.profileId,
+      createdByUserId: ctx.userId,
       opponentName: input.opponentName,
       framesWon,
       framesLost,
@@ -91,8 +86,8 @@ export class MatchesService {
     return toMatch(match);
   }
 
-  async update(userId: string, id: string, input: UpdateMatchInput): Promise<Match> {
-    const existing = await this.findMatchOrThrow(userId, id);
+  async update(profileId: string, id: string, input: UpdateMatchInput): Promise<Match> {
+    const existing = await this.findMatchOrThrow(profileId, id);
     const data: Prisma.MatchUpdateInput = {};
 
     if (input.matchType !== undefined) {
@@ -137,8 +132,8 @@ export class MatchesService {
     return toMatch(match);
   }
 
-  async addFrame(userId: string, id: string, input: AddMatchFrameInput): Promise<MatchFrame> {
-    const match = await this.findMatchOrThrow(userId, id);
+  async addFrame(profileId: string, id: string, input: AddMatchFrameInput): Promise<MatchFrame> {
+    const match = await this.findMatchOrThrow(profileId, id);
     const frameNumber = input.frameNumber ?? nextFrameNumber(match.frames);
 
     if (match.frames.some((frame) => frame.frameNumber === frameNumber)) {
@@ -181,12 +176,12 @@ export class MatchesService {
   }
 
   async updateFrame(
-    userId: string,
+    profileId: string,
     id: string,
     frameNumber: number,
     input: UpdateMatchFrameInput,
   ): Promise<Match> {
-    const match = await this.findMatchOrThrow(userId, id);
+    const match = await this.findMatchOrThrow(profileId, id);
     const frame = match.frames.find((item) => item.frameNumber === frameNumber);
     if (!frame) {
       throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
@@ -212,11 +207,11 @@ export class MatchesService {
       await recalcMatchFromFrames(tx, match.id);
     });
 
-    return toMatch(await this.findMatchOrThrow(userId, id));
+    return toMatch(await this.findMatchOrThrow(profileId, id));
   }
 
-  async removeLastFrame(userId: string, id: string): Promise<Match> {
-    const match = await this.findMatchOrThrow(userId, id);
+  async removeLastFrame(profileId: string, id: string): Promise<Match> {
+    const match = await this.findMatchOrThrow(profileId, id);
     const last = match.frames.at(-1);
     if (last) {
       await withSerializableRetry(this.prisma, async (tx) => {
@@ -224,25 +219,12 @@ export class MatchesService {
         await recalcMatchFromFrames(tx, match.id);
       });
     }
-    return toMatch(await this.findMatchOrThrow(userId, id));
+    return toMatch(await this.findMatchOrThrow(profileId, id));
   }
 
-  private async findProfile(userId: string): Promise<ProfileRef | null> {
-    return this.prisma.playerProfile.findUnique({ where: { userId }, select: { id: true } });
-  }
-
-  private async findProfileOrThrow(userId: string): Promise<ProfileRef> {
-    const profile = await this.findProfile(userId);
-    if (!profile) {
-      throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
-    }
-    return profile;
-  }
-
-  private async findMatchOrThrow(userId: string, id: string): Promise<MatchWithFrames> {
-    const profile = await this.findProfileOrThrow(userId);
+  private async findMatchOrThrow(profileId: string, id: string): Promise<MatchWithFrames> {
     const match = await this.prisma.match.findFirst({
-      where: { id, playerProfileId: profile.id },
+      where: { id, playerProfileId: profileId },
       include: matchInclude,
     });
 

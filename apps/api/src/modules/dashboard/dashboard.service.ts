@@ -35,24 +35,20 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getPlayerDashboard(userId: string): Promise<PlayerDashboard> {
+  async getPlayerDashboard(profileId: string | null): Promise<PlayerDashboard> {
     const now = new Date();
     const from = startOfDay(addDays(now, -(DASHBOARD_DAYS - 1)));
     const to = now;
     const period = { from: from.toISOString(), to: to.toISOString(), days: DASHBOARD_DAYS };
-    const profile = await this.prisma.playerProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
 
-    if (!profile) {
+    if (!profileId) {
       return emptyDashboard(period, from);
     }
 
     const [sessions, matches] = await Promise.all([
       this.prisma.trainingSession.findMany({
         where: {
-          playerProfileId: profile.id,
+          playerProfileId: profileId,
           startedAt: { gte: from, lte: to },
         },
         include: {
@@ -66,7 +62,7 @@ export class DashboardService {
       }),
       this.prisma.match.findMany({
         where: {
-          playerProfileId: profile.id,
+          playerProfileId: profileId,
           matchDate: { gte: from, lte: to },
         },
         orderBy: { matchDate: 'desc' },

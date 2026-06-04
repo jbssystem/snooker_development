@@ -21,6 +21,7 @@ import {
   TrainingSessionType as PrismaTrainingSessionType,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.module';
+import type { ProfileContext } from '../profiles/profile-context';
 
 type SessionWithExecutions = Prisma.TrainingSessionGetPayload<{
   include: {
@@ -47,10 +48,9 @@ type AttemptEntity = Prisma.DrillAttemptGetPayload<Record<string, never>>;
 export class TrainingService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async listSessions(userId: string): Promise<TrainingSession[]> {
-    const profile = await this.findProfileOrThrow(userId);
+  async listSessions(profileId: string): Promise<TrainingSession[]> {
     const sessions = await this.prisma.trainingSession.findMany({
-      where: { playerProfileId: profile.id },
+      where: { playerProfileId: profileId },
       include: sessionInclude,
       orderBy: { startedAt: 'desc' },
       take: 50,
@@ -59,17 +59,16 @@ export class TrainingService {
     return sessions.map(mapTrainingSession);
   }
 
-  async getSession(userId: string, id: string): Promise<TrainingSession> {
-    const session = await this.findSessionOrThrow(userId, id);
+  async getSession(profileId: string, id: string): Promise<TrainingSession> {
+    const session = await this.findSessionOrThrow(profileId, id);
 
     return mapTrainingSession(session);
   }
 
-  async createSession(userId: string, input: CreateTrainingSessionInput): Promise<TrainingSession> {
-    const profile = await this.findProfileOrThrow(userId);
+  async createSession(ctx: ProfileContext, input: CreateTrainingSessionInput): Promise<TrainingSession> {
     const data: Prisma.TrainingSessionCreateInput = {
-      playerProfile: { connect: { id: profile.id } },
-      createdBy: { connect: { id: userId } },
+      playerProfile: { connect: { id: ctx.profileId } },
+      createdBy: { connect: { id: ctx.userId } },
       title: input.title,
       sessionType: toPrismaSessionType(input.sessionType),
     };
@@ -91,11 +90,11 @@ export class TrainingService {
   }
 
   async updateSession(
-    userId: string,
+    profileId: string,
     id: string,
     input: UpdateTrainingSessionInput,
   ): Promise<TrainingSession> {
-    await this.findSessionOrThrow(userId, id);
+    await this.findSessionOrThrow(profileId, id);
     const data: Prisma.TrainingSessionUpdateInput = {};
 
     assignOptional(data, 'title', input.title);
@@ -121,11 +120,11 @@ export class TrainingService {
   }
 
   async finishSession(
-    userId: string,
+    profileId: string,
     id: string,
     input: FinishTrainingSessionInput,
   ): Promise<TrainingSession> {
-    const existing = await this.findSessionOrThrow(userId, id);
+    const existing = await this.findSessionOrThrow(profileId, id);
     if (existing.endedAt) {
       return mapTrainingSession(existing);
     }
@@ -145,13 +144,13 @@ export class TrainingService {
   }
 
   async addDrill(
-    userId: string,
+    ctx: ProfileContext,
     sessionId: string,
     input: AddDrillExecutionInput,
   ): Promise<DrillExecution> {
-    const session = await this.findSessionOrThrow(userId, sessionId);
+    const session = await this.findSessionOrThrow(ctx.profileId, sessionId);
     assertOpen(session.endedAt);
-    const drillTemplate = await this.findVisibleDrillTemplateOrThrow(userId, input.drillTemplateId);
+    const drillTemplate = await this.findVisibleDrillTemplateOrThrow(ctx.userId, input.drillTemplateId);
     const data: Prisma.DrillExecutionCreateInput = {
       trainingSession: { connect: { id: session.id } },
       drillTemplate: { connect: { id: drillTemplate.id } },
@@ -173,11 +172,11 @@ export class TrainingService {
   }
 
   async addAttempt(
-    userId: string,
+    profileId: string,
     executionId: string,
     input: CreateDrillAttemptInput,
   ): Promise<DrillAttempt> {
-    const execution = await this.findExecutionOrThrow(userId, executionId);
+    const execution = await this.findExecutionOrThrow(profileId, executionId);
     assertOpen(execution.endedAt);
 
     const attempt = await withSerializableRetry(this.prisma, async (tx) => {
@@ -219,8 +218,8 @@ export class TrainingService {
     return mapDrillAttempt(attempt);
   }
 
-  async removeLastAttempt(userId: string, executionId: string): Promise<DrillExecution> {
-    const execution = await this.findExecutionOrThrow(userId, executionId);
+  async removeLastAttempt(profileId: string, executionId: string): Promise<DrillExecution> {
+    const execution = await this.findExecutionOrThrow(profileId, executionId);
     assertOpen(execution.endedAt);
 
     await withSerializableRetry(this.prisma, async (tx) => {
@@ -244,16 +243,16 @@ export class TrainingService {
       });
     });
 
-    const refreshed = await this.findExecutionOrThrow(userId, executionId);
+    const refreshed = await this.findExecutionOrThrow(profileId, executionId);
     return mapDrillExecution(refreshed);
   }
 
   async finishDrill(
-    userId: string,
+    profileId: string,
     executionId: string,
     input: FinishDrillExecutionInput,
   ): Promise<DrillExecution> {
-    const existing = await this.findExecutionOrThrow(userId, executionId);
+    const existing = await this.findExecutionOrThrow(profileId, executionId);
     if (existing.endedAt) {
       return mapDrillExecution(existing);
     }
@@ -278,23 +277,9 @@ export class TrainingService {
     return mapDrillExecution(execution);
   }
 
-  private async findProfileOrThrow(userId: string): Promise<{ id: string }> {
-    const profile = await this.prisma.playerProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-
-    if (!profile) {
-      throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
-    }
-
-    return profile;
-  }
-
-  private async findSessionOrThrow(userId: string, id: string): Promise<SessionWithExecutions> {
-    const profile = await this.findProfileOrThrow(userId);
+  private async findSessionOrThrow(profileId: string, id: string): Promise<SessionWithExecutions> {
     const session = await this.prisma.trainingSession.findFirst({
-      where: { id, playerProfileId: profile.id },
+      where: { id, playerProfileId: profileId },
       include: sessionInclude,
     });
 
@@ -305,10 +290,9 @@ export class TrainingService {
     return session;
   }
 
-  private async findExecutionOrThrow(userId: string, id: string): Promise<ExecutionWithAttempts> {
-    const profile = await this.findProfileOrThrow(userId);
+  private async findExecutionOrThrow(profileId: string, id: string): Promise<ExecutionWithAttempts> {
     const execution = await this.prisma.drillExecution.findFirst({
-      where: { id, playerProfileId: profile.id },
+      where: { id, playerProfileId: profileId },
       include: executionInclude,
     });
 
