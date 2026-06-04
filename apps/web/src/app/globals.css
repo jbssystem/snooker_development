@@ -5,17 +5,21 @@
 :root {
   color-scheme: dark;
 
-  --color-bg-primary: #0e1116;
+  /* Backgrounds — a layered ladder from sunken to raised so surfaces read as
+     stacked planes rather than a single flat sheet. */
+  --color-bg-sunken: #090c10;
+  --color-bg-primary: #0d1014;
   --color-bg-secondary: #161b22;
   --color-bg-elevated: #1f2630;
+  --color-bg-raised: #28303c;
 
   --color-brand-primary: #0e6b4d;
   --color-brand-accent: #19a974;
   --color-brand-gold: #c8a45d;
 
-  --color-text-primary: #e9e6df;
-  --color-text-secondary: #a8b0b8;
-  --color-text-disabled: #6f7a86;
+  --color-text-primary: #ece9e2;
+  --color-text-secondary: #b2bac3;
+  --color-text-disabled: #76818d;
 
   --color-state-success: #3fb36b;
   --color-state-error: #d65a5a;
@@ -24,6 +28,24 @@
 
   --color-border-subtle: #2a323d;
   --color-border-active: #19a974;
+
+  /* Shared focus ring — applied consistently across interactive elements. */
+  --focus-ring: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px rgba(25, 169, 116, 0.7);
+
+  /* Elevation ladder. Each step pairs a soft ambient shadow with a tighter key
+     shadow (Material-style) plus a light top sheen line for a sense of depth. */
+  --elev-1:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    0 1px 2px -1px rgba(0, 0, 0, 0.6),
+    0 8px 24px -16px rgba(0, 0, 0, 0.7);
+  --elev-2:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+    0 2px 6px -2px rgba(0, 0, 0, 0.6),
+    0 16px 40px -22px rgba(0, 0, 0, 0.85);
+  --elev-3:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+    0 8px 16px -8px rgba(0, 0, 0, 0.6),
+    0 28px 64px -28px rgba(0, 0, 0, 0.9);
 }
 
 html,
@@ -51,15 +73,43 @@ body > * {
   z-index: 1;
 }
 
-/* Elevated surface used by Card and stat tiles. A faint top sheen plus a soft
-   drop shadow give depth without heavy borders. */
+/* Elevated surface used by Card and stat tiles. A faint top sheen, a soft
+   corner highlight and a layered drop shadow give depth without heavy borders.
+   The bottom inset line reads as the card's thickness. */
 .surface {
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 42%);
+  background-image:
+    radial-gradient(120% 80% at 100% 0%, rgba(25, 169, 116, 0.05), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 42%);
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--elev-1);
+}
+
+/* Elevation helpers — opt a surface into a higher plane. */
+.elev-2 {
+  box-shadow: var(--elev-2);
+}
+
+.elev-3 {
+  box-shadow: var(--elev-3);
+}
+
+/* Frosted-glass panel for the header, modals and popovers — translucent so the
+   ambient backdrop shows through, with a light top edge. */
+.glass {
+  background-color: rgba(22, 27, 34, 0.72);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: var(--elev-3);
+}
+
+/* Sunken well — for inputs, stepper tracks and tab strips. Reads as recessed. */
+.sunken {
+  background-color: var(--color-bg-sunken);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-    0 12px 34px -20px rgba(0, 0, 0, 0.8);
+    inset 0 1px 2px 0 rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
 }
 
 .surface-hover {
@@ -71,9 +121,12 @@ body > * {
     transform: translateY(-2px);
     border-color: rgba(25, 169, 116, 0.55);
     box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
-      0 18px 40px -20px rgba(0, 0, 0, 0.85),
-      0 0 0 1px rgba(25, 169, 116, 0.12);
+      var(--elev-2),
+      0 0 0 1px rgba(25, 169, 116, 0.16);
+  }
+
+  .surface-hover:active {
+    transform: translateY(0) scale(0.995);
   }
 }
 
@@ -97,22 +150,70 @@ body > * {
   font-weight: 600;
   color: #061611;
   background-image: linear-gradient(120deg, #19a974, #2bbf86 55%, #c8a45d 160%);
-  box-shadow: 0 8px 24px -10px rgba(25, 169, 116, 0.6);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
+    0 8px 24px -10px rgba(25, 169, 116, 0.6);
   transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
 }
 
 .btn-primary:hover {
   filter: brightness(1.05);
-  box-shadow: 0 12px 30px -10px rgba(25, 169, 116, 0.7);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
+    0 12px 30px -10px rgba(25, 169, 116, 0.7);
 }
 
 .btn-primary:active {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.98);
 }
 
 .btn-primary:disabled {
   opacity: 0.55;
   box-shadow: none;
+}
+
+/* Tactile press for any interactive control opting in. */
+@media (prefers-reduced-motion: no-preference) {
+  .press {
+    transition: transform 120ms ease, filter 120ms ease;
+  }
+
+  .press:active {
+    transform: scale(0.97);
+  }
+}
+
+/* Consistent keyboard focus ring. */
+.focus-ring:focus-visible,
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Shared input look — recessed well, brand-accent focus. Use on inputs,
+   selects and textareas for a consistent, tactile form surface. */
+.input-field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border-subtle);
+  background-color: var(--color-bg-sunken);
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.45);
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text-primary);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.input-field::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.input-field:focus,
+.input-field:focus-visible {
+  outline: none;
+  border-color: var(--color-border-active);
+  box-shadow:
+    inset 0 1px 2px 0 rgba(0, 0, 0, 0.45),
+    0 0 0 3px rgba(25, 169, 116, 0.25);
 }
 
 /* Gradient hairline used as a top accent on key cards. */
@@ -142,6 +243,17 @@ html {
   .ui-fade-in {
     animation: ui-fade-in 160ms ease-out;
   }
+
+  /* Rises into place — used for staggered list/card reveals. Pair with an
+     inline animation-delay for the stagger. */
+  .ui-rise-in {
+    animation: ui-rise-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Modal/popover pop. */
+  .ui-pop-in {
+    animation: ui-pop-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }
 
 @keyframes ui-fade-in {
@@ -153,5 +265,29 @@ html {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes ui-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ui-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

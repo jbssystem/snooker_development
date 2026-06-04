@@ -9,9 +9,11 @@ module.exports = {
     extend: {
       colors: {
         background: {
-          primary: '#0E1116',
+          sunken: '#090C10',
+          primary: '#0D1014',
           secondary: '#161B22',
           elevated: '#1F2630',
+          raised: '#28303C',
         },
         brand: {
           primary: '#0E6B4D',
@@ -19,9 +21,9 @@ module.exports = {
           gold: '#C8A45D',
         },
         text: {
-          primary: '#E9E6DF',
-          secondary: '#A8B0B8',
-          disabled: '#6F7A86',
+          primary: '#ECE9E2',
+          secondary: '#B2BAC3',
+          disabled: '#76818D',
         },
         state: {
           success: '#3FB36B',
@@ -50,6 +52,9 @@ module.exports = {
       },
       boxShadow: {
         glow: '0 0 24px rgba(25, 169, 116, 0.18)',
+        'elev-1': 'inset 0 1px 0 0 rgba(255,255,255,0.04), 0 1px 2px -1px rgba(0,0,0,0.6), 0 8px 24px -16px rgba(0,0,0,0.7)',
+        'elev-2': 'inset 0 1px 0 0 rgba(255,255,255,0.05), 0 2px 6px -2px rgba(0,0,0,0.6), 0 16px 40px -22px rgba(0,0,0,0.85)',
+        'elev-3': 'inset 0 1px 0 0 rgba(255,255,255,0.06), 0 8px 16px -8px rgba(0,0,0,0.6), 0 28px 64px -28px rgba(0,0,0,0.9)',
       },
     },
   },

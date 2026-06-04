@@ -1,27 +1,31 @@
 import type { ElementType, ReactNode } from 'react';
 
 /**
- * Elevated surface used across the app. `interactive` adds a hover lift,
- * `accent` highlights it with the brand colour + glow.
+ * Elevated surface used across the app. `elevation` picks the depth plane
+ * (1 = list cards, 2 = emphasised, 3 = floating). `interactive` adds a hover
+ * lift + tactile press, `accent` highlights it with the brand colour + glow.
  */
 export function Card({
   as,
   accent = false,
   interactive = false,
+  elevation = 1,
   className = '',
   children,
 }: {
   as?: ElementType;
   accent?: boolean;
   interactive?: boolean;
+  elevation?: 1 | 2 | 3;
   className?: string;
   children: ReactNode;
 }) {
   const Tag = as ?? 'div';
+  const elev = elevation === 3 ? 'elev-3' : elevation === 2 ? 'elev-2' : '';
   const tone = accent ? 'border-brand-accent/45 shadow-glow' : '';
   const hover = interactive ? 'surface-hover cursor-pointer' : '';
   return (
-    <Tag className={`surface rounded-xl ${tone} ${hover} ${className}`}>{children}</Tag>
+    <Tag className={`surface rounded-xl ${elev} ${tone} ${hover} ${className}`}>{children}</Tag>
   );
 }
 
