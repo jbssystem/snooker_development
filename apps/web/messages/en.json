@@ -1189,7 +1189,8 @@
       "percentage": "%",
       "time_ms": "Time",
       "text": "Text"
-    }
+    },
+    "searchPlaceholder": "Search by name or tags…"
   },
   "training": {
     "title": "Training",

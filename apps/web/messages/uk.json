@@ -1189,7 +1189,8 @@
       "percentage": "%",
       "time_ms": "Час",
       "text": "Текст"
-    }
+    },
+    "searchPlaceholder": "Пошук за назвою або тегами…"
   },
   "training": {
     "title": "Тренування",

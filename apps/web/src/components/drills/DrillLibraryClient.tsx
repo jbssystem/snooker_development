@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type {
   CreateDrillTemplateInput,
@@ -101,6 +101,7 @@ export function DrillLibraryClient() {
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<DrillCategory | 'all'>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<DrillDifficulty | 'all'>('all');
+  const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [formTab, setFormTab] = useState<FormTab>('details');
   const form = useForm<FormValues>({ defaultValues });
@@ -129,15 +130,27 @@ export function DrillLibraryClient() {
     for (const template of pool) counts[template.visibility] += 1;
     return counts;
   }, [pool]);
-  const visibleTemplates = useMemo(
+  const byVisibility = useMemo(
     () => (visibilityFilter === 'all' ? pool : pool.filter((tpl) => tpl.visibility === visibilityFilter)),
     [pool, visibilityFilter],
   );
-  const hasActiveFilters = visibilityFilter !== 'all' || categoryFilter !== 'all' || difficultyFilter !== 'all';
+  // Free-text search across the localized name and tags.
+  const visibleTemplates = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return byVisibility;
+    return byVisibility.filter((tpl) => {
+      const display = localizeDrillTemplate(tpl, tSystemDrills);
+      const haystack = `${display.name} ${tpl.tags.join(' ')}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [byVisibility, search, tSystemDrills]);
+  const hasActiveFilters =
+    visibilityFilter !== 'all' || categoryFilter !== 'all' || difficultyFilter !== 'all' || search.trim() !== '';
   const resetFilters = () => {
     setVisibilityFilter('all');
     setCategoryFilter('all');
     setDifficultyFilter('all');
+    setSearch('');
   };
 
   const resetForm = () => {
@@ -159,6 +172,16 @@ export function DrillLibraryClient() {
     resetForm();
     setShowForm(true);
   };
+
+  // Open the create form when arriving via the command palette (?new=1).
+  // Read from the URL directly to avoid a Suspense boundary requirement.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      resetForm();
+      setShowForm(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const createTemplate = useMutation({
     mutationFn: (input: CreateDrillTemplateInput) => api.drills.createTemplate(token ?? '', input),
@@ -274,6 +297,23 @@ export function DrillLibraryClient() {
 
       {templates.length > 0 && (
         <div className="mb-5 flex flex-wrap items-center gap-2" role="group" aria-label={t('filter.label')}>
+          <div className="relative min-w-[180px] flex-1 sm:max-w-xs">
+            <span className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-disabled">
+              <svg aria-hidden fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3-3" strokeLinecap="round" />
+              </svg>
+            </span>
+            <input
+              aria-label={t('searchPlaceholder')}
+              className="input-field pl-9"
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={t('searchPlaceholder')}
+              type="search"
+              value={search}
+            />
+          </div>
+
           <FilterSelect
             active={visibilityFilter !== 'all'}
             label={t('filter.label')}
@@ -363,14 +403,14 @@ export function DrillLibraryClient() {
         <form className="grid gap-4" data-testid="drill-template-form" onSubmit={form.handleSubmit(submitTemplate, () => setFormTab('details'))}>
           {editingId && <p className="text-sm text-text-secondary">{t('form.editingSubtitle')}</p>}
 
-          <div className="flex gap-1 rounded-lg bg-background-primary p-1" role="tablist">
+          <div className="sunken flex gap-1 rounded-lg p-1" role="tablist">
             {formTabs.map((tab) => (
               <button
                 key={tab}
                 aria-selected={formTab === tab}
-                className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
+                className={`press flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
                   formTab === tab
-                    ? 'bg-background-elevated text-brand-accent shadow-[0_0_0_1px_rgba(25,169,116,0.25)]'
+                    ? 'bg-background-elevated text-brand-accent shadow-elev-1 ring-1 ring-brand-accent/30'
                     : 'text-text-secondary hover:text-text-primary'
                 }`}
                 onClick={() => setFormTab(tab)}
@@ -672,7 +712,7 @@ function TemplateCard({
 
       <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{localizedTemplate.description}</p>
 
-      <div className="mt-4 rounded-lg border border-border-subtle bg-background-primary p-2">
+      <div className="sunken mt-4 rounded-lg border border-border-subtle p-2">
         <TableLayoutPreview layout={localizedTemplate.defaultTableLayout ?? EMPTY_PREVIEW_LAYOUT} />
       </div>
 
@@ -742,8 +782,7 @@ function difficultyBadgeClass(difficulty: DrillTemplate['difficulty']): string {
   }
 }
 
-const inputClass =
-  'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
+const inputClass = 'input-field';
 const primaryButtonClass = 'btn-primary w-full justify-center';
 const secondaryButtonClass =
   'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary hover:border-brand-accent hover:text-text-primary';
