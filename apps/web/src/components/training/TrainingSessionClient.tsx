@@ -19,6 +19,7 @@ import { Field } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillName, localizeDrillTemplate } from '@/lib/drill-localization';
+import { useHotkey } from '@/lib/use-hotkeys';
 import { TableLayoutPreview } from '@/components/table-renderer';
 
 type SessionFormValues = {
@@ -181,6 +182,13 @@ export function TrainingSessionClient() {
     setShowNewSession(true);
   };
 
+  // Open the new-session form when arriving via the command palette (?new=1).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      setShowNewSession(true);
+    }
+  }, []);
+
   return (
     <main className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
       <aside className="surface rounded-xl p-4 sm:p-5">
@@ -193,9 +201,9 @@ export function TrainingSessionClient() {
           {sessions.map((session) => (
             <button
               key={session.id}
-              className={`rounded-md border px-3 py-2 text-left transition ${
+              className={`press rounded-lg border px-3 py-2 text-left transition ${
                 session.id === activeSession?.id
-                  ? 'border-brand-accent bg-background-elevated text-text-primary'
+                  ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-1'
                   : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
               }`}
               onClick={() => {
@@ -336,6 +344,18 @@ function ActiveSessionPanel({
       ? Math.round((activeExecution.successes / activeExecution.attempts) * 100)
       : 0;
 
+  // Keyboard shortcuts for fast attempt entry during a live drill.
+  const canLog = executionOpen && !addAttemptPending;
+  useHotkey('1', () => addAttempt('success'), { enabled: canLog });
+  useHotkey('2', () => addAttempt('partial'), { enabled: canLog });
+  useHotkey('3', () => addAttempt('miss'), { enabled: canLog });
+  useHotkey('0', () => addAttempt('skipped'), { enabled: canLog });
+  useHotkey('u', () => {
+    if (activeExecution && activeExecution.attempts > 0 && !removeLastAttemptPending) {
+      removeLastAttempt(activeExecution.id);
+    }
+  }, { enabled: executionOpen });
+
   return (
     <div className="grid gap-5">
       <header className="surface rounded-xl p-4 sm:p-5">
@@ -432,7 +452,10 @@ function ActiveSessionPanel({
                     onClick={() => addAttempt(result)}
                     type="button"
                   >
-                    {t(`attemptResults.${result}`)}
+                    <span>{t(`attemptResults.${result}`)}</span>
+                    <kbd className="rounded border border-white/20 px-1.5 py-0.5 text-[10px] font-medium opacity-70">
+                      {attemptKey[result]}
+                    </kbd>
                   </button>
                 ))}
               </div>
@@ -442,11 +465,11 @@ function ActiveSessionPanel({
                 onClick={() => removeLastAttempt(activeExecution.id)}
                 type="button"
               >
-                ↩ {t('actions.undoAttempt')}
+                ↩ {t('actions.undoAttempt')} <kbd className="ml-1 rounded border border-border-subtle px-1 text-[10px]">U</kbd>
               </button>
             </div>
           ) : (
-            <p className="mt-4 rounded-md bg-background-primary px-3 py-2 text-sm text-text-secondary">
+            <p className="sunken mt-4 rounded-lg px-3 py-2 text-sm text-text-secondary">
               {t('execution.finishedNote')}
             </p>
           )}
@@ -536,7 +559,7 @@ function SessionMeta({ session, t }: { session: TrainingSession; t: ReturnType<t
   return (
     <div className="mt-4 flex flex-wrap gap-2">
       {items.map((item) => (
-        <span key={item.label} className="rounded-md bg-background-primary px-2.5 py-1 text-xs text-text-secondary">
+        <span key={item.label} className="rounded-md bg-background-elevated px-2.5 py-1 text-xs text-text-secondary shadow-elev-1">
           {item.label}: <span className="font-medium text-text-primary">{item.value}</span>
         </span>
       ))}
@@ -546,7 +569,7 @@ function SessionMeta({ session, t }: { session: TrainingSession; t: ReturnType<t
 
 function Tally({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-md bg-background-primary px-3 py-3">
+    <div className="sunken rounded-lg px-3 py-3">
       <dd className="text-2xl font-semibold text-text-primary">{value}</dd>
       <dt className="mt-1 text-xs text-text-disabled">{label}</dt>
     </div>
@@ -634,7 +657,7 @@ function LiveSessionInsight({ insight, t }: { insight: LiveTrainingInsight; t: R
       <p className="mt-3 text-sm leading-6 text-text-secondary">
         {t(`liveInsights.cards.${insight.bodyKey}.body`, insight.values)}
       </p>
-      <p className="mt-3 rounded-md bg-background-primary px-3 py-2 text-sm text-text-primary">
+      <p className="sunken mt-3 rounded-lg px-3 py-2 text-sm text-text-primary">
         <span className="text-xs uppercase text-text-disabled">{t('liveInsights.nextAction')}: </span>
         {t(`liveInsights.cards.${insight.actionKey}.action`, insight.values)}
       </p>
@@ -781,14 +804,21 @@ function liveInsightToneClass(tone: LiveTrainingInsight['tone']): string {
   return 'border-border-subtle';
 }
 
-const inputClass =
-  'w-full rounded-md border border-border-subtle bg-background-primary px-3 py-2 text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none';
+const inputClass = 'input-field';
 const primaryButtonClass = 'btn-primary';
 const secondaryButtonClass =
   'min-h-11 rounded-md border border-border-subtle px-3 py-2 text-sm text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-60';
 
+const attemptKey: Record<DrillAttemptResult, string> = {
+  success: '1',
+  partial: '2',
+  miss: '3',
+  skipped: '0',
+};
+
 function attemptButtonClass(result: DrillAttemptResult): string {
-  const base = 'min-h-14 rounded-md border px-3 py-2 text-base font-semibold transition disabled:opacity-60';
+  const base =
+    'press flex min-h-14 items-center justify-center gap-2 rounded-lg border bg-background-secondary px-3 py-2 text-base font-semibold shadow-elev-1 transition disabled:opacity-60';
   const byResult: Record<DrillAttemptResult, string> = {
     success: 'border-state-success/60 text-state-success hover:bg-state-success/10',
     partial: 'border-brand-accent/60 text-brand-accent hover:bg-brand-accent/10',
