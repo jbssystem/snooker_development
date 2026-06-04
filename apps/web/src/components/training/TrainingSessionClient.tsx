@@ -35,6 +35,23 @@ type SessionFormValues = {
 const sessionTypes: TrainingSessionType[] = ['solo', 'coached', 'match_prep', 'review', 'other'];
 const attemptResults: DrillAttemptResult[] = ['success', 'partial', 'miss', 'skipped'];
 
+const drillCategories = [
+  'cue_action',
+  'potting',
+  'positional_play',
+  'break_building',
+  'safety',
+  'snooker_escape',
+  'tactical_play',
+  'match_simulation',
+  'pressure_training',
+  'mental_routine',
+  'custom',
+] as const;
+const drillDifficulties = ['beginner', 'intermediate', 'advanced', 'professional'] as const;
+
+const SESSION_PAGE_SIZE = 8;
+
 const defaultValues: SessionFormValues = {
   title: '',
   sessionType: 'solo',
@@ -65,10 +82,10 @@ export function TrainingSessionClient() {
   const form = useForm<SessionFormValues>({ defaultValues });
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [activeExecutionId, setActiveExecutionId] = useState<string | null>(null);
-  const [selectedDrillId, setSelectedDrillId] = useState('');
   const [finishFatigue, setFinishFatigue] = useState('');
   const [serverError, setServerError] = useState<string | null>(null);
   const [showNewSession, setShowNewSession] = useState(false);
+  const [page, setPage] = useState(0);
   const canEdit = useCanEdit();
 
   const sessionsQuery = useQuery({
@@ -91,6 +108,11 @@ export function TrainingSessionClient() {
   const activeExecution = activeSession?.drillExecutions.find((execution) => execution.id === activeExecutionId)
     ?? activeSession?.drillExecutions.find((execution) => !execution.endedAt)
     ?? activeSession?.drillExecutions.at(-1);
+
+  // Paging keeps the session sidebar usable once the history grows long.
+  const pageCount = Math.max(1, Math.ceil(sessions.length / SESSION_PAGE_SIZE));
+  const safePage = Math.min(page, pageCount - 1);
+  const pagedSessions = sessions.slice(safePage * SESSION_PAGE_SIZE, safePage * SESSION_PAGE_SIZE + SESSION_PAGE_SIZE);
 
   useEffect(() => {
     if (!activeSessionId && activeSession) {
@@ -123,7 +145,26 @@ export function TrainingSessionClient() {
     onSuccess: (execution) => {
       setServerError(null);
       setActiveExecutionId(execution.id);
-      setSelectedDrillId('');
+      queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
+    },
+    onError: (e) => setServerError(errorMessage(e, tErr)),
+  });
+
+  const removeDrill = useMutation({
+    mutationFn: (executionId: string) => api.training.removeDrill(token ?? '', executionId),
+    onSuccess: (_data, executionId) => {
+      setServerError(null);
+      // Drop the active selection if the removed drill was the one in focus.
+      setActiveExecutionId((current) => (current === executionId ? null : current));
+      queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
+    },
+    onError: (e) => setServerError(errorMessage(e, tErr)),
+  });
+
+  const reopenSession = useMutation({
+    mutationFn: (sessionId: string) => api.training.reopenSession(token ?? '', sessionId),
+    onSuccess: () => {
+      setServerError(null);
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
     },
     onError: (e) => setServerError(errorMessage(e, tErr)),
@@ -186,7 +227,7 @@ export function TrainingSessionClient() {
           </button>
         )}
         <div className="mt-4 grid gap-2">
-          {sessions.map((session) => (
+          {pagedSessions.map((session) => (
             <button
               key={session.id}
               className={`press rounded-lg border px-3 py-2 text-left transition ${
@@ -212,6 +253,33 @@ export function TrainingSessionClient() {
             </p>
           )}
         </div>
+        {pageCount > 1 && (
+          <div className="mt-3 flex items-center justify-between gap-2 text-xs text-text-secondary">
+            <button
+              className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+              disabled={safePage === 0}
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+              type="button"
+            >
+              {t('pagination.prev')}
+            </button>
+            <span className="tabular-nums">
+              {t('pagination.status', {
+                from: safePage * SESSION_PAGE_SIZE + 1,
+                to: Math.min((safePage + 1) * SESSION_PAGE_SIZE, sessions.length),
+                total: sessions.length,
+              })}
+            </span>
+            <button
+              className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+              disabled={safePage >= pageCount - 1}
+              onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+              type="button"
+            >
+              {t('pagination.next')}
+            </button>
+          </div>
+        )}
       </aside>
 
       <section className="order-first min-w-0 lg:order-none">
@@ -224,26 +292,28 @@ export function TrainingSessionClient() {
               }
             }}
             addAttemptPending={addAttempt.isPending}
-            addDrill={() => {
-              if (activeSession && selectedDrillId) {
-                addDrill.mutate({ sessionId: activeSession.id, drillTemplateId: selectedDrillId });
+            addDrill={(drillTemplateId) => {
+              if (activeSession) {
+                addDrill.mutate({ sessionId: activeSession.id, drillTemplateId });
               }
             }}
             addDrillPending={addDrill.isPending}
             drills={drillsQuery.data ?? []}
             finishDrill={(id) => finishDrill.mutate(id)}
             finishDrillPending={finishDrill.isPending}
+            removeDrill={(id) => removeDrill.mutate(id)}
+            removeDrillPending={removeDrill.isPending}
             removeLastAttempt={(id) => removeLastAttempt.mutate(id)}
             removeLastAttemptPending={removeLastAttempt.isPending}
             finishFatigue={finishFatigue}
             finishSession={() => finishSession.mutate(activeSession.id)}
             finishSessionPending={finishSession.isPending}
-            selectedDrillId={selectedDrillId}
+            reopenSession={() => reopenSession.mutate(activeSession.id)}
+            reopenSessionPending={reopenSession.isPending}
             serverError={serverError}
             session={activeSession}
             setActiveExecutionId={setActiveExecutionId}
             setFinishFatigue={setFinishFatigue}
-            setSelectedDrillId={setSelectedDrillId}
             t={t}
             tSystemDrills={tSystemDrills}
           />
@@ -289,48 +359,64 @@ function ActiveSessionPanel({
   drills,
   finishDrill,
   finishDrillPending,
+  removeDrill,
+  removeDrillPending,
   removeLastAttempt,
   removeLastAttemptPending,
   finishFatigue,
   finishSession,
   finishSessionPending,
-  selectedDrillId,
+  reopenSession,
+  reopenSessionPending,
   serverError,
   session,
   setActiveExecutionId,
   setFinishFatigue,
-  setSelectedDrillId,
   t,
   tSystemDrills,
 }: {
   activeExecution: DrillExecution | undefined;
   addAttempt: (result: DrillAttemptResult) => void;
   addAttemptPending: boolean;
-  addDrill: () => void;
+  addDrill: (drillTemplateId: string) => void;
   addDrillPending: boolean;
   drills: DrillTemplate[];
   finishDrill: (id: string) => void;
   finishDrillPending: boolean;
+  removeDrill: (id: string) => void;
+  removeDrillPending: boolean;
   removeLastAttempt: (id: string) => void;
   removeLastAttemptPending: boolean;
   finishFatigue: string;
   finishSession: () => void;
   finishSessionPending: boolean;
-  selectedDrillId: string;
+  reopenSession: () => void;
+  reopenSessionPending: boolean;
   serverError: string | null;
   session: TrainingSession;
   setActiveExecutionId: (id: string) => void;
   setFinishFatigue: (value: string) => void;
-  setSelectedDrillId: (id: string) => void;
   t: ReturnType<typeof useTranslations>;
   tSystemDrills: ReturnType<typeof useTranslations>;
 }) {
+  const tDrills = useTranslations('drills');
+  const [showDetails, setShowDetails] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [executionToDelete, setExecutionToDelete] = useState<DrillExecution | null>(null);
   const open = !session.endedAt;
+  // A finished session can be reopened only on the same calendar day it started,
+  // so an accidental finish is recoverable but history stays locked.
+  const canReopen = !open && isToday(session.startedAt);
   const executionOpen = Boolean(activeExecution && !activeExecution.endedAt);
   const successRate =
     activeExecution && activeExecution.attempts > 0
       ? Math.round((activeExecution.successes / activeExecution.attempts) * 100)
       : 0;
+  // The full template behind the active execution — used for the details modal.
+  const activeTemplate = useMemo(
+    () => (activeExecution ? drills.find((drill) => drill.id === activeExecution.drillTemplateId) ?? null : null),
+    [activeExecution, drills],
+  );
 
   // Keyboard shortcuts for fast attempt entry during a live drill.
   const canLog = executionOpen && !addAttemptPending;
@@ -356,23 +442,38 @@ function ActiveSessionPanel({
             </p>
           </div>
           {open && (
-            <div className="flex items-end gap-2">
-              <label className="flex flex-col gap-1 text-xs text-text-secondary">
-                <span>{t('fields.fatigueAfter')}</span>
-                <input
-                  className={`${inputClass} h-11 w-20`}
-                  max={10}
-                  min={1}
-                  onChange={(event) => setFinishFatigue(event.target.value)}
-                  placeholder="1–10"
-                  type="number"
-                  value={finishFatigue}
-                />
-              </label>
-              <button className={secondaryButtonClass} disabled={finishSessionPending} onClick={finishSession} type="button">
-                {t('actions.finishSession')}
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-end gap-2">
+                <label className="flex flex-col gap-1 text-xs text-text-secondary">
+                  <span>{t('fields.fatigueAfter')}</span>
+                  <input
+                    className={`${inputClass} h-11 w-20`}
+                    max={10}
+                    min={1}
+                    onChange={(event) => setFinishFatigue(event.target.value)}
+                    placeholder="1–10"
+                    type="number"
+                    value={finishFatigue}
+                  />
+                </label>
+                <button className={secondaryButtonClass} disabled={finishSessionPending} onClick={finishSession} type="button">
+                  {t('actions.finishSession')}
+                </button>
+              </div>
+              <button
+                className={`${primaryButtonClass} w-full justify-center`}
+                disabled={addDrillPending}
+                onClick={() => setShowPicker(true)}
+                type="button"
+              >
+                + {t('drillPicker.add')}
               </button>
             </div>
+          )}
+          {canReopen && (
+            <button className={secondaryButtonClass} disabled={reopenSessionPending} onClick={reopenSession} type="button">
+              {t('actions.reopenSession')}
+            </button>
           )}
         </div>
         {session.goal && <p className="mt-3 text-sm text-text-secondary">{session.goal}</p>}
@@ -385,31 +486,64 @@ function ActiveSessionPanel({
         </p>
       )}
 
-      {open && (
-        <section className="surface rounded-xl p-4 sm:p-5">
-          <label className="text-sm font-medium text-text-secondary">{t('drillPicker.title')}</label>
-          <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-            <select className={inputClass} onChange={(event) => setSelectedDrillId(event.target.value)} value={selectedDrillId}>
-              <option value="">{t('drillPicker.empty')}</option>
-              {drills.map((drill) => (
-                <option key={drill.id} value={drill.id}>{localizeDrillTemplate(drill, tSystemDrills).name}</option>
-              ))}
-            </select>
-            <button className={primaryButtonClass} disabled={!selectedDrillId || addDrillPending} onClick={addDrill} type="button">
-              {t('drillPicker.add')}
-            </button>
+      {session.drillExecutions.length > 0 && (
+        <section>
+          <h3 className="mb-2 text-xs uppercase tracking-wide text-text-disabled">{t('execution.sessionDrills')}</h3>
+          <div className="flex flex-wrap gap-2">
+            {session.drillExecutions.map((execution) => (
+              <div key={execution.id} className="relative">
+                <button
+                  className={`rounded-md border px-3 py-2 pr-8 text-left text-sm transition ${
+                    activeExecution?.id === execution.id
+                      ? 'border-brand-accent bg-background-elevated text-text-primary'
+                      : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                  }`}
+                  onClick={() => setActiveExecutionId(execution.id)}
+                  type="button"
+                >
+                  <span className="block max-w-[200px] truncate font-medium">
+                    {localizeDrillName(execution.drillTemplateId, execution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-text-disabled">
+                    {execution.successes}/{execution.attempts} · {execution.endedAt ? t('status.finished') : t('status.active')}
+                  </span>
+                </button>
+                {!execution.endedAt && (
+                  <button
+                    aria-label={t('actions.removeDrill')}
+                    className="press absolute right-1.5 top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-text-disabled transition hover:bg-state-error/15 hover:text-state-error disabled:opacity-50"
+                    disabled={removeDrillPending}
+                    onClick={() => setExecutionToDelete(execution)}
+                    title={t('actions.removeDrill')}
+                    type="button"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </section>
       )}
 
       {activeExecution ? (
-        <section className="rounded-lg border border-brand-accent/50 bg-background-secondary p-4 shadow-glow sm:p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs uppercase tracking-wide text-brand-accent">{t('execution.current')}</p>
-              <h3 className="mt-1 text-xl font-semibold text-text-primary">
+        <section className="rounded-lg border border-brand-accent/50 bg-background-secondary p-3 shadow-glow sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <h3 className="truncate text-base font-semibold text-text-primary">
                 {localizeDrillName(activeExecution.drillTemplateId, activeExecution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
               </h3>
+              {activeTemplate && (
+                <button
+                  aria-label={t('actions.details')}
+                  className="press inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border-subtle text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+                  onClick={() => setShowDetails(true)}
+                  title={t('actions.details')}
+                  type="button"
+                >
+                  <InfoIcon />
+                </button>
+              )}
             </div>
             {executionOpen && (
               <button
@@ -423,7 +557,7 @@ function ActiveSessionPanel({
             )}
           </div>
 
-          <dl className="mt-4 grid grid-cols-3 gap-3 text-center">
+          <dl className="mt-3 grid grid-cols-3 gap-2">
             <Tally label={t('execution.attempts')} value={activeExecution.attempts} />
             <Tally label={t('execution.successes')} value={activeExecution.successes} />
             <Tally label={t('execution.successRate')} value={`${successRate}%`} />
@@ -505,34 +639,148 @@ function ActiveSessionPanel({
         )
       )}
 
-      {session.drillExecutions.length > 0 && (
-        <section>
-          <h3 className="mb-2 text-xs uppercase tracking-wide text-text-disabled">{t('execution.sessionDrills')}</h3>
-          <div className="flex flex-wrap gap-2">
-            {session.drillExecutions.map((execution) => (
-              <button
-                key={execution.id}
-                className={`rounded-md border px-3 py-2 text-left text-sm transition ${
-                  activeExecution?.id === execution.id
-                    ? 'border-brand-accent bg-background-elevated text-text-primary'
-                    : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent hover:text-text-primary'
-                }`}
-                onClick={() => setActiveExecutionId(execution.id)}
-                type="button"
-              >
-                <span className="block max-w-[200px] truncate font-medium">
-                  {localizeDrillName(execution.drillTemplateId, execution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
-                </span>
-                <span className="mt-0.5 block text-xs text-text-disabled">
-                  {execution.successes}/{execution.attempts} · {execution.endedAt ? t('status.finished') : t('status.active')}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
       <LiveSessionInsight insight={buildLiveTrainingInsight(session, activeExecution)} t={t} />
+
+      <Modal
+        closeLabel={t('actions.close')}
+        onClose={() => setShowDetails(false)}
+        open={showDetails && activeTemplate !== null}
+        title={activeTemplate ? localizeDrillTemplate(activeTemplate, tSystemDrills).name : ''}
+      >
+        {activeTemplate && <DrillDetails template={localizeDrillTemplate(activeTemplate, tSystemDrills)} tDrills={tDrills} />}
+      </Modal>
+
+      <Modal
+        closeLabel={t('actions.close')}
+        onClose={() => setShowPicker(false)}
+        open={showPicker}
+        title={t('drillPicker.modalTitle')}
+      >
+        <DrillPicker
+          drills={drills}
+          onPick={(drillTemplateId) => {
+            addDrill(drillTemplateId);
+            setShowPicker(false);
+          }}
+          pending={addDrillPending}
+          t={t}
+          tDrills={tDrills}
+          tSystemDrills={tSystemDrills}
+        />
+      </Modal>
+
+      <Modal
+        closeLabel={t('actions.close')}
+        onClose={() => setExecutionToDelete(null)}
+        open={executionToDelete !== null}
+        title={t('removeDrill.title')}
+      >
+        <div className="grid gap-4">
+          <p className="text-sm text-text-secondary">
+            {t('removeDrill.confirm', {
+              name:
+                localizeDrillName(executionToDelete?.drillTemplateId, executionToDelete?.drillTemplateName, tSystemDrills) ??
+                t('execution.unnamed'),
+            })}
+          </p>
+          <div className="flex justify-end gap-2">
+            <button className={secondaryButtonClass} onClick={() => setExecutionToDelete(null)} type="button">
+              {t('actions.cancel')}
+            </button>
+            <button
+              className="min-h-11 rounded-md border border-state-error/50 bg-state-error/10 px-3 py-2 text-sm font-medium text-state-error transition hover:bg-state-error/20 disabled:opacity-60"
+              disabled={removeDrillPending}
+              onClick={() => {
+                if (executionToDelete) {
+                  removeDrill(executionToDelete.id);
+                  setExecutionToDelete(null);
+                }
+              }}
+              type="button"
+            >
+              {t('actions.removeDrill')}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// Full drill catalogue with category + difficulty filters; the list is shown in
+// full (no paging) so the coach can scan everything at a glance.
+function DrillPicker({
+  drills,
+  onPick,
+  pending,
+  t,
+  tDrills,
+  tSystemDrills,
+}: {
+  drills: DrillTemplate[];
+  onPick: (drillTemplateId: string) => void;
+  pending: boolean;
+  t: ReturnType<typeof useTranslations>;
+  tDrills: ReturnType<typeof useTranslations>;
+  tSystemDrills: ReturnType<typeof useTranslations>;
+}) {
+  const [category, setCategory] = useState('');
+  const [difficulty, setDifficulty] = useState('');
+  const localized = useMemo(
+    () => drills.map((drill) => ({ raw: drill, view: localizeDrillTemplate(drill, tSystemDrills) })),
+    [drills, tSystemDrills],
+  );
+  const filtered = localized.filter(
+    ({ raw }) => (!category || raw.category === category) && (!difficulty || raw.difficulty === difficulty),
+  );
+
+  return (
+    <div className="grid gap-3">
+      <div className="grid grid-cols-2 gap-2">
+        <label className="text-xs text-text-secondary">
+          <span className="mb-1 block font-medium uppercase tracking-wide text-text-disabled">{tDrills('fields.category')}</span>
+          <select className={inputClass} onChange={(event) => setCategory(event.target.value)} value={category}>
+            <option value="">{tDrills('filter.allCategories')}</option>
+            {drillCategories.map((value) => (
+              <option key={value} value={value}>{tDrills(`categories.${value}`)}</option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs text-text-secondary">
+          <span className="mb-1 block font-medium uppercase tracking-wide text-text-disabled">{tDrills('fields.difficulty')}</span>
+          <select className={inputClass} onChange={(event) => setDifficulty(event.target.value)} value={difficulty}>
+            <option value="">{tDrills('filter.allDifficulties')}</option>
+            {drillDifficulties.map((value) => (
+              <option key={value} value={value}>{tDrills(`difficulties.${value}`)}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="grid max-h-[55vh] gap-2 overflow-y-auto pr-1">
+        {filtered.map(({ raw, view }) => (
+          <button
+            key={raw.id}
+            className="press flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-background-secondary px-3 py-2 text-left transition hover:border-brand-accent disabled:opacity-60"
+            disabled={pending}
+            onClick={() => onPick(raw.id)}
+            type="button"
+          >
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium text-text-primary">{view.name}</span>
+              <span className="mt-0.5 block text-xs text-text-disabled">
+                {tDrills(`categories.${raw.category}`)} · {tDrills(`difficulties.${raw.difficulty}`)}
+              </span>
+            </span>
+            <span className="shrink-0 text-sm text-brand-accent">+</span>
+          </button>
+        ))}
+        {filtered.length === 0 && (
+          <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
+            {tDrills('filter.noResults')}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -555,11 +803,57 @@ function SessionMeta({ session, t }: { session: TrainingSession; t: ReturnType<t
   );
 }
 
+function InfoIcon() {
+  return (
+    <svg aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5" strokeLinecap="round" />
+      <path d="M12 8h.01" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DrillDetails({ template, tDrills }: { template: DrillTemplate; tDrills: ReturnType<typeof useTranslations> }) {
+  const rows: Array<{ label: string; value: string }> = [
+    { label: tDrills('fields.description'), value: template.description },
+    { label: tDrills('fields.goal'), value: template.goal },
+    { label: tDrills('fields.rules'), value: template.rules },
+    { label: tDrills('fields.successCriteria'), value: template.successCriteria },
+  ];
+  return (
+    <div className="grid gap-3">
+      <div className="flex flex-wrap gap-2">
+        <span className="rounded-md bg-background-elevated px-2.5 py-1 text-xs text-text-secondary shadow-elev-1">
+          {tDrills(`categories.${template.category}`)}
+        </span>
+        <span className="rounded-md bg-background-elevated px-2.5 py-1 text-xs text-text-secondary shadow-elev-1">
+          {tDrills(`difficulties.${template.difficulty}`)}
+        </span>
+      </div>
+      {rows.map((row) => (
+        <div key={row.label} className="sunken rounded-lg px-3 py-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-text-disabled">{row.label}</p>
+          <p className="mt-1 whitespace-pre-line text-sm text-text-secondary">{row.value}</p>
+        </div>
+      ))}
+      {template.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {template.tags.map((tag) => (
+            <span key={tag} className="rounded-full border border-border-subtle px-2 py-0.5 text-xs text-text-disabled">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Tally({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="sunken rounded-lg px-3 py-3">
-      <dd className="text-2xl font-semibold text-text-primary">{value}</dd>
-      <dt className="mt-1 text-xs text-text-disabled">{label}</dt>
+    <div className="sunken flex items-baseline justify-center gap-1.5 rounded-md px-3 py-1.5">
+      <dd className="text-lg font-semibold tabular-nums text-text-primary">{value}</dd>
+      <dt className="text-xs text-text-disabled">{label}</dt>
     </div>
   );
 }
@@ -857,6 +1151,16 @@ function formatDate(value: string): string {
     minute: '2-digit',
     month: 'short',
   }).format(new Date(value));
+}
+
+function isToday(value: string): boolean {
+  const date = new Date(value);
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
 }
 
 function errorMessage(e: unknown, t: (key: string) => string): string {

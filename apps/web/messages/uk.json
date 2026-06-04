@@ -1240,6 +1240,11 @@
       "active": "Активна",
       "finished": "Завершена"
     },
+    "pagination": {
+      "prev": "Назад",
+      "next": "Вперёд",
+      "status": "{from}–{to} з {total}"
+    },
     "startTitle": "Почніть тренування",
     "startSubtitle": "Створіть сесію, додайте вправи та відмічайте спроби в один тап.",
     "newSession": {
@@ -1281,12 +1286,21 @@
     "drillPicker": {
       "title": "Вправа",
       "empty": "Оберіть шаблон",
-      "add": "Додати"
+      "add": "Додати вправу",
+      "modalTitle": "Додати вправу"
+    },
+    "removeDrill": {
+      "title": "Видалити вправу",
+      "confirm": "Видалити вправу «{name}» із сесії? Цю дію не можна скасувати."
     },
     "actions": {
       "finishSession": "Завершити сесію",
+      "reopenSession": "Перевідкрити сесію",
       "finishDrill": "Завершити вправу",
       "undoAttempt": "Скасувати спробу",
+      "removeDrill": "Видалити",
+      "details": "Деталі вправи",
+      "cancel": "Скасувати",
       "close": "Закрити"
     },
     "execution": {

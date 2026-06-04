@@ -326,11 +326,21 @@ export const api = {
         token,
         body: JSON.stringify(input),
       }),
+    reopenSession: (token: string, id: string) =>
+      request<TrainingSession>(`/training-sessions/${id}/reopen`, {
+        method: 'POST',
+        token,
+      }),
     addDrill: (token: string, sessionId: string, input: AddDrillExecutionInput) =>
       request<DrillExecution>(`/training-sessions/${sessionId}/drills`, {
         method: 'POST',
         token,
         body: JSON.stringify(input),
+      }),
+    removeDrill: (token: string, executionId: string) =>
+      request<void>(`/drill-executions/${executionId}`, {
+        method: 'DELETE',
+        token,
       }),
     addAttempt: (token: string, executionId: string, input: CreateDrillAttemptInput) =>
       request<DrillAttempt>(`/drill-executions/${executionId}/attempts`, {

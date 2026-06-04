@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -85,6 +86,15 @@ export class TrainingController {
     return this.training.finishSession(profileId, id, body);
   }
 
+  @Post('training-sessions/:id/reopen')
+  @WriteAccess()
+  reopenSession(
+    @CurrentProfileId() profileId: string,
+    @Param('id', CuidValidationPipe) id: string,
+  ): Promise<TrainingSession> {
+    return this.training.reopenSession(profileId, id);
+  }
+
   @Post('training-sessions/:id/drills')
   @WriteAccess()
   addDrill(
@@ -112,6 +122,16 @@ export class TrainingController {
     @Param('id', CuidValidationPipe) id: string,
   ): Promise<DrillExecution> {
     return this.training.removeLastAttempt(profileId, id);
+  }
+
+  @Delete('drill-executions/:id')
+  @HttpCode(204)
+  @WriteAccess()
+  async removeDrill(
+    @CurrentProfileId() profileId: string,
+    @Param('id', CuidValidationPipe) id: string,
+  ): Promise<void> {
+    await this.training.removeDrill(profileId, id);
   }
 
   @Patch('drill-executions/:id/finish')

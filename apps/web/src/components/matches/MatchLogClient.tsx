@@ -811,8 +811,8 @@ function MatchDetail({
               </button>
             )}
           </div>
-          <div className="mt-4 overflow-hidden rounded-md border border-border-subtle">
-            <table className="w-full border-collapse text-sm">
+          <div className="mt-4 overflow-x-auto rounded-md border border-border-subtle">
+            <table className="w-full min-w-[420px] border-collapse text-sm">
               <thead className="bg-background-primary text-text-disabled">
                 <tr>
                   <th className="px-3 py-2 text-left">{t('frames.number')}</th>

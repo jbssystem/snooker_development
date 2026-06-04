@@ -143,6 +143,26 @@ export class TrainingService {
     return mapTrainingSession(session);
   }
 
+  async reopenSession(profileId: string, id: string): Promise<TrainingSession> {
+    const existing = await this.findSessionOrThrow(profileId, id);
+    if (!existing.endedAt) {
+      return mapTrainingSession(existing);
+    }
+    // Only same-day sessions may be reopened, so an accidental finish can be
+    // undone but historical sessions stay locked.
+    if (!isSameCalendarDay(existing.startedAt, new Date())) {
+      throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
+    }
+
+    const session = await this.prisma.trainingSession.update({
+      where: { id },
+      data: { endedAt: null, fatigueAfter: null },
+      include: sessionInclude,
+    });
+
+    return mapTrainingSession(session);
+  }
+
   async addDrill(
     ctx: ProfileContext,
     sessionId: string,
@@ -247,6 +267,14 @@ export class TrainingService {
     return mapDrillExecution(refreshed);
   }
 
+  async removeDrill(profileId: string, executionId: string): Promise<void> {
+    const execution = await this.findExecutionOrThrow(profileId, executionId);
+    // Finished drills are part of the recorded history; only an in-progress
+    // execution may be removed (e.g. added by mistake).
+    assertOpen(execution.endedAt);
+    await this.prisma.drillExecution.delete({ where: { id: execution.id } });
+  }
+
   async finishDrill(
     profileId: string,
     executionId: string,
@@ -348,6 +376,14 @@ function assignDate<T extends object, K extends keyof T>(target: T, key: K, valu
   if (value !== undefined) {
     target[key] = new Date(value) as T[K];
   }
+}
+
+function isSameCalendarDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 function assertOpen(endedAt: Date | null): void {

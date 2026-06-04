@@ -1240,6 +1240,11 @@
       "active": "Active",
       "finished": "Finished"
     },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "status": "{from}–{to} of {total}"
+    },
     "startTitle": "Start a session",
     "startSubtitle": "Create a session, add drills and log attempts with one tap.",
     "newSession": {
@@ -1281,12 +1286,21 @@
     "drillPicker": {
       "title": "Drill",
       "empty": "Select template",
-      "add": "Add"
+      "add": "Add drill",
+      "modalTitle": "Add drill"
+    },
+    "removeDrill": {
+      "title": "Remove drill",
+      "confirm": "Remove the drill “{name}” from this session? This cannot be undone."
     },
     "actions": {
       "finishSession": "Finish session",
+      "reopenSession": "Reopen session",
       "finishDrill": "Finish drill",
       "undoAttempt": "Undo attempt",
+      "removeDrill": "Remove",
+      "details": "Drill details",
+      "cancel": "Cancel",
       "close": "Close"
     },
     "execution": {
