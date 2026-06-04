@@ -191,29 +191,34 @@ body > * {
 }
 
 /* Shared input look — recessed well, brand-accent focus. Use on inputs,
-   selects and textareas for a consistent, tactile form surface. */
-.input-field {
-  width: 100%;
-  border-radius: 0.5rem;
-  border: 1px solid var(--color-border-subtle);
-  background-color: var(--color-bg-sunken);
-  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.45);
-  padding: 0.5rem 0.75rem;
-  color: var(--color-text-primary);
-  transition: border-color 140ms ease, box-shadow 140ms ease;
-}
+   selects and textareas for a consistent, tactile form surface.
+   Lives in @layer components so utility classes (e.g. pl-9 for a leading
+   search icon, pr-8 for a clear button) still override its padding. */
+@layer components {
+  .input-field {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border-subtle);
+    background-color: var(--color-bg-sunken);
+    box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.45);
+    padding: 0.5rem 0.75rem;
+    color: var(--color-text-primary);
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
 
-.input-field::placeholder {
-  color: var(--color-text-disabled);
-}
+  .input-field::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.75;
+  }
 
-.input-field:focus,
-.input-field:focus-visible {
-  outline: none;
-  border-color: var(--color-border-active);
-  box-shadow:
-    inset 0 1px 2px 0 rgba(0, 0, 0, 0.45),
-    0 0 0 3px rgba(25, 169, 116, 0.25);
+  .input-field:focus,
+  .input-field:focus-visible {
+    outline: none;
+    border-color: var(--color-border-active);
+    box-shadow:
+      inset 0 1px 2px 0 rgba(0, 0, 0, 0.45),
+      0 0 0 3px rgba(25, 169, 116, 0.25);
+  }
 }
 
 /* Gradient hairline used as a top accent on key cards. */

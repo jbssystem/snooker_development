@@ -1076,7 +1076,13 @@
         "chalk": "Chalk can also explain feel and error patterns.",
         "activeFrom": "Equipment is treated as active from this date.",
         "notes": "Record facts briefly without long analysis."
-      }
+      },
+      "currentEmpty": "No active equipment yet"
+    },
+    "tabs": {
+      "player": "Player",
+      "currentEquipment": "Current equipment",
+      "equipmentHistory": "Equipment history"
     }
   },
   "drills": {

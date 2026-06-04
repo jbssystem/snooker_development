@@ -4,14 +4,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import type { CreateEquipmentProfileInput, UpsertPlayerProfileInput } from '@snooker/shared';
+import type { CreateEquipmentProfileInput, EquipmentProfile, UpsertPlayerProfileInput } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
-import { AccordionSection } from '@/components/layout/AccordionSection';
 import { CountryOptions, Field, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { AvatarPicker } from './AvatarPicker';
 import { PlayerAvatar } from './PlayerAvatar';
+
+type ProfileTab = 'player' | 'current' | 'history';
 
 type ProfileFormValues = {
   firstName: string;
@@ -67,6 +68,7 @@ export function ProfileClient() {
   const token = tokens?.accessToken ?? null;
   const [serverError, setServerError] = useState<string | null>(null);
   const [avatarOpen, setAvatarOpen] = useState(false);
+  const [tab, setTab] = useState<ProfileTab>('player');
 
   const profileForm = useForm<ProfileFormValues>({ defaultValues: profileDefaults });
   const equipmentForm = useForm<EquipmentFormValues>({ defaultValues: equipmentDefaults });
@@ -134,6 +136,9 @@ export function ProfileClient() {
   });
 
   const equipmentItems = useMemo(() => equipmentQuery.data ?? [], [equipmentQuery.data]);
+  // "Current" = still in use (no end date); "history" = retired items.
+  const currentItems = useMemo(() => equipmentItems.filter((item) => !item.activeTo), [equipmentItems]);
+  const historyItems = useMemo(() => equipmentItems.filter((item) => Boolean(item.activeTo)), [equipmentItems]);
   const avatarValue = profileForm.watch('avatar');
   const fullName = [profileForm.watch('firstName'), profileForm.watch('lastName')]
     .filter(Boolean)
@@ -158,11 +163,41 @@ export function ProfileClient() {
     );
   }
 
-  return (
-    <main className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
-      <section>
-        <PageHeader subtitle={t('subtitle')} title={t('title')} />
+  const tabs: Array<{ id: ProfileTab; label: string; count?: number }> = [
+    { id: 'player', label: t('tabs.player') },
+    { id: 'current', label: t('tabs.currentEquipment'), count: currentItems.length },
+    { id: 'history', label: t('tabs.equipmentHistory'), count: historyItems.length },
+  ];
 
+  return (
+    <main className="mx-auto w-full max-w-3xl">
+      <PageHeader subtitle={t('subtitle')} title={t('title')} />
+
+      <div className="sunken mb-6 flex gap-1 rounded-lg p-1" role="tablist">
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            aria-selected={tab === item.id}
+            className={`press focus-ring flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition ${
+              tab === item.id
+                ? 'bg-background-elevated text-brand-accent shadow-elev-1 ring-1 ring-brand-accent/30'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+            onClick={() => setTab(item.id)}
+            role="tab"
+            type="button"
+          >
+            {item.label}
+            {item.count !== undefined && (
+              <span className="rounded-full bg-background-sunken px-1.5 text-[11px] tabular-nums text-text-disabled">
+                {item.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      <section className={tab === 'player' ? '' : 'hidden'}>
         <div className="surface mb-6 flex items-center gap-4 rounded-xl p-4 sm:p-5">
           <button
             aria-label={t('avatar.edit')}
@@ -254,15 +289,12 @@ export function ProfileClient() {
         </form>
       </section>
 
-      <aside className="flex flex-col gap-5">
-        <AccordionSection
-          defaultOpen
-          subtitle={t('equipment.subtitle')}
-          testId="profile-equipment-form"
-          title={t('equipment.title')}
-        >
+      <section className={tab === 'current' ? '' : 'hidden'}>
+        <div className="surface rounded-xl p-5" data-testid="profile-equipment-form">
+          <h2 className="text-lg font-semibold text-text-primary">{t('equipment.title')}</h2>
+          <p className="mt-1 text-sm text-text-secondary">{t('equipment.subtitle')}</p>
           <form
-            className="grid gap-3"
+            className="mt-4 grid gap-3"
             onSubmit={equipmentForm.handleSubmit((values) =>
               addEquipment.mutate({
                 cueName: values.cueName || undefined,
@@ -349,43 +381,34 @@ export function ProfileClient() {
               <p className="text-xs text-state-warning">{t('equipment.needsProfile')}</p>
             )}
           </form>
-        </AccordionSection>
 
-        <section className="surface rounded-xl p-5">
+          <div className="mt-5 border-t border-border-subtle/60 pt-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">{t('tabs.currentEquipment')}</h3>
+            <div className="mt-3 flex flex-col gap-3">
+              {currentItems.length === 0 && (
+                <p className="text-sm text-text-secondary">{t('equipment.currentEmpty')}</p>
+              )}
+              {currentItems.map((item) => (
+                <EquipmentCard key={item.id} item={item} onDelete={() => deleteEquipment.mutate(item.id)} t={t} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={tab === 'history' ? '' : 'hidden'}>
+        <div className="surface rounded-xl p-5">
           <h2 className="text-lg font-semibold text-text-primary">{t('equipment.history')}</h2>
           <div className="mt-4 flex flex-col gap-3">
-            {equipmentItems.length === 0 && (
+            {historyItems.length === 0 && (
               <p className="text-sm text-text-secondary">{t('equipment.empty')}</p>
             )}
-            {equipmentItems.map((item) => (
-              <article key={item.id} className="rounded-md border border-border-subtle bg-background-raised p-3 shadow-elev-1">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-medium text-text-primary">{item.cueName || t('equipment.unnamed')}</h3>
-                    <p className="mt-1 text-xs text-text-disabled">
-                      {toDateInput(item.activeFrom)}{item.activeTo ? ` - ${toDateInput(item.activeTo)}` : ''}
-                    </p>
-                  </div>
-                  <button
-                    className="press rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:border-state-error hover:text-state-error"
-                    onClick={() => deleteEquipment.mutate(item.id)}
-                    type="button"
-                  >
-                    {t('equipment.delete')}
-                  </button>
-                </div>
-                <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-text-secondary">
-                  {item.cueWeight && <Meta label={t('equipment.fields.cueWeight')} value={String(item.cueWeight)} />}
-                  {item.tipBrand && <Meta label={t('equipment.fields.tipBrand')} value={item.tipBrand} />}
-                  {item.tipSize && <Meta label={t('equipment.fields.tipSize')} value={String(item.tipSize)} />}
-                  {item.chalk && <Meta label={t('equipment.fields.chalk')} value={item.chalk} />}
-                </dl>
-                {item.notes && <p className="mt-3 text-sm text-text-secondary">{item.notes}</p>}
-              </article>
+            {historyItems.map((item) => (
+              <EquipmentCard key={item.id} item={item} onDelete={() => deleteEquipment.mutate(item.id)} t={t} />
             ))}
           </div>
-        </section>
-      </aside>
+        </div>
+      </section>
 
       <AvatarPicker
         name={fullName}
@@ -414,6 +437,43 @@ function toProfilePayload(values: ProfileFormValues): UpsertPlayerProfileInput {
 
 const inputClass = 'input-field';
 const primaryButtonClass = 'btn-primary press';
+
+function EquipmentCard({
+  item,
+  onDelete,
+  t,
+}: {
+  item: EquipmentProfile;
+  onDelete: () => void;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <article className="rounded-md border border-border-subtle bg-background-raised p-3 shadow-elev-1">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-medium text-text-primary">{item.cueName || t('equipment.unnamed')}</h3>
+          <p className="mt-1 text-xs text-text-disabled">
+            {toDateInput(item.activeFrom)}{item.activeTo ? ` - ${toDateInput(item.activeTo)}` : ''}
+          </p>
+        </div>
+        <button
+          className="press rounded-md border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:border-state-error hover:text-state-error"
+          onClick={onDelete}
+          type="button"
+        >
+          {t('equipment.delete')}
+        </button>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-text-secondary">
+        {item.cueWeight && <Meta label={t('equipment.fields.cueWeight')} value={String(item.cueWeight)} />}
+        {item.tipBrand && <Meta label={t('equipment.fields.tipBrand')} value={item.tipBrand} />}
+        {item.tipSize && <Meta label={t('equipment.fields.tipSize')} value={String(item.tipSize)} />}
+        {item.chalk && <Meta label={t('equipment.fields.chalk')} value={item.chalk} />}
+      </dl>
+      {item.notes && <p className="mt-3 text-sm text-text-secondary">{item.notes}</p>}
+    </article>
+  );
+}
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (
