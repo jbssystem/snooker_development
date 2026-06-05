@@ -16,15 +16,19 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { AiReport, GenerateWeeklyAiReportInput } from '@snooker/shared';
+import type { ActiveAiFocusPreset, AiReport, GenerateWeeklyAiReportInput } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { MarkdownLite, splitReportSections } from '@/lib/markdown-lite';
+
+const REPORT_PAGE_SIZE = 8;
 
 type GenerateFormValues = {
   periodStart: string;
   periodEnd: string;
+  focusPresetIds: string[];
 };
 
 type ExternalReportFrame = {
@@ -76,11 +80,17 @@ export function AiReportsClient() {
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.tokens?.accessToken ?? null);
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
   const form = useForm<GenerateFormValues>({ defaultValues: weeklyDefaults() });
 
   const profileQuery = useQuery({
     queryKey: ['player-profile', token],
     queryFn: () => api.players.getProfile(token ?? ''),
+    enabled: Boolean(token),
+  });
+  const focusPresetsQuery = useQuery({
+    queryKey: ['ai-focus-presets', token, locale],
+    queryFn: () => api.ai.listFocusPresets(token ?? '', locale),
     enabled: Boolean(token),
   });
   const reportsQuery = useQuery({
@@ -104,6 +114,11 @@ export function AiReportsClient() {
   const activeReport = reports.find((report) => report.id === activeReportId) ?? reports[0] ?? null;
   const profileMissing = profileQuery.data === null;
   const serverError = generateReport.error ? errorMessage(generateReport.error, tErr) : null;
+  const focusPresets = focusPresetsQuery.data ?? [];
+
+  const pageCount = Math.max(1, Math.ceil(reports.length / REPORT_PAGE_SIZE));
+  const safePage = Math.min(page, pageCount - 1);
+  const pagedReports = reports.slice(safePage * REPORT_PAGE_SIZE, safePage * REPORT_PAGE_SIZE + REPORT_PAGE_SIZE);
 
   return (
     <main className="grid gap-8 xl:grid-cols-[330px_minmax(0,1fr)_360px]">
@@ -111,7 +126,7 @@ export function AiReportsClient() {
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
         <div className="mt-5 grid gap-2">
-          {reports.map((report, i) => (
+          {pagedReports.map((report, i) => (
             <button
               key={report.id}
               className={`press ui-rise-in rounded-md border px-3 py-2 text-left transition ${
@@ -136,6 +151,33 @@ export function AiReportsClient() {
             </p>
           )}
         </div>
+        {pageCount > 1 && (
+          <div className="mt-3 flex items-center justify-between gap-2 text-xs text-text-secondary">
+            <button
+              className="press min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+              disabled={safePage === 0}
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+              type="button"
+            >
+              {t('pagination.prev')}
+            </button>
+            <span className="tabular-nums">
+              {t('pagination.status', {
+                from: safePage * REPORT_PAGE_SIZE + 1,
+                to: Math.min((safePage + 1) * REPORT_PAGE_SIZE, reports.length),
+                total: reports.length,
+              })}
+            </span>
+            <button
+              className="press min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+              disabled={safePage >= pageCount - 1}
+              onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+              type="button"
+            >
+              {t('pagination.next')}
+            </button>
+          </div>
+        )}
       </aside>
 
       <section className="order-first min-w-0 surface rounded-xl p-5 xl:order-none">
@@ -165,6 +207,28 @@ export function AiReportsClient() {
               <span>{t('generate.periodEnd')}</span>
               <input className={inputClass} type="date" {...form.register('periodEnd', { required: t('required') })} />
             </label>
+            {focusPresets.length > 0 && (
+              <fieldset className="grid gap-2">
+                <legend className="mb-1 text-sm text-text-secondary">{t('generate.focusAreas')}</legend>
+                <div className="sunken grid gap-1 rounded-lg p-1">
+                  {focusPresets.map((preset: ActiveAiFocusPreset) => (
+                    <label
+                      key={preset.id}
+                      className="press flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-text-secondary transition hover:text-text-primary has-[:checked]:bg-background-elevated has-[:checked]:text-text-primary has-[:checked]:shadow-elev-1"
+                    >
+                      <input
+                        className="h-4 w-4 accent-brand-accent"
+                        type="checkbox"
+                        value={preset.id}
+                        {...form.register('focusPresetIds')}
+                      />
+                      <span>{preset.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-text-disabled">{t('generate.focusHint')}</p>
+              </fieldset>
+            )}
             {serverError && <p className="rounded-md border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error">{serverError}</p>}
             <button className={`${primaryButtonClass} press`} disabled={generateReport.isPending || profileMissing} type="submit">
               {generateReport.isPending ? t('saving') : t('generate.submit')}
@@ -206,11 +270,18 @@ function ReportDetail({ report }: { report: AiReport }) {
         <StatusBadge report={report} />
       </header>
 
-      <dl className="grid gap-3 md:grid-cols-3">
-        <Stat label={t('report.provider')} value={`${report.provider} / ${report.model}`} />
-        <Stat label={t('report.promptVersion')} value={report.promptVersion} />
-        <Stat label={t('report.sourceHash')} value={report.sourceDataHash.slice(0, 12)} />
-      </dl>
+      {report.focusAreas && report.focusAreas.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {report.focusAreas.map((area) => (
+            <span
+              key={area.slug}
+              className="rounded-full border border-brand-accent/40 bg-brand-accent/10 px-3 py-1 text-xs font-medium text-brand-accent"
+            >
+              {area.label}
+            </span>
+          ))}
+        </div>
+      )}
 
       <section>
         <h3 className="text-lg font-semibold text-text-primary">{t('report.dataSources')}</h3>
@@ -224,11 +295,9 @@ function ReportDetail({ report }: { report: AiReport }) {
       )}
 
       {report.status === 'completed' && report.contentMarkdown && (
-        <section>
+        <section className="grid gap-4">
           <h3 className="text-lg font-semibold text-text-primary">{t('report.content')}</h3>
-          <pre className="sunken mt-3 whitespace-pre-wrap rounded-md border border-border-subtle p-4 text-sm leading-6 text-text-secondary">
-            {report.contentMarkdown}
-          </pre>
+          <ReportSections markdown={report.contentMarkdown} />
         </section>
       )}
       {(report.status === 'queued' || report.status === 'running') && (
@@ -323,6 +392,55 @@ function ExternalReportVisuals({ sourceData }: { sourceData: ExternalReportSourc
   );
 }
 
+const SECTION_ICONS: Array<{ test: RegExp; icon: string }> = [
+  { test: /highlight|итог|підсумк|головн|основн/i, icon: '⭐' },
+  { test: /number|цифр|числ|показател|метрик/i, icon: '📊' },
+  { test: /improv|улучш|покращ|прогрес|рост/i, icon: '📈' },
+  { test: /regress|flat|спад|стагн|слаб|weakness|снизил/i, icon: '📉' },
+  { test: /focus|фокус|план|next|recommend|рекоменд|порад/i, icon: '🎯' },
+  { test: /confidence|достоверн|caveat|довір|данн|data/i, icon: '🔍' },
+  { test: /factor|фактор|сон|sleep|самочувств|wellness|нагрузк/i, icon: '🌙' },
+];
+
+function iconForHeading(heading: string): string {
+  for (const { test, icon } of SECTION_ICONS) {
+    if (test.test(heading)) return icon;
+  }
+  return '📄';
+}
+
+function ReportSections({ markdown }: { markdown: string }) {
+  const sections = useMemo(() => splitReportSections(markdown), [markdown]);
+  if (sections.length === 0) {
+    return <MarkdownLite text={markdown} />;
+  }
+  return (
+    <div className="grid gap-4">
+      {sections.map((section, index) =>
+        section.heading === null ? (
+          <div key={`intro-${index}`} className="rounded-lg border border-border-subtle bg-background-primary p-4 shadow-elev-1">
+            <MarkdownLite text={section.body} />
+          </div>
+        ) : (
+          <section
+            key={`${section.heading}-${index}`}
+            className="surface ui-rise-in rounded-xl p-5"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <h4 className="mb-3 flex items-center gap-2 text-base font-semibold text-text-primary">
+              <span aria-hidden className="grid h-8 w-8 place-items-center rounded-md bg-background-elevated text-base shadow-elev-1">
+                {iconForHeading(section.heading)}
+              </span>
+              {section.heading}
+            </h4>
+            {section.body ? <MarkdownLite text={section.body} /> : null}
+          </section>
+        ),
+      )}
+    </div>
+  );
+}
+
 function ChartPanel({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="rounded-lg border border-border-subtle bg-background-primary p-4 shadow-elev-1">
@@ -403,14 +521,16 @@ function Stat({ label, value }: { label: string; value: string }) {
 function weeklyDefaults(): GenerateFormValues {
   const end = new Date();
   const start = new Date(end.getTime() - 6 * 24 * 60 * 60 * 1000);
-  return { periodStart: toDateInput(start), periodEnd: toDateInput(end) };
+  return { periodStart: toDateInput(start), periodEnd: toDateInput(end), focusPresetIds: [] };
 }
 
 function toGenerateInput(values: GenerateFormValues, locale: string): GenerateWeeklyAiReportInput {
+  const focusPresetIds = (values.focusPresetIds ?? []).filter(Boolean);
   return {
     periodStart: new Date(values.periodStart).toISOString(),
     periodEnd: endOfDay(new Date(values.periodEnd)).toISOString(),
     locale: locale === 'en' || locale === 'uk' ? locale : 'ru',
+    ...(focusPresetIds.length > 0 ? { focusPresetIds } : {}),
   };
 }
 

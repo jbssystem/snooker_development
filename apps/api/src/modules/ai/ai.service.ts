@@ -7,9 +7,11 @@ import {
   AI_REPORT_QUEUE,
   ErrorCodes,
   GENERATE_WEEKLY_AI_REPORT_JOB,
+  type ActiveAiFocusPreset,
   type AiProvider,
   type AiReport,
   type AiReportDataSources,
+  type AiReportFocusArea,
   type AiReportStatus,
   type AiReportType,
   type GenerateExternalMatchReportInput,
@@ -50,6 +52,33 @@ export class AiService implements OnModuleDestroy {
     await this.queue?.close();
   }
 
+  async listActiveFocusPresets(locale?: string): Promise<ActiveAiFocusPreset[]> {
+    const lang = toLocale(locale ?? 'ru');
+    const rows = await this.prisma.aiFocusPreset.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    });
+    return rows.map((row) => ({ id: row.id, slug: row.slug, label: pickLabel(row.labelJson, lang) }));
+  }
+
+  /** Loads selected focus presets and projects them onto the report locale. */
+  private async loadFocusAreas(
+    focusPresetIds: string[] | undefined,
+    locale: string,
+  ): Promise<Array<AiReportFocusArea & { instruction: string }>> {
+    if (!focusPresetIds || focusPresetIds.length === 0) return [];
+    const lang = toLocale(locale);
+    const rows = await this.prisma.aiFocusPreset.findMany({
+      where: { id: { in: focusPresetIds }, isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    });
+    return rows.map((row) => ({
+      slug: row.slug,
+      label: pickLabel(row.labelJson, lang),
+      instruction: row.promptInstruction,
+    }));
+  }
+
   async listReports(profileId: string): Promise<AiReport[]> {
     const reports = await this.prisma.aiReport.findMany({
       where: { playerProfileId: profileId },
@@ -68,7 +97,8 @@ export class AiService implements OnModuleDestroy {
     const profile = await this.loadProfileOrThrow(ctx.profileId);
     const period = resolvePeriod(input);
     const runtime = resolveAiRuntime(this.config);
-    const rawSourceData = await this.collectSourceData(profile, period.from, period.to);
+    const focusAreas = await this.loadFocusAreas(input.focusPresetIds, input.locale);
+    const rawSourceData = { ...(await this.collectSourceData(profile, period.from, period.to)), focusAreas };
     const sourceData = toJsonValue(rawSourceData);
     const dataSources = countDataSources(rawSourceData);
     const report = await this.prisma.aiReport.create({
@@ -160,12 +190,14 @@ export class AiService implements OnModuleDestroy {
     }
 
     const runtime = resolveAiRuntime(this.config);
+    const focusAreas = await this.loadFocusAreas(input.focusPresetIds, input.locale);
     const periodStart = matches[0]!.matchDate;
     const periodEnd = matches[matches.length - 1]!.matchDate;
 
     const rawSourceData = {
       generatedAt: new Date().toISOString(),
       selectedMatchCount: matches.length,
+      focusAreas,
       player: {
         firstName: profile.firstName,
         lastName: profile.lastName,
@@ -462,6 +494,10 @@ function toAiReport(report: AiReportEntity): AiReport {
     ...(report.contentMarkdown ? { contentMarkdown: report.contentMarkdown } : {}),
     sourceDataHash: report.sourceDataHash,
     ...(report.reportType === 'EXTERNAL_ANALYSIS' ? { sourceData: report.sourceDataJson } : {}),
+    ...(() => {
+      const focusAreas = extractFocusAreas(report.sourceDataJson);
+      return focusAreas.length > 0 ? { focusAreas } : {};
+    })(),
     dataSources: toDataSources(report.dataSourcesJson),
     promptVersion: report.promptVersion,
     provider: toAiProvider(report.provider),
@@ -471,6 +507,28 @@ function toAiReport(report: AiReportEntity): AiReport {
     createdAt: report.createdAt.toISOString(),
     updatedAt: report.updatedAt.toISOString(),
   };
+}
+
+function pickLabel(value: Prisma.JsonValue, locale: 'ru' | 'en' | 'uk'): string {
+  const data = value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  const localized = data[locale];
+  if (typeof localized === 'string' && localized.length > 0) return localized;
+  const fallback = data.en ?? data.ru;
+  return typeof fallback === 'string' ? fallback : '';
+}
+
+function extractFocusAreas(value: Prisma.JsonValue): AiReportFocusArea[] {
+  const data = value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+  const raw = data?.focusAreas;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      const entry = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+      const slug = typeof entry.slug === 'string' ? entry.slug : '';
+      const label = typeof entry.label === 'string' ? entry.label : '';
+      return { slug, label };
+    })
+    .filter((entry) => entry.slug.length > 0);
 }
 
 function resolvePeriod(input: GenerateWeeklyAiReportInput): { from: Date; to: Date } {

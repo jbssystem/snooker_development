@@ -28,7 +28,21 @@ type SourceData = {
   supplementEvents?: unknown[];
   previousReports?: unknown[];
   externalImports?: unknown[];
+  focusAreas?: FocusArea[];
 };
+
+type FocusArea = { slug?: string; label?: string; instruction?: string };
+
+/** Renders selected focus presets as an extra instruction block for the prompt. */
+function focusBlock(focusAreas: FocusArea[] | undefined): string {
+  if (!focusAreas || focusAreas.length === 0) return '';
+  const lines = focusAreas
+    .map((area) => (area.instruction ?? '').trim())
+    .filter((line) => line.length > 0)
+    .map((line) => `- ${line}`);
+  if (lines.length === 0) return '';
+  return `\n\n## Priority focus areas (emphasize these)\n${lines.join('\n')}`;
+}
 
 const prisma = new PrismaClient();
 
@@ -94,25 +108,30 @@ async function generateWeeklySummary(reportId: string): Promise<void> {
 
 async function weeklyPrompt(locale: string, periodStart: Date, periodEnd: Date, sourceData: SourceData): Promise<string> {
   const template = await readPromptTemplate();
-  return template
-    .replaceAll('{{locale}}', locale || 'ru')
-    .replaceAll('{{periodStart}}', sourceData.period?.from ?? periodStart.toISOString())
-    .replaceAll('{{periodEnd}}', sourceData.period?.to ?? periodEnd.toISOString());
+  return (
+    template
+      .replaceAll('{{locale}}', locale || 'ru')
+      .replaceAll('{{periodStart}}', sourceData.period?.from ?? periodStart.toISOString())
+      .replaceAll('{{periodEnd}}', sourceData.period?.to ?? periodEnd.toISOString()) + focusBlock(sourceData.focusAreas)
+  );
 }
 
 type ExternalSourceData = {
   selectedMatchCount?: number;
   player?: { firstName?: string; lastName?: string; level?: string | null; country?: string | null };
   matches?: Array<{ tournament?: string; opponentName?: string; framesWon?: number; framesLost?: number; result?: string; highBreak?: number | null; breaks100?: number }>;
+  focusAreas?: FocusArea[];
 };
 
 async function externalAnalysisPrompt(locale: string, sourceData: ExternalSourceData): Promise<string> {
   const template = await readExternalAnalysisTemplate();
   const playerName = [sourceData.player?.firstName, sourceData.player?.lastName].filter(Boolean).join(' ') || 'Unknown';
-  return template
-    .replaceAll('{{locale}}', locale || 'ru')
-    .replaceAll('{{playerName}}', playerName)
-    .replaceAll('{{selectedMatchCount}}', String(sourceData.selectedMatchCount ?? 0));
+  return (
+    template
+      .replaceAll('{{locale}}', locale || 'ru')
+      .replaceAll('{{playerName}}', playerName)
+      .replaceAll('{{selectedMatchCount}}', String(sourceData.selectedMatchCount ?? 0)) + focusBlock(sourceData.focusAreas)
+  );
 }
 
 async function generateExternalMarkdown(

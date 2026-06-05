@@ -896,7 +896,14 @@
       "title": "Сформувати звіт",
       "periodStart": "Початок періоду",
       "periodEnd": "Кінець періоду",
+      "focusAreas": "Фокуси аналізу",
+      "focusHint": "Оберіть один або кілька акцентів — вони спрямують аналіз.",
       "submit": "Створити weekly summary"
+    },
+    "pagination": {
+      "prev": "Назад",
+      "next": "Вперед",
+      "status": "{from}–{to} з {total}"
     },
     "profileRequired": {
       "title": "Потрібен профіль гравця",
@@ -1764,7 +1771,25 @@
       "stats": "Зведення",
       "users": "Користувачі",
       "announcements": "Повідомлення",
-      "exercises": "Вправи"
+      "exercises": "Вправи",
+      "aiFocusPresets": "AI-фокуси"
+    },
+    "aiFocusPresets": {
+      "createTitle": "Новий фокус аналізу",
+      "editTitle": "Редагування фокуса",
+      "fieldSlug": "Slug (латиниця)",
+      "fieldSortOrder": "Порядок",
+      "fieldInstruction": "Інструкція для промта (англ.)",
+      "labelRu": "Назва (RU)",
+      "labelEn": "Назва (EN)",
+      "labelUk": "Назва (UK)",
+      "active": "Активний",
+      "inactive": "Вимкнено",
+      "create": "Створити",
+      "update": "Зберегти",
+      "edit": "Змінити",
+      "cancel": "Скасувати",
+      "delete": "Видалити"
     },
     "stats": {
       "totalUsers": "Користувачі",

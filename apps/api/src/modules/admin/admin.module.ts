@@ -9,6 +9,8 @@ import { AdminAnnouncementsController } from './announcements/admin-announcement
 import { AdminAnnouncementsService } from './announcements/admin-announcements.service';
 import { AdminDrillsController } from './drills/admin-drills.controller';
 import { AdminDrillsService } from './drills/admin-drills.service';
+import { AdminAiFocusPresetsController } from './ai-focus-presets/admin-ai-focus-presets.controller';
+import { AdminAiFocusPresetsService } from './ai-focus-presets/admin-ai-focus-presets.service';
 import { AdminStatsController } from './stats/admin-stats.controller';
 import { AdminStatsService } from './stats/admin-stats.service';
 
@@ -19,6 +21,7 @@ import { AdminStatsService } from './stats/admin-stats.service';
     AdminAnnouncementsController,
     AdminDrillsController,
     AdminStatsController,
+    AdminAiFocusPresetsController,
   ],
   providers: [
     AdminAuditService,
@@ -27,6 +30,7 @@ import { AdminStatsService } from './stats/admin-stats.service';
     AdminAnnouncementsService,
     AdminDrillsService,
     AdminStatsService,
+    AdminAiFocusPresetsService,
   ],
 })
 export class AdminModule {}

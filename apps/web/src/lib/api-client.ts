@@ -16,7 +16,11 @@ import type {
   CreateAnnouncementInput,
   UpdateAnnouncementInput,
   AddDrillExecutionInput,
+  ActiveAiFocusPreset,
+  AiFocusPreset,
   AiReport,
+  CreateAiFocusPresetInput,
+  UpdateAiFocusPresetInput,
   CreateEquipmentProfileInput,
   CreateDrillTemplateInput,
   RecognizeLayoutInput,
@@ -438,6 +442,8 @@ export const api = {
       }),
   },
   ai: {
+    listFocusPresets: (token: string, locale: string) =>
+      request<ActiveAiFocusPreset[]>(`/ai/focus-presets?locale=${encodeURIComponent(locale)}`, { token }),
     listReports: (token: string) => request<AiReport[]>('/ai/reports', { token }),
     getReport: (token: string, id: string) => request<AiReport>(`/ai/reports/${id}`, { token }),
     generateWeeklyReport: (token: string, input: GenerateWeeklyAiReportInput) =>
@@ -549,5 +555,16 @@ export const api = {
         body: JSON.stringify({ visibility }),
       }),
     getStats: (token: string) => request<AdminStats>('/admin/stats', { token }),
+    listAiFocusPresets: (token: string) => request<AiFocusPreset[]>('/admin/ai-focus-presets', { token }),
+    createAiFocusPreset: (token: string, input: CreateAiFocusPresetInput) =>
+      request<AiFocusPreset>('/admin/ai-focus-presets', { method: 'POST', token, body: JSON.stringify(input) }),
+    updateAiFocusPreset: (token: string, id: string, input: UpdateAiFocusPresetInput) =>
+      request<AiFocusPreset>(`/admin/ai-focus-presets/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
+    deleteAiFocusPreset: (token: string, id: string) =>
+      request<void>(`/admin/ai-focus-presets/${id}`, { method: 'DELETE', token }),
   },
 };

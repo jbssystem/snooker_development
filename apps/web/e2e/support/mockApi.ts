@@ -25,6 +25,8 @@ const exact: Record<string, Handler> = {
   'GET /lifestyle-factors': fx.lifestyleFactors,
   'GET /supplement-events': fx.supplementEvents,
   'GET /ai/reports': fx.aiReports,
+  'GET /ai/focus-presets': fx.aiFocusPresets,
+  'GET /admin/ai-focus-presets': fx.adminAiFocusPresets,
   'GET /external-links': fx.externalLinks,
   'GET /external-links/imported-matches': fx.importedMatches,
   'GET /profiles/accessible': fx.accessibleProfiles,

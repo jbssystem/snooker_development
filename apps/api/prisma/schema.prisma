@@ -169,6 +169,7 @@ model User {
   createdSupplementEvents SupplementEvent[]       @relation("CreatedSupplementEvents")
   requestedAiReports      AiReport[]              @relation("RequestedAiReports")
   authoredAnnouncements   Announcement[]          @relation("AuthoredAnnouncements")
+  createdAiFocusPresets   AiFocusPreset[]         @relation("CreatedAiFocusPresets")
   dismissedAnnouncements  AnnouncementDismissal[]
   adminAuditLogs          AdminAuditLog[]         @relation("AdminAuditActor")
   sensitiveAccessLogs     SensitiveDataAccessLog[] @relation("SensitiveDataActor")
@@ -646,6 +647,23 @@ model Announcement {
   @@index([publishedAt])
   @@index([startsAt])
   @@index([endsAt])
+}
+
+model AiFocusPreset {
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  labelJson         Json
+  promptInstruction String
+  sortOrder         Int      @default(0)
+  isActive          Boolean  @default(true)
+  createdByUserId   String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  createdBy User @relation("CreatedAiFocusPresets", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([isActive])
+  @@index([sortOrder])
 }
 
 model AnnouncementDismissal {

@@ -232,9 +232,29 @@ export const aiReports = [
     },
     reportType: 'default',
     sourceData: null,
+    focusAreas: [{ slug: 'improvements', label: 'Improvements' }],
     contentMarkdown: '## Summary\nGood week.',
     errorMessage: null,
     createdAt: ISO_NOW,
+  },
+];
+
+export const aiFocusPresets = [
+  { id: 'cmseedfocus0improvements00', slug: 'improvements', label: 'Improvements' },
+  { id: 'cmseedfocus0factors0000000', slug: 'factors', label: 'Influencing factors' },
+];
+
+export const adminAiFocusPresets = [
+  {
+    id: 'cmseedfocus0improvements00',
+    slug: 'improvements',
+    label: { ru: 'Поиск улучшений', en: 'Improvements', uk: 'Пошук покращень' },
+    promptInstruction: 'Highlight what improved with concrete evidence.',
+    sortOrder: 10,
+    isActive: true,
+    createdByUserId: 'cmseedcoach000000000000000',
+    createdAt: ISO_NOW,
+    updatedAt: ISO_NOW,
   },
 ];
 

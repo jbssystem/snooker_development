@@ -28,6 +28,7 @@ const protectedRoutes: RouteCase[] = [
   { path: 'admin/announcements', title: 'Administration' },
   { path: 'admin/exercises', title: 'Administration' },
   { path: 'admin/stats', title: 'Administration' },
+  { path: 'admin/ai-focus-presets', title: 'Administration' },
 ];
 
 test.describe('protected pages render', () => {

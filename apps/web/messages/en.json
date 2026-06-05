@@ -896,7 +896,14 @@
       "title": "Generate report",
       "periodStart": "Period start",
       "periodEnd": "Period end",
+      "focusAreas": "Analysis focus",
+      "focusHint": "Pick one or more emphases — they steer the analysis.",
       "submit": "Create weekly summary"
+    },
+    "pagination": {
+      "prev": "Prev",
+      "next": "Next",
+      "status": "{from}–{to} of {total}"
     },
     "profileRequired": {
       "title": "Player profile required",
@@ -1764,7 +1771,25 @@
       "stats": "Overview",
       "users": "Users",
       "announcements": "Announcements",
-      "exercises": "Exercises"
+      "exercises": "Exercises",
+      "aiFocusPresets": "AI focus"
+    },
+    "aiFocusPresets": {
+      "createTitle": "New analysis focus",
+      "editTitle": "Edit focus",
+      "fieldSlug": "Slug (latin)",
+      "fieldSortOrder": "Order",
+      "fieldInstruction": "Prompt instruction (English)",
+      "labelRu": "Label (RU)",
+      "labelEn": "Label (EN)",
+      "labelUk": "Label (UK)",
+      "active": "Active",
+      "inactive": "Disabled",
+      "create": "Create",
+      "update": "Save",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "delete": "Delete"
     },
     "stats": {
       "totalUsers": "Users",

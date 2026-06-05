@@ -896,7 +896,14 @@
       "title": "Сформировать отчёт",
       "periodStart": "Начало периода",
       "periodEnd": "Окончание периода",
+      "focusAreas": "Фокусы анализа",
+      "focusHint": "Выберите один или несколько акцентов — они направят анализ.",
       "submit": "Создать weekly summary"
+    },
+    "pagination": {
+      "prev": "Назад",
+      "next": "Вперёд",
+      "status": "{from}–{to} из {total}"
     },
     "profileRequired": {
       "title": "Нужен профиль игрока",
@@ -1764,7 +1771,25 @@
       "stats": "Сводка",
       "users": "Пользователи",
       "announcements": "Сообщения",
-      "exercises": "Упражнения"
+      "exercises": "Упражнения",
+      "aiFocusPresets": "AI-фокусы"
+    },
+    "aiFocusPresets": {
+      "createTitle": "Новый фокус анализа",
+      "editTitle": "Редактирование фокуса",
+      "fieldSlug": "Slug (латиница)",
+      "fieldSortOrder": "Порядок",
+      "fieldInstruction": "Инструкция для промта (англ.)",
+      "labelRu": "Название (RU)",
+      "labelEn": "Название (EN)",
+      "labelUk": "Название (UK)",
+      "active": "Активен",
+      "inactive": "Выключен",
+      "create": "Создать",
+      "update": "Сохранить",
+      "edit": "Изменить",
+      "cancel": "Отмена",
+      "delete": "Удалить"
     },
     "stats": {
       "totalUsers": "Пользователи",
