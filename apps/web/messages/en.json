@@ -898,6 +898,8 @@
       "periodEnd": "Period end",
       "focusAreas": "Analysis focus",
       "focusHint": "Pick one or more emphases — they steer the analysis.",
+      "selectAll": "Select all",
+      "clearAll": "Clear",
       "submit": "Create weekly summary"
     },
     "pagination": {
@@ -920,6 +922,7 @@
       "content": "Content"
     },
     "sources": {
+      "none": "No data for the period",
       "trainingSessions": "Training sessions",
       "drillExecutions": "Drills",
       "matches": "Matches",

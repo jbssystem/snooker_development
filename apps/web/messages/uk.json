@@ -898,6 +898,8 @@
       "periodEnd": "Кінець періоду",
       "focusAreas": "Фокуси аналізу",
       "focusHint": "Оберіть один або кілька акцентів — вони спрямують аналіз.",
+      "selectAll": "Виділити всі",
+      "clearAll": "Скинути",
       "submit": "Створити weekly summary"
     },
     "pagination": {
@@ -920,6 +922,7 @@
       "content": "Зміст"
     },
     "sources": {
+      "none": "Немає даних за період",
       "trainingSessions": "Тренування",
       "drillExecutions": "Вправи",
       "matches": "Матчі",

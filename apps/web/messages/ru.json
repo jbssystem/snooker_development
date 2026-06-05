@@ -898,6 +898,8 @@
       "periodEnd": "Окончание периода",
       "focusAreas": "Фокусы анализа",
       "focusHint": "Выберите один или несколько акцентов — они направят анализ.",
+      "selectAll": "Выделить все",
+      "clearAll": "Сбросить",
       "submit": "Создать weekly summary"
     },
     "pagination": {
@@ -920,6 +922,7 @@
       "content": "Содержание"
     },
     "sources": {
+      "none": "Нет данных за период",
       "trainingSessions": "Тренировки",
       "drillExecutions": "Упражнения",
       "matches": "Матчи",

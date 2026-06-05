@@ -129,7 +129,7 @@ export function AiReportsClient() {
           {pagedReports.map((report, i) => (
             <button
               key={report.id}
-              className={`press ui-rise-in rounded-md border px-3 py-2 text-left transition ${
+              className={`press ui-rise-in w-full min-w-0 rounded-md border px-3 py-2 text-left transition ${
                 report.id === activeReport?.id
                   ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-2'
                   : 'border-border-subtle text-text-secondary shadow-elev-1 hover:border-brand-accent hover:text-text-primary'
@@ -209,7 +209,32 @@ export function AiReportsClient() {
             </label>
             {focusPresets.length > 0 && (
               <fieldset className="grid gap-2">
-                <legend className="mb-1 text-sm text-text-secondary">{t('generate.focusAreas')}</legend>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="text-sm text-text-secondary">{t('generate.focusAreas')}</span>
+                  <div className="flex gap-2 text-xs">
+                    <button
+                      type="button"
+                      className="press text-text-disabled transition hover:text-brand-accent"
+                      onClick={() =>
+                        form.setValue(
+                          'focusPresetIds',
+                          focusPresets.map((preset) => preset.id),
+                          { shouldDirty: true },
+                        )
+                      }
+                    >
+                      {t('generate.selectAll')}
+                    </button>
+                    <span className="text-text-disabled">·</span>
+                    <button
+                      type="button"
+                      className="press text-text-disabled transition hover:text-brand-accent"
+                      onClick={() => form.setValue('focusPresetIds', [], { shouldDirty: true })}
+                    >
+                      {t('generate.clearAll')}
+                    </button>
+                  </div>
+                </div>
                 <div className="sunken grid gap-1 rounded-lg p-1">
                   {focusPresets.map((preset: ActiveAiFocusPreset) => (
                     <label
@@ -284,9 +309,20 @@ function ReportDetail({ report }: { report: AiReport }) {
       )}
 
       <section>
-        <h3 className="text-lg font-semibold text-text-primary">{t('report.dataSources')}</h3>
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          {dataSourceRows.map(([key, value]) => <Stat key={key} label={t(`sources.${key}`)} value={String(value)} />)}
+        <h3 className="text-sm font-semibold text-text-secondary">{t('report.dataSources')}</h3>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {dataSourceRows.filter(([, value]) => value > 0).map(([key, value]) => (
+            <span
+              key={key}
+              className="sunken inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1 text-xs text-text-secondary"
+            >
+              {t(`sources.${key}`)}
+              <span className="font-semibold tabular-nums text-text-primary">{value}</span>
+            </span>
+          ))}
+          {dataSourceRows.every(([, value]) => value === 0) && (
+            <span className="text-xs text-text-disabled">{t('sources.none')}</span>
+          )}
         </div>
       </section>
 
