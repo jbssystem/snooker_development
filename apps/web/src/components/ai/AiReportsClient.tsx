@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Bar,
@@ -24,6 +24,19 @@ import { useAuthStore } from '@/lib/auth-store';
 import { MarkdownLite, splitReportSections } from '@/lib/markdown-lite';
 
 const REPORT_PAGE_SIZE = 8;
+
+/** True below the xl breakpoint (1280px). Desktop-first to avoid hydration mismatch. */
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1279px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return isMobile;
+}
 
 type GenerateFormValues = {
   periodStart: string;
@@ -81,6 +94,7 @@ export function AiReportsClient() {
   const token = useAuthStore((state) => state.tokens?.accessToken ?? null);
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const isMobile = useIsMobile();
   const form = useForm<GenerateFormValues>({ defaultValues: weeklyDefaults() });
 
   const profileQuery = useQuery({
@@ -122,7 +136,7 @@ export function AiReportsClient() {
 
   return (
     <main className="grid gap-8 xl:grid-cols-[330px_minmax(0,1fr)_360px]">
-      <aside className="surface rounded-xl p-5">
+      <aside className="surface order-3 rounded-xl p-5 xl:order-none">
         <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
         <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
         <div className="mt-5 grid gap-2">
@@ -180,11 +194,11 @@ export function AiReportsClient() {
         )}
       </aside>
 
-      <section className="order-first min-w-0 surface rounded-xl p-5 xl:order-none">
+      <section className="order-2 min-w-0 surface rounded-xl p-5 xl:order-none">
         {activeReport ? <ReportDetail report={activeReport} /> : <EmptyReport />}
       </section>
 
-      <aside className="grid gap-6 content-start">
+      <aside className="order-1 grid content-start gap-6 xl:order-none">
         {profileMissing && (
           <section className="rounded-lg border border-state-warning/40 bg-state-warning/10 p-5 text-text-secondary">
             <h2 className="text-lg font-semibold text-text-primary">{t('profileRequired.title')}</h2>
@@ -194,7 +208,7 @@ export function AiReportsClient() {
             </Link>
           </section>
         )}
-        <AccordionSection defaultOpen testId="ai-generate-form" title={t('generate.title')}>
+        <AccordionSection key={isMobile ? 'mobile' : 'desktop'} defaultOpen={!isMobile} testId="ai-generate-form" title={t('generate.title')}>
           <form
             className="grid gap-4"
             onSubmit={form.handleSubmit((values) => generateReport.mutate(toGenerateInput(values, locale)))}
