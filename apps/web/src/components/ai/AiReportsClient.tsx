@@ -472,19 +472,15 @@ function ReportSections({ markdown }: { markdown: string }) {
             <MarkdownLite text={section.body} />
           </div>
         ) : (
-          <section
+          <AccordionSection
             key={`${section.heading}-${index}`}
-            className="surface ui-rise-in rounded-xl p-5"
-            style={{ animationDelay: `${index * 50}ms` }}
+            defaultOpen
+            compact
+            className="ui-rise-in"
+            title={`${iconForHeading(section.heading)}  ${section.heading}`}
           >
-            <h4 className="mb-3 flex items-center gap-2 text-base font-semibold text-text-primary">
-              <span aria-hidden className="grid h-8 w-8 place-items-center rounded-md bg-background-elevated text-base shadow-elev-1">
-                {iconForHeading(section.heading)}
-              </span>
-              {section.heading}
-            </h4>
-            {section.body ? <MarkdownLite text={section.body} /> : null}
-          </section>
+            {section.body ? <MarkdownLite text={section.body} /> : <p className="text-sm text-text-disabled">—</p>}
+          </AccordionSection>
         ),
       )}
     </div>
