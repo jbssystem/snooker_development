@@ -17,6 +17,7 @@ import { replay, breakRunsFor, type ScoreEvent as DomainScoreEvent } from '@snoo
 import type { ScoreEvent } from '@snooker/shared';
 import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
+import { ChevronDown } from '@/components/layout/ChevronDown';
 import { Modal } from '@/components/layout/Modal';
 import { CountryOptions, Field, PlusIcon } from '@/components/ui';
 import { useCanEdit } from '@/lib/use-active-profile';
@@ -113,6 +114,8 @@ export function MatchLogClient() {
   const [opponentFilter, setOpponentFilter] = useState('');
   const [page, setPage] = useState(0);
   const frameEditForm = useForm<FrameFormValues>({ defaultValues: frameDefaultValues });
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const profileQuery = useQuery({
     queryKey: ['player-profile', token],
@@ -263,108 +266,122 @@ export function MatchLogClient() {
 
   return (
     <main className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <aside className="surface rounded-xl p-5">
-        <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
-        {canEdit && (
-          <div className="mt-5 grid grid-cols-2 gap-2">
-            <button className="btn-primary justify-center" onClick={() => openCreate('match')} type="button">
-              <PlusIcon className="h-4 w-4" />
-              {t('type.match')}
-            </button>
-            <button
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border-subtle px-3 py-2 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
-              onClick={() => openCreate('sparring')}
-              type="button"
-            >
-              <PlusIcon className="h-4 w-4" />
-              {t('type.sparring')}
-            </button>
+      <aside className="surface overflow-hidden rounded-xl p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
+            <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
           </div>
-        )}
-        {matches.length > 0 && (
-          <div className="relative mt-4">
-            <input
-              className={`${inputClass} pr-8`}
-              onChange={(event) => setOpponentFilter(event.target.value)}
-              placeholder={t('filter.opponentPlaceholder')}
-              type="search"
-              value={opponentFilter}
-            />
-            {opponentFilter && (
+          <button
+            aria-expanded={mobileSidebarOpen}
+            className="flex shrink-0 items-center justify-center rounded-md border border-border-subtle p-2 text-text-secondary transition hover:border-brand-accent hover:text-text-primary lg:hidden"
+            onClick={() => setMobileSidebarOpen((v) => !v)}
+            type="button"
+          >
+            <ChevronDown open={mobileSidebarOpen} />
+          </button>
+        </div>
+        <div className={mobileSidebarOpen ? 'block' : 'hidden lg:block'}>
+          {canEdit && (
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button className="btn-primary justify-center" onClick={() => openCreate('match')} type="button">
+                <PlusIcon className="h-4 w-4" />
+                {t('type.match')}
+              </button>
               <button
-                aria-label={t('filter.clear')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-disabled transition hover:text-text-primary"
-                onClick={() => setOpponentFilter('')}
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border-subtle px-3 py-2 text-sm font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+                onClick={() => openCreate('sparring')}
                 type="button"
               >
-                ✕
+                <PlusIcon className="h-4 w-4" />
+                {t('type.sparring')}
               </button>
+            </div>
+          )}
+          {matches.length > 0 && (
+            <div className="relative mt-4">
+              <input
+                className={`${inputClass} pr-8`}
+                onChange={(event) => setOpponentFilter(event.target.value)}
+                placeholder={t('filter.opponentPlaceholder')}
+                type="search"
+                value={opponentFilter}
+              />
+              {opponentFilter && (
+                <button
+                  aria-label={t('filter.clear')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-text-disabled transition hover:text-text-primary"
+                  onClick={() => setOpponentFilter('')}
+                  type="button"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+          <div className="mt-3 grid gap-2">
+            {pagedMatches.map((match) => (
+              <button
+                key={match.id}
+                className={`press relative rounded-lg border px-3 py-2 pr-16 text-left transition ${
+                  match.id === activeMatch?.id
+                    ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-1'
+                    : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                }`}
+                onClick={() => setActiveMatchId(match.id)}
+                type="button"
+              >
+                <span className="absolute right-2 top-2">
+                  <MatchTypeBadge label={t(`type.${match.matchType}`)} type={match.matchType} />
+                </span>
+                <span className="block truncate text-sm font-medium">{match.opponentName}</span>
+                <span className="mt-1 block text-xs text-text-disabled">
+                  {formatDate(match.matchDate, locale)} · {match.framesWon}:{match.framesLost}
+                </span>
+              </button>
+            ))}
+            {matches.length === 0 && (
+              <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
+                {matchesQuery.isLoading ? t('loading') : t('empty')}
+              </p>
+            )}
+            {matches.length > 0 && filteredMatches.length === 0 && (
+              <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
+                {t('filter.noResults')}
+              </p>
             )}
           </div>
-        )}
-        <div className="mt-3 grid gap-2">
-          {pagedMatches.map((match) => (
-            <button
-              key={match.id}
-              className={`press relative rounded-lg border px-3 py-2 pr-16 text-left transition ${
-                match.id === activeMatch?.id
-                  ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-1'
-                  : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
-              }`}
-              onClick={() => setActiveMatchId(match.id)}
-              type="button"
-            >
-              <span className="absolute right-2 top-2">
-                <MatchTypeBadge label={t(`type.${match.matchType}`)} type={match.matchType} />
+          {pageCount > 1 && (
+            <div className="mt-3 flex items-center justify-between gap-2 text-xs text-text-secondary">
+              <button
+                className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+                disabled={safePage === 0}
+                onClick={() => setPage((current) => Math.max(0, current - 1))}
+                type="button"
+              >
+                {t('pagination.prev')}
+              </button>
+              <span className="tabular-nums">
+                {t('pagination.status', {
+                  from: safePage * MATCH_PAGE_SIZE + 1,
+                  to: Math.min((safePage + 1) * MATCH_PAGE_SIZE, filteredMatches.length),
+                  total: filteredMatches.length,
+                })}
               </span>
-              <span className="block truncate text-sm font-medium">{match.opponentName}</span>
-              <span className="mt-1 block text-xs text-text-disabled">
-                {formatDate(match.matchDate, locale)} · {match.framesWon}:{match.framesLost}
-              </span>
-            </button>
-          ))}
-          {matches.length === 0 && (
-            <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
-              {matchesQuery.isLoading ? t('loading') : t('empty')}
-            </p>
-          )}
-          {matches.length > 0 && filteredMatches.length === 0 && (
-            <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
-              {t('filter.noResults')}
-            </p>
+              <button
+                className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+                disabled={safePage >= pageCount - 1}
+                onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+                type="button"
+              >
+                {t('pagination.next')}
+              </button>
+            </div>
           )}
         </div>
-        {pageCount > 1 && (
-          <div className="mt-3 flex items-center justify-between gap-2 text-xs text-text-secondary">
-            <button
-              className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
-              disabled={safePage === 0}
-              onClick={() => setPage((current) => Math.max(0, current - 1))}
-              type="button"
-            >
-              {t('pagination.prev')}
-            </button>
-            <span className="tabular-nums">
-              {t('pagination.status', {
-                from: safePage * MATCH_PAGE_SIZE + 1,
-                to: Math.min((safePage + 1) * MATCH_PAGE_SIZE, filteredMatches.length),
-                total: filteredMatches.length,
-              })}
-            </span>
-            <button
-              className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
-              disabled={safePage >= pageCount - 1}
-              onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
-              type="button"
-            >
-              {t('pagination.next')}
-            </button>
-          </div>
-        )}
       </aside>
 
-      <section className="order-first min-w-0 lg:order-none">
+      <section className="min-w-0">
         {profileMissing && (
           <div className="mb-5 rounded-lg border border-state-warning/40 bg-state-warning/10 p-5 text-text-secondary">
             <h2 className="text-lg font-semibold text-text-primary">{t('profileRequired.title')}</h2>

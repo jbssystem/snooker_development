@@ -13,6 +13,7 @@ import type {
   TrainingSessionType,
 } from '@snooker/shared';
 import { AccordionSection } from '@/components/layout/AccordionSection';
+import { ChevronDown } from '@/components/layout/ChevronDown';
 import { Modal } from '@/components/layout/Modal';
 import { Field } from '@/components/ui';
 import { useCanEdit } from '@/lib/use-active-profile';
@@ -87,6 +88,8 @@ export function TrainingSessionClient() {
   const [showNewSession, setShowNewSession] = useState(false);
   const [page, setPage] = useState(0);
   const canEdit = useCanEdit();
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const sessionsQuery = useQuery({
     queryKey: ['training-sessions'],
@@ -218,71 +221,85 @@ export function TrainingSessionClient() {
 
   return (
     <main className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-      <aside className="surface rounded-xl p-4 sm:p-5">
-        <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
-        <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
-        {canEdit && (
-          <button className={`${primaryButtonClass} mt-5 w-full`} onClick={openNewSession} type="button">
-            + {t('newSession.open')}
+      <aside className="surface overflow-hidden rounded-xl p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-text-primary">{t('title')}</h1>
+            <p className="mt-2 text-sm text-text-secondary">{t('subtitle')}</p>
+          </div>
+          <button
+            aria-expanded={mobileSidebarOpen}
+            className="flex shrink-0 items-center justify-center rounded-md border border-border-subtle p-2 text-text-secondary transition hover:border-brand-accent hover:text-text-primary lg:hidden"
+            onClick={() => setMobileSidebarOpen((v) => !v)}
+            type="button"
+          >
+            <ChevronDown open={mobileSidebarOpen} />
           </button>
-        )}
-        <div className="mt-4 grid gap-2">
-          {pagedSessions.map((session) => (
-            <button
-              key={session.id}
-              className={`press rounded-lg border px-3 py-2 text-left transition ${
-                session.id === activeSession?.id
-                  ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-1'
-                  : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
-              }`}
-              onClick={() => {
-                setActiveSessionId(session.id);
-                setActiveExecutionId(null);
-              }}
-              type="button"
-            >
-              <span className="block truncate text-sm font-medium">{session.title}</span>
-              <span className="mt-1 block text-xs text-text-disabled">
-                {formatDate(session.startedAt)} · {session.endedAt ? t('status.finished') : t('status.active')}
-              </span>
+        </div>
+        <div className={mobileSidebarOpen ? 'block' : 'hidden lg:block'}>
+          {canEdit && (
+            <button className={`${primaryButtonClass} mt-5 w-full`} onClick={openNewSession} type="button">
+              + {t('newSession.open')}
             </button>
-          ))}
-          {sessions.length === 0 && (
-            <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
-              {t('empty')}
-            </p>
+          )}
+          <div className="mt-4 grid gap-2">
+            {pagedSessions.map((session) => (
+              <button
+                key={session.id}
+                className={`press rounded-lg border px-3 py-2 text-left transition ${
+                  session.id === activeSession?.id
+                    ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-1'
+                    : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                }`}
+                onClick={() => {
+                  setActiveSessionId(session.id);
+                  setActiveExecutionId(null);
+                }}
+                type="button"
+              >
+                <span className="block truncate text-sm font-medium">{session.title}</span>
+                <span className="mt-1 block text-xs text-text-disabled">
+                  {formatDate(session.startedAt)} · {session.endedAt ? t('status.finished') : t('status.active')}
+                </span>
+              </button>
+            ))}
+            {sessions.length === 0 && (
+              <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
+                {t('empty')}
+              </p>
+            )}
+          </div>
+          {pageCount > 1 && (
+            <div className="mt-3 flex items-center justify-between gap-2 text-xs text-text-secondary">
+              <button
+                className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+                disabled={safePage === 0}
+                onClick={() => setPage((current) => Math.max(0, current - 1))}
+                type="button"
+              >
+                {t('pagination.prev')}
+              </button>
+              <span className="tabular-nums">
+                {t('pagination.status', {
+                  from: safePage * SESSION_PAGE_SIZE + 1,
+                  to: Math.min((safePage + 1) * SESSION_PAGE_SIZE, sessions.length),
+                  total: sessions.length,
+                })}
+              </span>
+              <button
+                className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+                disabled={safePage >= pageCount - 1}
+                onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+                type="button"
+              >
+                {t('pagination.next')}
+              </button>
+            </div>
           )}
         </div>
-        {pageCount > 1 && (
-          <div className="mt-3 flex items-center justify-between gap-2 text-xs text-text-secondary">
-            <button
-              className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
-              disabled={safePage === 0}
-              onClick={() => setPage((current) => Math.max(0, current - 1))}
-              type="button"
-            >
-              {t('pagination.prev')}
-            </button>
-            <span className="tabular-nums">
-              {t('pagination.status', {
-                from: safePage * SESSION_PAGE_SIZE + 1,
-                to: Math.min((safePage + 1) * SESSION_PAGE_SIZE, sessions.length),
-                total: sessions.length,
-              })}
-            </span>
-            <button
-              className="min-h-9 rounded-md border border-border-subtle px-3 py-1.5 transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
-              disabled={safePage >= pageCount - 1}
-              onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
-              type="button"
-            >
-              {t('pagination.next')}
-            </button>
-          </div>
-        )}
       </aside>
 
-      <section className="order-first min-w-0 lg:order-none">
+      <section className="min-w-0">
         {activeSession ? (
           <ActiveSessionPanel
             activeExecution={activeExecution}
