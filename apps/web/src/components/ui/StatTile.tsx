@@ -32,16 +32,16 @@ export function StatTile({
         : 'bg-background-elevated text-text-secondary';
   const trendArrow = trend?.direction === 'up' ? '↑' : trend?.direction === 'down' ? '↓' : '→';
   return (
-    <Card className="accent-top p-4 sm:p-5">
+    <Card className={`stat-tile accent-top group p-4 sm:p-5 ${tone === 'gold' ? 'stat-tile-gold' : ''}`}>
       <div className="flex items-start justify-between gap-3">
-        <span className="text-xs font-medium uppercase tracking-wide text-text-disabled">{label}</span>
+        <span className="text-xs font-medium uppercase tracking-wide text-text-disabled transition-colors duration-200 group-hover:text-text-secondary">{label}</span>
         {icon && (
-          <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-elev-1 ring-1 ${iconTone}`}>
+          <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-elev-1 ring-1 transition-transform duration-200 group-hover:scale-110 ${iconTone}`}>
             <span className="h-5 w-5">{icon}</span>
           </span>
         )}
       </div>
-      <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary transition-colors duration-200 group-hover:text-white sm:text-4xl">
         {value}
         {unit && <span className="ml-1 text-base font-normal text-text-secondary">{unit}</span>}
       </p>

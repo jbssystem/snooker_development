@@ -158,10 +158,10 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
         <SectionCard title={t('recent.title')}>
           <div className="grid gap-3">
             {dashboard.recentSessions.map((session) => (
-              <article key={session.id} className="sunken rounded-lg border border-border-subtle p-3 transition hover:border-brand-accent/40">
+              <article key={session.id} className="stat-tile group rounded-lg border border-border-subtle p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-medium text-text-primary">{session.title}</h3>
+                    <h3 className="truncate font-medium text-text-primary transition-colors duration-200 group-hover:text-white">{session.title}</h3>
                     <p className="mt-1 text-xs text-text-disabled">{formatDate(session.startedAt, locale)}</p>
                   </div>
                   <span className="shrink-0 rounded-md bg-background-elevated px-2 py-1 text-xs text-brand-gold shadow-elev-1">
@@ -185,9 +185,9 @@ function MiniStat({ label, value }: { label: string; value: number | string }) {
   const locale = useLocale();
   const displayValue = typeof value === 'number' ? formatNumber(value, locale) : value;
   return (
-    <div className="sunken rounded-lg border border-border-subtle px-3 py-3">
-      <p className="text-xs uppercase tracking-wide text-text-disabled">{label}</p>
-      <p className="mt-1.5 text-xl font-semibold text-text-primary">{displayValue}</p>
+    <div className="stat-tile group rounded-lg border border-border-subtle px-3 py-3">
+      <p className="text-xs uppercase tracking-wide text-text-disabled transition-colors duration-200 group-hover:text-text-secondary">{label}</p>
+      <p className="mt-1.5 text-xl font-semibold text-text-primary transition-colors duration-200 group-hover:text-white">{displayValue}</p>
     </div>
   );
 }
@@ -198,10 +198,10 @@ function DrillProgressRow({ drill }: { drill: DashboardDrillProgress }) {
   const locale = useLocale();
   const drillName = localizeDrillName(drill.drillTemplateId, drill.drillTemplateName, tSystemDrills) ?? drill.drillTemplateName;
   return (
-    <article className="grid gap-2 rounded-md border border-border-subtle bg-background-secondary p-3 shadow-elev-1">
+    <article className="stat-tile group grid gap-2 rounded-md border border-border-subtle p-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-medium text-text-primary">{drillName}</h3>
+          <h3 className="font-medium text-text-primary transition-colors duration-200 group-hover:text-white">{drillName}</h3>
           <p className="mt-1 text-xs text-text-disabled">{formatDate(drill.lastPracticedAt, locale)}</p>
         </div>
         <span className="rounded-md bg-background-elevated px-2 py-1 text-sm text-brand-gold">{drill.successRate}%</span>
