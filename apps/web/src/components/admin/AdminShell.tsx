@@ -11,6 +11,7 @@ const TABS = [
   { key: 'announcements', href: '/admin/announcements' },
   { key: 'exercises', href: '/admin/exercises' },
   { key: 'aiFocusPresets', href: '/admin/ai-focus-presets' },
+  { key: 'aiSettings', href: '/admin/ai-settings' },
 ] as const;
 
 export function AdminShell({ children }: { children: ReactNode }) {

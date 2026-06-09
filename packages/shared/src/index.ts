@@ -10,6 +10,7 @@ export * from './schemas/ai';
 export * from './schemas/external';
 export * from './schemas/announcement';
 export * from './schemas/admin';
+export * from './schemas/ai-settings';
 export * from './constants/locales';
 export * from './errors/codes';
 export * from './queues/ai';

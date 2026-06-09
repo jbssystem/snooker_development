@@ -813,5 +813,20 @@ model UserFavoriteDrill {
   @@index([userId])
 }
 
+/// Singleton row (id = "ai") holding runtime-editable AI configuration so the
+/// provider, model and API key can be changed from the admin UI without a
+/// redeploy. The API key is stored AES-256-GCM-encrypted in `apiKeyCipher`;
+/// env vars (AI_PROVIDER/AI_MODEL/AI_API_KEY) remain the fallback when a field
+/// is unset. See AdminAiSettingsService.
+model AppSetting {
+  id           String   @id
+  provider     String   @default("none")
+  model        String?
+  visionModel  String?
+  apiKeyCipher String?
+  updatedAt    DateTime @updatedAt
+  updatedById  String?
+}
+
 // NOTE: Shot-by-shot, AI insights and external imports will be added in
 // subsequent migrations. Schema sketches live in docs/database-model.md.

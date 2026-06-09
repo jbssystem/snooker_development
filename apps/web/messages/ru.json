@@ -1781,7 +1781,37 @@
       "users": "Пользователи",
       "announcements": "Сообщения",
       "exercises": "Упражнения",
-      "aiFocusPresets": "AI-фокусы"
+      "aiFocusPresets": "AI-фокусы",
+      "aiSettings": "AI-настройки"
+    },
+    "aiSettings": {
+      "description": "Настройте провайдера, модель и API-ключ ИИ. Изменения применяются без перезапуска сервера.",
+      "provider": "Провайдер",
+      "providers": {
+        "none": "Отключено",
+        "local": "Локальная генерация",
+        "anthropic": "Anthropic (Claude)"
+      },
+      "model": "Модель",
+      "modelDefault": "По умолчанию (из окружения)",
+      "recommended": "рекомендуется",
+      "visionModel": "Модель для распознавания фото",
+      "visionModelHint": "Используется при распознавании раскладки шаров по фото стола. Лучше Sonnet/Opus, чем Haiku.",
+      "apiKey": "API-ключ Anthropic",
+      "apiKeyPlaceholder": "sk-ant-…",
+      "apiKeyHint": "Оставьте пустым, чтобы не менять. Ключ хранится в зашифрованном виде и не показывается обратно.",
+      "noKey": "Ключ не задан",
+      "source": {
+        "db": "задан в админке",
+        "env": "из окружения",
+        "none": "нет"
+      },
+      "save": "Сохранить",
+      "saving": "Сохранение…",
+      "saved": "Сохранено",
+      "saveError": "Не удалось сохранить",
+      "clearKey": "Удалить ключ",
+      "updatedAt": "Обновлено: {date}"
     },
     "aiFocusPresets": {
       "createTitle": "Новый фокус анализа",

@@ -1,5 +1,4 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type {
   DrillCategory as PrismaDrillCategory,
   DrillDifficulty as PrismaDrillDifficulty,
@@ -21,13 +20,14 @@ import {
   type UpdateDrillTemplateInput,
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
+import { SettingsService } from '../settings/settings.service';
 import { recognizeTableLayout } from './table-vision';
 
 @Injectable()
 export class DrillsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
+    private readonly settings: SettingsService,
   ) {}
 
   /**
@@ -37,18 +37,15 @@ export class DrillsService {
    * Anthropic provider + API key; no local fallback is meaningful for vision.
    */
   async recognizeLayout(input: RecognizeLayoutInput): Promise<TableLayout> {
-    const provider = (this.config.get<string>('AI_PROVIDER') ?? 'none').toLowerCase();
-    const apiKey = this.config.get<string>('AI_API_KEY');
-    if (provider !== 'anthropic' || !apiKey) {
+    const runtime = await this.settings.getAiRuntime();
+    if (runtime.provider !== 'anthropic' || !runtime.apiKey) {
       throw new BadRequestException({ error: { code: ErrorCodes.Drills.AiUnavailable } });
     }
     // Vision/spatial reasoning (resolving tightly packed reds) is much better on
     // a Sonnet-class model than on the fast Haiku used for text summaries, so the
-    // recognition model is overridable independently of AI_MODEL.
-    const model =
-      this.config.get<string>('AI_VISION_MODEL') ??
-      this.config.get<string>('AI_MODEL') ??
-      'claude-sonnet-4-5';
+    // recognition model is resolved separately (AppSetting.visionModel).
+    const apiKey = runtime.apiKey;
+    const model = runtime.visionModel;
     try {
       const layout = await recognizeTableLayout({
         apiKey,

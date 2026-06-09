@@ -1781,7 +1781,37 @@
       "users": "Users",
       "announcements": "Announcements",
       "exercises": "Exercises",
-      "aiFocusPresets": "AI focus"
+      "aiFocusPresets": "AI focus",
+      "aiSettings": "AI settings"
+    },
+    "aiSettings": {
+      "description": "Configure the AI provider, model and API key. Changes apply without a server restart.",
+      "provider": "Provider",
+      "providers": {
+        "none": "Disabled",
+        "local": "Local generation",
+        "anthropic": "Anthropic (Claude)"
+      },
+      "model": "Model",
+      "modelDefault": "Default (from environment)",
+      "recommended": "recommended",
+      "visionModel": "Photo recognition model",
+      "visionModelHint": "Used to read the ball layout from a table photo. Sonnet/Opus work better than Haiku here.",
+      "apiKey": "Anthropic API key",
+      "apiKeyPlaceholder": "sk-ant-…",
+      "apiKeyHint": "Leave empty to keep unchanged. The key is stored encrypted and never shown back.",
+      "noKey": "No key set",
+      "source": {
+        "db": "set in admin",
+        "env": "from environment",
+        "none": "none"
+      },
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "saveError": "Could not save",
+      "clearKey": "Remove key",
+      "updatedAt": "Updated: {date}"
     },
     "aiFocusPresets": {
       "createTitle": "New analysis focus",

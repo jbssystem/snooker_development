@@ -19,6 +19,7 @@ import {
   type GenerateWeeklyAiReportJob,
 } from '@snooker/shared';
 import { PrismaService } from '../prisma/prisma.module';
+import { SettingsService } from '../settings/settings.service';
 import { SensitiveDataAuditService } from '../audit/sensitive-data-audit.service';
 import type { ProfileContext } from '../profiles/profile-context';
 
@@ -45,6 +46,7 @@ export class AiService implements OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly settings: SettingsService,
     private readonly sensitiveAudit: SensitiveDataAuditService,
   ) {}
 
@@ -96,7 +98,7 @@ export class AiService implements OnModuleDestroy {
     const userId = ctx.userId;
     const profile = await this.loadProfileOrThrow(ctx.profileId);
     const period = resolvePeriod(input);
-    const runtime = resolveAiRuntime(this.config);
+    const runtime = await this.settings.getAiRuntime();
     const focusAreas = await this.loadFocusAreas(input.focusPresetIds, input.locale);
     const rawSourceData = { ...(await this.collectSourceData(profile, period.from, period.to)), focusAreas };
     const sourceData = toJsonValue(rawSourceData);
@@ -189,7 +191,7 @@ export class AiService implements OnModuleDestroy {
       throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
     }
 
-    const runtime = resolveAiRuntime(this.config);
+    const runtime = await this.settings.getAiRuntime();
     const focusAreas = await this.loadFocusAreas(input.focusPresetIds, input.locale);
     const periodStart = matches[0]!.matchDate;
     const periodEnd = matches[matches.length - 1]!.matchDate;
@@ -541,18 +543,6 @@ function resolvePeriod(input: GenerateWeeklyAiReportInput): { from: Date; to: Da
     throw new BadRequestException({ error: { code: ErrorCodes.Validation.Failed } });
   }
   return { from, to };
-}
-
-function resolveAiRuntime(config: ConfigService): { provider: AiProvider; model: string } {
-  const rawProvider = (config.get<string>('AI_PROVIDER') ?? 'none').toLowerCase();
-  const configuredProvider = toAiProvider(rawProvider);
-  if (configuredProvider === 'anthropic' && config.get<string>('AI_API_KEY')) {
-    return { provider: 'anthropic', model: config.get<string>('AI_MODEL') ?? 'claude-3-5-sonnet-latest' };
-  }
-  if (configuredProvider === 'local') {
-    return { provider: 'local', model: config.get<string>('AI_MODEL') ?? 'local-weekly-summary-v1' };
-  }
-  return { provider: 'none', model: 'local-weekly-summary-v1' };
 }
 
 function countDataSources(sourceData: WeeklySourceData): AiReportDataSources {

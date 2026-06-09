@@ -2,6 +2,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { Worker } from 'bullmq';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { decryptSecret, isEncryptionConfigured } from './secret-box';
 import {
   AI_REPORT_QUEUE,
   EXTERNAL_IMPORT_QUEUE,
@@ -72,14 +73,15 @@ async function generateWeeklySummary(reportId: string): Promise<void> {
   await prisma.aiReport.update({ where: { id: report.id }, data: { status: 'RUNNING', errorMessage: null } });
   try {
     const sourceData = report.sourceDataJson as SourceData;
+    const apiKey = await resolveAiApiKey();
     let result: GenResult;
 
     if (report.reportType === 'EXTERNAL_ANALYSIS') {
       const prompt = await externalAnalysisPrompt(report.locale, sourceData);
-      result = await generateExternalMarkdown(report.provider, report.model, prompt, sourceData, report.locale);
+      result = await generateExternalMarkdown(report.provider, report.model, apiKey, prompt, sourceData, report.locale);
     } else {
       const prompt = await weeklyPrompt(report.locale, report.periodStart, report.periodEnd, sourceData);
-      result = await generateMarkdown(report.provider, report.model, prompt, sourceData, report.locale);
+      result = await generateMarkdown(report.provider, report.model, apiKey, prompt, sourceData, report.locale);
     }
 
     await prisma.aiReport.update({
@@ -104,6 +106,27 @@ async function generateWeeklySummary(reportId: string): Promise<void> {
     });
     throw error;
   }
+}
+
+/**
+ * Resolve the Anthropic API key the same way the API does: the encrypted value
+ * in AppSetting ("ai") wins, with AI_API_KEY as the env fallback. Returns '' when
+ * no usable key exists (callers then fall back to the local summary).
+ */
+async function resolveAiApiKey(): Promise<string> {
+  try {
+    const row = await prisma.appSetting.findUnique({ where: { id: 'ai' } });
+    if (row?.apiKeyCipher && isEncryptionConfigured()) {
+      try {
+        return decryptSecret(row.apiKeyCipher);
+      } catch (error) {
+        console.error('[worker] failed to decrypt stored API key', error);
+      }
+    }
+  } catch (error) {
+    console.error('[worker] failed to read AI settings', error);
+  }
+  return process.env.AI_API_KEY ?? '';
 }
 
 async function weeklyPrompt(locale: string, periodStart: Date, periodEnd: Date, sourceData: SourceData): Promise<string> {
@@ -137,14 +160,15 @@ async function externalAnalysisPrompt(locale: string, sourceData: ExternalSource
 async function generateExternalMarkdown(
   provider: string,
   model: string,
+  apiKey: string,
   prompt: string,
   sourceData: ExternalSourceData,
   locale: string,
 ): Promise<GenResult> {
   const loc = toLocale(locale);
-  if (provider === 'anthropic' && process.env.AI_API_KEY) {
+  if (provider === 'anthropic' && apiKey) {
     try {
-      return await callAnthropicExternal(model, prompt, sourceData);
+      return await callAnthropicExternal(model, apiKey, prompt, sourceData);
     } catch {
       return { text: localExternalAnalysis(sourceData, loc) };
     }
@@ -152,7 +176,7 @@ async function generateExternalMarkdown(
   return { text: localExternalAnalysis(sourceData, loc) };
 }
 
-async function callAnthropicExternal(model: string, prompt: string, sourceData: ExternalSourceData): Promise<GenResult> {
+async function callAnthropicExternal(model: string, apiKey: string, prompt: string, sourceData: ExternalSourceData): Promise<GenResult> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90_000);
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -160,7 +184,7 @@ async function callAnthropicExternal(model: string, prompt: string, sourceData: 
     signal: controller.signal,
     headers: {
       'content-type': 'application/json',
-      'x-api-key': process.env.AI_API_KEY ?? '',
+      'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
@@ -278,13 +302,14 @@ const externalText = {
 async function generateMarkdown(
   provider: string,
   model: string,
+  apiKey: string,
   prompt: string,
   sourceData: SourceData,
   locale: string,
 ): Promise<GenResult> {
-  if (provider === 'anthropic' && process.env.AI_API_KEY) {
+  if (provider === 'anthropic' && apiKey) {
     try {
-      return await callAnthropic(model, prompt, sourceData);
+      return await callAnthropic(model, apiKey, prompt, sourceData);
     } catch {
       return { text: localWeeklySummary(sourceData, sourceData.period, provider, toLocale(locale)) };
     }
@@ -292,7 +317,7 @@ async function generateMarkdown(
   return { text: localWeeklySummary(sourceData, sourceData.period, provider, toLocale(locale)) };
 }
 
-async function callAnthropic(model: string, prompt: string, sourceData: SourceData): Promise<GenResult> {
+async function callAnthropic(model: string, apiKey: string, prompt: string, sourceData: SourceData): Promise<GenResult> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90_000);
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -300,7 +325,7 @@ async function callAnthropic(model: string, prompt: string, sourceData: SourceDa
     signal: controller.signal,
     headers: {
       'content-type': 'application/json',
-      'x-api-key': process.env.AI_API_KEY ?? '',
+      'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({

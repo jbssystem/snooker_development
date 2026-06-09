@@ -13,6 +13,8 @@ import type {
   AdminUserList,
   AdminUserDetail,
   AdminStats,
+  AiSettings,
+  UpdateAiSettingsInput,
   CreateAnnouncementInput,
   UpdateAnnouncementInput,
   AddDrillExecutionInput,
@@ -560,6 +562,9 @@ export const api = {
         body: JSON.stringify({ visibility }),
       }),
     getStats: (token: string) => request<AdminStats>('/admin/stats', { token }),
+    getAiSettings: (token: string) => request<AiSettings>('/admin/ai-settings', { token }),
+    updateAiSettings: (token: string, input: UpdateAiSettingsInput) =>
+      request<AiSettings>('/admin/ai-settings', { method: 'PUT', token, body: JSON.stringify(input) }),
     listAiFocusPresets: (token: string) => request<AiFocusPreset[]>('/admin/ai-focus-presets', { token }),
     createAiFocusPreset: (token: string, input: CreateAiFocusPresetInput) =>
       request<AiFocusPreset>('/admin/ai-focus-presets', { method: 'POST', token, body: JSON.stringify(input) }),

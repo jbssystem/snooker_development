@@ -1781,7 +1781,37 @@
       "users": "Користувачі",
       "announcements": "Повідомлення",
       "exercises": "Вправи",
-      "aiFocusPresets": "AI-фокуси"
+      "aiFocusPresets": "AI-фокуси",
+      "aiSettings": "AI-налаштування"
+    },
+    "aiSettings": {
+      "description": "Налаштуйте провайдера, модель і API-ключ ШІ. Зміни застосовуються без перезапуску сервера.",
+      "provider": "Провайдер",
+      "providers": {
+        "none": "Вимкнено",
+        "local": "Локальна генерація",
+        "anthropic": "Anthropic (Claude)"
+      },
+      "model": "Модель",
+      "modelDefault": "За замовчуванням (з оточення)",
+      "recommended": "рекомендовано",
+      "visionModel": "Модель для розпізнавання фото",
+      "visionModelHint": "Використовується для розпізнавання розкладки куль із фото столу. Sonnet/Opus краще за Haiku.",
+      "apiKey": "API-ключ Anthropic",
+      "apiKeyPlaceholder": "sk-ant-…",
+      "apiKeyHint": "Залиште порожнім, щоб не змінювати. Ключ зберігається зашифрованим і не показується назад.",
+      "noKey": "Ключ не задано",
+      "source": {
+        "db": "задано в адмінці",
+        "env": "з оточення",
+        "none": "немає"
+      },
+      "save": "Зберегти",
+      "saving": "Збереження…",
+      "saved": "Збережено",
+      "saveError": "Не вдалося зберегти",
+      "clearKey": "Видалити ключ",
+      "updatedAt": "Оновлено: {date}"
     },
     "aiFocusPresets": {
       "createTitle": "Новий фокус аналізу",

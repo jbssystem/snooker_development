@@ -13,6 +13,7 @@ import { AdminAiFocusPresetsController } from './ai-focus-presets/admin-ai-focus
 import { AdminAiFocusPresetsService } from './ai-focus-presets/admin-ai-focus-presets.service';
 import { AdminStatsController } from './stats/admin-stats.controller';
 import { AdminStatsService } from './stats/admin-stats.service';
+import { AdminAiSettingsController } from './ai-settings/admin-ai-settings.controller';
 
 @Module({
   imports: [AuthModule, EmailModule],
@@ -22,6 +23,7 @@ import { AdminStatsService } from './stats/admin-stats.service';
     AdminDrillsController,
     AdminStatsController,
     AdminAiFocusPresetsController,
+    AdminAiSettingsController,
   ],
   providers: [
     AdminAuditService,
