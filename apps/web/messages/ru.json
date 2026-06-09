@@ -556,7 +556,8 @@
     "drills": {
       "title": "Прогресс упражнений",
       "empty": "Упражнения ещё не выполнялись.",
-      "meta": "{executions} выполнений · {attempts} попыток"
+      "meta": "{executions} выполнений · {attempts} попыток",
+      "openDetails": "Открыть упражнение «{name}»"
     },
     "matches": {
       "title": "Матчевая форма",
@@ -570,7 +571,8 @@
     "recent": {
       "title": "Последние сессии",
       "empty": "Сессий пока нет.",
-      "meta": "{drills} упражнений · {attempts} попыток"
+      "meta": "{drills} упражнений · {attempts} попыток",
+      "openSession": "Перейти к сессии «{title}»"
     }
   },
   "analytics": {
@@ -603,7 +605,8 @@
     "drills": {
       "title": "Прогресс упражнений",
       "empty": "Упражнения ещё не выполнялись.",
-      "meta": "{executions} выполнений · {attempts} попыток"
+      "meta": "{executions} выполнений · {attempts} попыток",
+      "openDetails": "Открыть упражнение «{name}»"
     },
     "matches": {
       "title": "Матчевая форма",
@@ -979,6 +982,10 @@
       "email": "Email",
       "password": "Пароль",
       "displayName": "Имя"
+    },
+    "togglePassword": {
+      "show": "Показать пароль",
+      "hide": "Скрыть пароль"
     },
     "submitting": "Отправка…",
     "logout": "Выйти",

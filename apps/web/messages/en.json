@@ -556,7 +556,8 @@
     "drills": {
       "title": "Drill progress",
       "empty": "No drills have been executed yet.",
-      "meta": "{executions} executions · {attempts} attempts"
+      "meta": "{executions} executions · {attempts} attempts",
+      "openDetails": "Open drill “{name}”"
     },
     "matches": {
       "title": "Match form",
@@ -570,7 +571,8 @@
     "recent": {
       "title": "Recent sessions",
       "empty": "No sessions yet.",
-      "meta": "{drills} drills · {attempts} attempts"
+      "meta": "{drills} drills · {attempts} attempts",
+      "openSession": "Go to session “{title}”"
     }
   },
   "analytics": {
@@ -603,7 +605,8 @@
     "drills": {
       "title": "Drill progress",
       "empty": "No drills have been executed yet.",
-      "meta": "{executions} executions · {attempts} attempts"
+      "meta": "{executions} executions · {attempts} attempts",
+      "openDetails": "Open drill “{name}”"
     },
     "matches": {
       "title": "Match form",
@@ -979,6 +982,10 @@
       "email": "Email",
       "password": "Password",
       "displayName": "Name"
+    },
+    "togglePassword": {
+      "show": "Show password",
+      "hide": "Hide password"
     },
     "submitting": "Submitting…",
     "logout": "Sign out",

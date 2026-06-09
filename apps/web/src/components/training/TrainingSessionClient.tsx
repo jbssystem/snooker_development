@@ -15,6 +15,7 @@ import type {
 import { AccordionSection } from '@/components/layout/AccordionSection';
 import { ChevronDown } from '@/components/layout/ChevronDown';
 import { Modal } from '@/components/layout/Modal';
+import { DrillDetailsModal } from '@/components/drills/DrillDetailsModal';
 import { Field } from '@/components/ui';
 import { useCanEdit } from '@/lib/use-active-profile';
 import { api, ApiError } from '@/lib/api-client';
@@ -123,10 +124,17 @@ export function TrainingSessionClient() {
     }
   }, [activeSession, activeSessionId]);
 
-  // Open the new-session form when arriving via the command palette (?new=1).
+  // Open the new-session form when arriving via the command palette (?new=1),
+  // or focus a specific session when deep-linked (?session=<id>).
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('new') === '1') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('new') === '1') {
       setShowNewSession(true);
+    }
+    const sessionId = params.get('session');
+    if (sessionId) {
+      setActiveSessionId(sessionId);
+      setActiveExecutionId(null);
     }
   }, []);
 
@@ -658,14 +666,7 @@ function ActiveSessionPanel({
 
       <LiveSessionInsight insight={buildLiveTrainingInsight(session, activeExecution)} t={t} />
 
-      <Modal
-        closeLabel={t('actions.close')}
-        onClose={() => setShowDetails(false)}
-        open={showDetails && activeTemplate !== null}
-        title={activeTemplate ? localizeDrillTemplate(activeTemplate, tSystemDrills).name : ''}
-      >
-        {activeTemplate && <DrillDetails template={localizeDrillTemplate(activeTemplate, tSystemDrills)} tDrills={tDrills} />}
-      </Modal>
+      <DrillDetailsModal template={activeTemplate} open={showDetails} onClose={() => setShowDetails(false)} />
 
       <Modal
         closeLabel={t('actions.close')}
@@ -857,42 +858,6 @@ function DrillStarIcon({ filled }: { filled: boolean }) {
         d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
       />
     </svg>
-  );
-}
-
-function DrillDetails({ template, tDrills }: { template: DrillTemplate; tDrills: ReturnType<typeof useTranslations> }) {
-  const rows: Array<{ label: string; value: string }> = [
-    { label: tDrills('fields.description'), value: template.description },
-    { label: tDrills('fields.goal'), value: template.goal },
-    { label: tDrills('fields.rules'), value: template.rules },
-    { label: tDrills('fields.successCriteria'), value: template.successCriteria },
-  ];
-  return (
-    <div className="grid gap-3">
-      <div className="flex flex-wrap gap-2">
-        <span className="rounded-md bg-background-elevated px-2.5 py-1 text-xs text-text-secondary shadow-elev-1">
-          {tDrills(`categories.${template.category}`)}
-        </span>
-        <span className="rounded-md bg-background-elevated px-2.5 py-1 text-xs text-text-secondary shadow-elev-1">
-          {tDrills(`difficulties.${template.difficulty}`)}
-        </span>
-      </div>
-      {rows.map((row) => (
-        <div key={row.label} className="sunken rounded-lg px-3 py-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-text-disabled">{row.label}</p>
-          <p className="mt-1 whitespace-pre-line text-sm text-text-secondary">{row.value}</p>
-        </div>
-      ))}
-      {template.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {template.tags.map((tag) => (
-            <span key={tag} className="rounded-full border border-border-subtle px-2 py-0.5 text-xs text-text-disabled">
-              #{tag}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
 

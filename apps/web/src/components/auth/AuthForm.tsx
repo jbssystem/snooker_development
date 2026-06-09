@@ -22,6 +22,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   // Set when login is rejected because the email is not verified yet.
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, formState } = useForm<FormValues>({
     defaultValues: { email: '', password: '', displayName: '' },
   });
@@ -109,14 +110,25 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </Field>
 
       <Field label={t('fields.password')} error={formState.errors.password?.message}>
-        <input
-          type="password"
-          autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-          required
-          minLength={mode === 'register' ? 8 : 1}
-          {...register('password', { required: t('errors.required') })}
-          className={inputClass}
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            required
+            minLength={mode === 'register' ? 8 : 1}
+            {...register('password', { required: t('errors.required') })}
+            className={`${inputClass} pr-11`}
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? t('togglePassword.hide') : t('togglePassword.show')}
+            aria-pressed={showPassword}
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-text-secondary transition hover:text-text-primary"
+          >
+            {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+          </button>
+        </div>
       </Field>
 
       {serverError && (
@@ -180,6 +192,25 @@ function Field({
       {children}
       {error && <span className="text-xs text-state-error">{error}</span>}
     </label>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg aria-hidden className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg aria-hidden className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.58 10.58a3 3 0 004.24 4.24" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.36 5.36A9.3 9.3 0 0112 5c6.25 0 9.75 7 9.75 7a16.7 16.7 0 01-3.06 3.94M6.3 6.3A16.7 16.7 0 002.25 12s3.5 7 9.75 7a9.3 9.3 0 003.36-.63" />
+    </svg>
   );
 }
 

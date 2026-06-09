@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   Bar,
@@ -13,8 +14,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { DashboardDrillProgress, PlayerDashboard } from '@snooker/shared';
+import type { DashboardDrillProgress, DrillTemplate, PlayerDashboard } from '@snooker/shared';
 import { CoachInsightPanel } from '@/components/insights/CoachInsightPanel';
+import { DrillDetailsModal } from '@/components/drills/DrillDetailsModal';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
@@ -76,8 +78,22 @@ export function DashboardClient() {
 function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
   const t = useTranslations('dashboard');
   const locale = useLocale();
+  const token = useAuthStore((state) => state.tokens?.accessToken ?? null);
   const hasData = dashboard.totals.sessions > 0 || dashboard.totals.attempts > 0 || dashboard.matchSummary.matches > 0;
   const insights = buildDashboardInsights(dashboard);
+
+  // Drill templates power the details modal opened from the progress list.
+  const templatesQuery = useQuery({
+    queryKey: ['drill-templates', token],
+    queryFn: () => api.drills.listTemplates(token ?? ''),
+    enabled: Boolean(token),
+  });
+  const templatesById = useMemo(() => {
+    const map = new Map<string, DrillTemplate>();
+    for (const template of templatesQuery.data ?? []) map.set(template.id, template);
+    return map;
+  }, [templatesQuery.data]);
+  const [selectedDrill, setSelectedDrill] = useState<DrillTemplate | null>(null);
 
   return (
     <>
@@ -150,7 +166,16 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
       <section className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <SectionCard title={t('drills.title')}>
           <div className="grid gap-3">
-            {dashboard.drillProgress.map((drill) => <DrillProgressRow key={drill.drillTemplateId} drill={drill} />)}
+            {dashboard.drillProgress.map((drill) => (
+              <DrillProgressRow
+                key={drill.drillTemplateId}
+                drill={drill}
+                onOpen={() => {
+                  const template = templatesById.get(drill.drillTemplateId);
+                  if (template) setSelectedDrill(template);
+                }}
+              />
+            ))}
             {dashboard.drillProgress.length === 0 && <p className="text-text-secondary">{t('drills.empty')}</p>}
           </div>
         </SectionCard>
@@ -168,15 +193,30 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
                     {session.successRate}%
                   </span>
                 </div>
-                <p className="mt-3 text-sm text-text-secondary">
-                  {t('recent.meta', { drills: session.drillExecutions, attempts: session.attempts })}
-                </p>
+                <div className="mt-3 flex items-end justify-between gap-2">
+                  <p className="text-sm text-text-secondary">
+                    {t('recent.meta', { drills: session.drillExecutions, attempts: session.attempts })}
+                  </p>
+                  <Link
+                    href={`/training?session=${session.id}`}
+                    aria-label={t('recent.openSession', { title: session.title })}
+                    className="press inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-subtle text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+                  >
+                    <ArrowRightIcon />
+                  </Link>
+                </div>
               </article>
             ))}
             {dashboard.recentSessions.length === 0 && <p className="text-text-secondary">{t('recent.empty')}</p>}
           </div>
         </SectionCard>
       </section>
+
+      <DrillDetailsModal
+        template={selectedDrill}
+        open={selectedDrill !== null}
+        onClose={() => setSelectedDrill(null)}
+      />
     </>
   );
 }
@@ -192,13 +232,18 @@ function MiniStat({ label, value }: { label: string; value: number | string }) {
   );
 }
 
-function DrillProgressRow({ drill }: { drill: DashboardDrillProgress }) {
+function DrillProgressRow({ drill, onOpen }: { drill: DashboardDrillProgress; onOpen: () => void }) {
   const t = useTranslations('dashboard');
   const tSystemDrills = useTranslations('systemDrills');
   const locale = useLocale();
   const drillName = localizeDrillName(drill.drillTemplateId, drill.drillTemplateName, tSystemDrills) ?? drill.drillTemplateName;
   return (
-    <article className="stat-tile group grid gap-2 rounded-md border border-border-subtle p-3">
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={t('drills.openDetails', { name: drillName })}
+      className="stat-tile press group grid w-full gap-2 rounded-md border border-border-subtle p-3 text-left transition hover:border-brand-accent"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-medium text-text-primary transition-colors duration-200 group-hover:text-white">{drillName}</h3>
@@ -212,7 +257,15 @@ function DrillProgressRow({ drill }: { drill: DashboardDrillProgress }) {
       <p className="text-sm text-text-secondary">
         {t('drills.meta', { executions: drill.executions, attempts: drill.attempts })}
       </p>
-    </article>
+    </button>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
   );
 }
 
