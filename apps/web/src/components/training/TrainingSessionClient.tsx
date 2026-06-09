@@ -726,12 +726,16 @@ function DrillPicker({
 }) {
   const [category, setCategory] = useState('');
   const [difficulty, setDifficulty] = useState('');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const localized = useMemo(
     () => drills.map((drill) => ({ raw: drill, view: localizeDrillTemplate(drill, tSystemDrills) })),
     [drills, tSystemDrills],
   );
   const filtered = localized.filter(
-    ({ raw }) => (!category || raw.category === category) && (!difficulty || raw.difficulty === difficulty),
+    ({ raw }) =>
+      (!category || raw.category === category) &&
+      (!difficulty || raw.difficulty === difficulty) &&
+      (!favoritesOnly || raw.isFavorited),
   );
 
   return (
@@ -756,6 +760,20 @@ function DrillPicker({
           </select>
         </label>
       </div>
+
+      <button
+        aria-pressed={favoritesOnly}
+        className={`inline-flex w-full items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
+          favoritesOnly
+            ? 'border-brand-gold/60 bg-brand-gold/15 font-medium text-brand-gold'
+            : 'border-border-subtle text-text-secondary hover:border-brand-gold/40 hover:text-text-primary'
+        }`}
+        onClick={() => setFavoritesOnly((v) => !v)}
+        type="button"
+      >
+        <DrillStarIcon filled={favoritesOnly} />
+        {tDrills('filter.favoritesOnly')}
+      </button>
 
       <div className="grid max-h-[55vh] gap-2 overflow-y-auto pr-1">
         {filtered.map(({ raw, view }) => (
@@ -809,6 +827,18 @@ function InfoIcon() {
       <circle cx="12" cy="12" r="9" />
       <path d="M12 11v5" strokeLinecap="round" />
       <path d="M12 8h.01" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DrillStarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg aria-hidden className="h-4 w-4 shrink-0" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+      />
     </svg>
   );
 }

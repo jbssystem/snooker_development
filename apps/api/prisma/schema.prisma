@@ -174,6 +174,7 @@ model User {
   adminAuditLogs          AdminAuditLog[]         @relation("AdminAuditActor")
   sensitiveAccessLogs     SensitiveDataAccessLog[] @relation("SensitiveDataActor")
   profileMemberships      ProfileMembership[]
+  favoriteDrills          UserFavoriteDrill[]
 }
 
 model EmailVerificationToken {
@@ -305,8 +306,9 @@ model DrillTemplate {
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @updatedAt
 
-  createdBy  User             @relation("CreatedDrillTemplates", fields: [createdByUserId], references: [id], onDelete: Cascade)
-  executions DrillExecution[]
+  createdBy   User               @relation("CreatedDrillTemplates", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  executions  DrillExecution[]
+  favoritedBy UserFavoriteDrill[]
 
   @@index([createdByUserId])
   @@index([category])
@@ -797,6 +799,18 @@ model ProfileInvitation {
   @@index([playerProfileId])
   @@index([email])
   @@index([status])
+}
+
+model UserFavoriteDrill {
+  userId          String
+  drillTemplateId String
+  createdAt       DateTime @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  drillTemplate DrillTemplate @relation(fields: [drillTemplateId], references: [id], onDelete: Cascade)
+
+  @@id([userId, drillTemplateId])
+  @@index([userId])
 }
 
 // NOTE: Shot-by-shot, AI insights and external imports will be added in

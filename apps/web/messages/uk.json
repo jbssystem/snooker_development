@@ -1212,7 +1212,13 @@
       "noResults": "Немає вправ за обраними фільтрами.",
       "allCategories": "Усі категорії",
       "allDifficulties": "Будь-яка складність",
-      "reset": "Скинути"
+      "reset": "Скинути",
+      "favorites": "Обрані",
+      "favoritesOnly": "Тільки обрані"
+    },
+    "favorite": {
+      "add": "До обраних",
+      "remove": "Прибрати з обраних"
     },
     "metrics": {
       "title": "Метрики",

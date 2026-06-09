@@ -1212,7 +1212,13 @@
       "noResults": "No drills match the selected filters.",
       "allCategories": "All categories",
       "allDifficulties": "Any difficulty",
-      "reset": "Reset"
+      "reset": "Reset",
+      "favorites": "Favorites",
+      "favoritesOnly": "Favorites only"
+    },
+    "favorite": {
+      "add": "Add to favorites",
+      "remove": "Remove from favorites"
     },
     "metrics": {
       "title": "Metrics",

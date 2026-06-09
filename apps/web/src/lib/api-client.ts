@@ -307,6 +307,11 @@ export const api = {
         method: 'DELETE',
         token,
       }),
+    toggleFavorite: (token: string, id: string) =>
+      request<void>(`/drill-templates/${id}/favorite`, {
+        method: 'POST',
+        token,
+      }),
   },
   training: {
     listSessions: (token: string) => request<TrainingSession[]>('/training-sessions', { token }),

@@ -153,6 +153,7 @@ export const DrillTemplateSchema = z.object({
   tags: TagsSchema,
   visibility: DrillVisibilitySchema,
   createdByUserId: z.string().cuid(),
+  isFavorited: z.boolean().default(false),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

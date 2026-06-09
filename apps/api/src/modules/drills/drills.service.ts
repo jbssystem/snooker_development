@@ -66,13 +66,35 @@ export class DrillsService {
   async list(userId: string): Promise<DrillTemplate[]> {
     const templates = await this.prisma.drillTemplate.findMany({
       where: visibleToUser(userId),
+      include: { favoritedBy: { where: { userId }, select: { userId: true } } },
       orderBy: [{ updatedAt: 'desc' }],
     });
     return templates.map(toDrillTemplate);
   }
 
   async get(userId: string, id: string): Promise<DrillTemplate> {
-    return toDrillTemplate(await this.findVisibleOrThrow(userId, id));
+    const template = await this.prisma.drillTemplate.findFirst({
+      where: { id, ...visibleToUser(userId) },
+      include: { favoritedBy: { where: { userId }, select: { userId: true } } },
+    });
+    if (!template) {
+      throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
+    }
+    return toDrillTemplate(template);
+  }
+
+  async toggleFavorite(userId: string, drillTemplateId: string): Promise<void> {
+    await this.findVisibleOrThrow(userId, drillTemplateId);
+    const existing = await this.prisma.userFavoriteDrill.findUnique({
+      where: { userId_drillTemplateId: { userId, drillTemplateId } },
+    });
+    if (existing) {
+      await this.prisma.userFavoriteDrill.delete({
+        where: { userId_drillTemplateId: { userId, drillTemplateId } },
+      });
+    } else {
+      await this.prisma.userFavoriteDrill.create({ data: { userId, drillTemplateId } });
+    }
   }
 
   async create(userId: string, input: CreateDrillTemplateInput): Promise<DrillTemplate> {
@@ -169,7 +191,9 @@ function toUpdateData(input: UpdateDrillTemplateInput): Prisma.DrillTemplateUpda
   return data;
 }
 
-export function toDrillTemplate(template: PrismaDrillTemplate): DrillTemplate {
+export function toDrillTemplate(
+  template: PrismaDrillTemplate & { favoritedBy?: Array<{ userId: string }> },
+): DrillTemplate {
   return {
     id: template.id,
     name: template.name,
@@ -186,6 +210,7 @@ export function toDrillTemplate(template: PrismaDrillTemplate): DrillTemplate {
     tags: template.tags,
     visibility: fromPrismaVisibility(template.visibility),
     createdByUserId: template.createdByUserId,
+    isFavorited: (template.favoritedBy?.length ?? 0) > 0,
     createdAt: template.createdAt.toISOString(),
     updatedAt: template.updatedAt.toISOString(),
   };

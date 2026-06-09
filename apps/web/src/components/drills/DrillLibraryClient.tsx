@@ -67,6 +67,8 @@ const metricTypes: DrillMetricType[] = ['number', 'boolean', 'percentage', 'time
 type VisibilityFilter = 'all' | DrillVisibility;
 const visibilityFilters: VisibilityFilter[] = ['all', 'private', 'system', 'shared'];
 
+type FavoriteFilter = 'all' | 'favorites';
+
 type FormTab = 'details' | 'metrics' | 'table';
 const formTabs: FormTab[] = ['details', 'metrics', 'table'];
 
@@ -100,6 +102,7 @@ export function DrillLibraryClient() {
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<DrillCategory | 'all'>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<DrillDifficulty | 'all'>('all');
+  const [favoriteFilter, setFavoriteFilter] = useState<FavoriteFilter>('all');
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [formTab, setFormTab] = useState<FormTab>('details');
@@ -133,22 +136,31 @@ export function DrillLibraryClient() {
     () => (visibilityFilter === 'all' ? pool : pool.filter((tpl) => tpl.visibility === visibilityFilter)),
     [pool, visibilityFilter],
   );
+  const byFavorite = useMemo(
+    () => (favoriteFilter === 'favorites' ? byVisibility.filter((tpl) => tpl.isFavorited) : byVisibility),
+    [byVisibility, favoriteFilter],
+  );
   // Free-text search across the localized name and tags.
   const visibleTemplates = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return byVisibility;
-    return byVisibility.filter((tpl) => {
+    if (!q) return byFavorite;
+    return byFavorite.filter((tpl) => {
       const display = localizeDrillTemplate(tpl, tSystemDrills);
       const haystack = `${display.name} ${tpl.tags.join(' ')}`.toLowerCase();
       return haystack.includes(q);
     });
-  }, [byVisibility, search, tSystemDrills]);
+  }, [byFavorite, search, tSystemDrills]);
   const hasActiveFilters =
-    visibilityFilter !== 'all' || categoryFilter !== 'all' || difficultyFilter !== 'all' || search.trim() !== '';
+    visibilityFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    difficultyFilter !== 'all' ||
+    favoriteFilter !== 'all' ||
+    search.trim() !== '';
   const resetFilters = () => {
     setVisibilityFilter('all');
     setCategoryFilter('all');
     setDifficultyFilter('all');
+    setFavoriteFilter('all');
     setSearch('');
   };
 
@@ -205,6 +217,11 @@ export function DrillLibraryClient() {
     mutationFn: (id: string) => api.drills.deleteTemplate(token ?? '', id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['drill-templates'] }),
     onError: (e) => setServerError(errorMessage(e, tErr)),
+  });
+
+  const toggleFavorite = useMutation({
+    mutationFn: (id: string) => api.drills.toggleFavorite(token ?? '', id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['drill-templates'] }),
   });
 
   const loadIntoForm = (template: DrillTemplate, clone: boolean) => {
@@ -335,6 +352,21 @@ export function DrillLibraryClient() {
             value={difficultyFilter}
           />
 
+          <button
+            aria-pressed={favoriteFilter === 'favorites'}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+              favoriteFilter === 'favorites'
+                ? 'border-brand-gold/60 bg-brand-gold/15 text-brand-gold'
+                : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-gold/40 hover:text-text-primary'
+            }`}
+            onClick={() => setFavoriteFilter((f) => (f === 'favorites' ? 'all' : 'favorites'))}
+            title={t('filter.favorites')}
+            type="button"
+          >
+            <StarIcon filled={favoriteFilter === 'favorites'} />
+            {t('filter.favorites')}
+          </button>
+
           {hasActiveFilters && (
             <button
               className="ml-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-text-secondary transition hover:text-text-primary"
@@ -360,6 +392,7 @@ export function DrillLibraryClient() {
               onClone={() => loadIntoForm(template, true)}
               onDelete={() => deleteTemplate.mutate(template.id)}
               onEdit={() => loadIntoForm(template, false)}
+              onToggleFavorite={() => toggleFavorite.mutate(template.id)}
             />
           ))}
         {!templatesQuery.isLoading && templates.length === 0 && (
@@ -668,6 +701,7 @@ function TemplateCard({
   onClone,
   onDelete,
   onEdit,
+  onToggleFavorite,
 }: {
   template: DrillTemplate;
   t: (key: string) => string;
@@ -675,13 +709,14 @@ function TemplateCard({
   onClone: () => void;
   onDelete: () => void;
   onEdit: () => void;
+  onToggleFavorite: () => void;
 }) {
   const localizedTemplate = localizeDrillTemplate(template, tSystemDrills);
   const isSystem = template.visibility === 'system';
 
   return (
     <article
-      className={`surface surface-hover flex flex-col rounded-xl p-4 sm:p-5 ${isSystem ? 'accent-top' : ''}`}
+      className={`surface surface-hover relative flex flex-col rounded-xl p-4 sm:p-5 ${isSystem ? 'accent-top' : ''}`}
     >
       <header>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -744,6 +779,21 @@ function TemplateCard({
           </>
         )}
       </div>
+
+      {/* Star button — bottom-right corner */}
+      <button
+        aria-label={template.isFavorited ? t('favorite.remove') : t('favorite.add')}
+        className={`press absolute bottom-4 right-4 rounded-full p-1.5 transition focus-ring ${
+          template.isFavorited
+            ? 'text-brand-gold hover:text-brand-gold/70'
+            : 'text-text-disabled hover:text-brand-gold'
+        }`}
+        onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+        title={template.isFavorited ? t('favorite.remove') : t('favorite.add')}
+        type="button"
+      >
+        <StarIcon filled={template.isFavorited} />
+      </button>
     </article>
   );
 }
@@ -914,6 +964,18 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 const EMPTY_PREVIEW_LAYOUT = createEmptyTableLayout('empty-preview');
+
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg aria-hidden className="h-5 w-5" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+      />
+    </svg>
+  );
+}
 
 function errorMessage(e: unknown, t: (key: string) => string): string {
   if (e instanceof ApiError) {

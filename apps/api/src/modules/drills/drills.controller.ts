@@ -68,6 +68,15 @@ export class DrillsController {
     return this.drills.update(userId, id, body);
   }
 
+  @Post(':id/favorite')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async toggleFavorite(
+    @CurrentUserId() userId: string,
+    @Param('id', CuidValidationPipe) id: string,
+  ): Promise<void> {
+    await this.drills.toggleFavorite(userId, id);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@CurrentUserId() userId: string, @Param('id', CuidValidationPipe) id: string): Promise<void> {
