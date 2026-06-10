@@ -3,7 +3,7 @@
 import type Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { ForwardedRef } from 'react';
-import { memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Arrow, Circle, Group, Layer, Line, Rect, Stage, Text } from 'react-konva';
 import {
   BALL_DIAMETER_MM,
@@ -15,14 +15,14 @@ import {
   type TableAnnotation,
   type TargetZone,
 } from '@snooker/snooker-domain';
-import { tableDimensions } from './layouts';
+import { tableDimensions, TABLE_VIEW_PADDING_MM } from './layouts';
 import type { SnookerTableCanvasHandle, SnookerTableCanvasProps } from './SnookerTableCanvas';
 
 type Props = SnookerTableCanvasProps & {
   forwardedRef?: ForwardedRef<SnookerTableCanvasHandle> | undefined;
 };
 
-const PADDING_MM = 120;
+const PADDING_MM = TABLE_VIEW_PADDING_MM;
 const D_RADIUS_MM = 292;
 const HANDLE = '#C8A45D';
 const BALL_COLORS: Record<BallColor, { fill: string; stroke: string }> = {
@@ -50,15 +50,27 @@ export const SnookerTableCanvasImpl = memo(function SnookerTableCanvasImpl({
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
-  const [containerWidth, setContainerWidth] = useState(720);
+  // Stay null until the real container width is measured: rendering the Stage at
+  // a guessed width and then resizing it causes a visible "big → shrink" jump.
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const dimensions = tableDimensions(layout);
   const editable = mode === 'edit';
+  const logicalWidth = dimensions.width + PADDING_MM * 2;
+  const logicalHeight = dimensions.height + PADDING_MM * 2;
+  const aspectRatio = logicalWidth / logicalHeight;
   const stageSize = useMemo(() => {
-    const logicalWidth = dimensions.width + PADDING_MM * 2;
-    const logicalHeight = dimensions.height + PADDING_MM * 2;
-    const scale = containerWidth / logicalWidth;
-    return { width: containerWidth, height: logicalHeight * scale, scale };
-  }, [containerWidth, dimensions.height, dimensions.width]);
+    const width = containerWidth ?? 0;
+    const scale = width / logicalWidth;
+    return { width, height: logicalHeight * scale, scale };
+  }, [containerWidth, logicalHeight, logicalWidth]);
+
+  // Measure synchronously before paint so the first frame already has the right
+  // size — the container reserves the aspect ratio, so there is no layout shift.
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      setContainerWidth(Math.max(280, Math.floor(containerRef.current.clientWidth)));
+    }
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -99,7 +111,15 @@ export const SnookerTableCanvasImpl = memo(function SnookerTableCanvasImpl({
   const pixelRatio = typeof window !== 'undefined' ? Math.min(3, Math.max(2, window.devicePixelRatio || 1)) : 2;
 
   return (
-    <div ref={containerRef} className={className} data-testid="snooker-table-canvas">
+    <div
+      ref={containerRef}
+      className={className}
+      data-testid="snooker-table-canvas"
+      // Reserve the exact box up front (zero layout shift); in read-only views the
+      // canvas must not swallow taps/scroll so the surrounding card stays tappable.
+      style={{ aspectRatio: String(aspectRatio), ...(mode === 'view' ? { pointerEvents: 'none' } : null) }}
+    >
+      {containerWidth !== null && (
       <Stage
         ref={stageRef}
         height={stageSize.height}
@@ -178,6 +198,7 @@ export const SnookerTableCanvasImpl = memo(function SnookerTableCanvasImpl({
           )}
         </Layer>
       </Stage>
+      )}
     </div>
   );
 });

@@ -35,7 +35,7 @@ const DynamicCanvas = dynamic<DynamicCanvasProps>(
     ssr: false,
     loading: () => (
       <div
-        className="aspect-[2/1] w-full rounded-md border border-border-subtle bg-background-elevated"
+        className="aspect-[1.89/1] w-full rounded-md border border-border-subtle bg-background-elevated"
         data-testid="snooker-table-canvas"
       />
     ),

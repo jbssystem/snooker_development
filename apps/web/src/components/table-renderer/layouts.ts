@@ -159,6 +159,21 @@ export function tableDimensions(layout: Pick<TableLayout, 'tableSize'>) {
   return TABLE_DIMENSIONS_MM.fullSize;
 }
 
+/** Breathing room (mm) drawn around the playing surface in the canvas view. */
+export const TABLE_VIEW_PADDING_MM = 120;
+
+/**
+ * Width / height ratio of the rendered table view (playing surface + padding).
+ * Used to reserve the exact box up front so lazy previews and the canvas never
+ * cause a layout shift.
+ */
+export function tableAspectRatio(layout: Pick<TableLayout, 'tableSize'>): number {
+  const dimensions = tableDimensions(layout);
+  return (
+    (dimensions.width + TABLE_VIEW_PADDING_MM * 2) / (dimensions.height + TABLE_VIEW_PADDING_MM * 2)
+  );
+}
+
 export function defaultBallPoint(color: BallColor, layout: TableLayout): Point {
   const dimensions = tableDimensions(layout);
   if (color === 'yellow') return scaleSpot(SPOTS_MM.yellow, dimensions.width);

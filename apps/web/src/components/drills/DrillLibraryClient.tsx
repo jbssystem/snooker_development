@@ -28,6 +28,7 @@ import {
   TableLayoutPreview,
   createEmptyTableLayout,
   createStandardTableLayout,
+  tableAspectRatio,
 } from '@/components/table-renderer';
 
 type FormValues = {
@@ -910,7 +911,10 @@ function TablePreview({
         {inView ? (
           <TableLayoutPreview layout={layout} />
         ) : (
-          <div className="aspect-[2/1] w-full rounded-md border border-border-subtle bg-background-elevated" />
+          <div
+            className="w-full rounded-md border border-border-subtle bg-background-elevated"
+            style={{ aspectRatio: String(tableAspectRatio(layout)) }}
+          />
         )}
       </span>
     </button>
