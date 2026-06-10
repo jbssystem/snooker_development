@@ -335,6 +335,9 @@ export class TrainingService {
     const drillTemplate = await this.prisma.drillTemplate.findFirst({
       where: {
         id,
+        // Hidden drills can no longer be added to new sessions (existing
+        // executions are untouched — they reference the row directly).
+        hiddenAt: null,
         OR: [
           { createdByUserId: userId },
           { visibility: DrillVisibility.SHARED },

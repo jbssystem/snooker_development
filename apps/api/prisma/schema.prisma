@@ -303,6 +303,10 @@ model DrillTemplate {
   tags                   String[]        @default([])
   visibility             DrillVisibility @default(PRIVATE)
   createdByUserId        String
+  // When set, an admin has hidden this drill: it disappears from the library and
+  // cannot be added to new training sessions. Existing executions keep referencing
+  // it, so historical sessions stay intact.
+  hiddenAt               DateTime?
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @updatedAt
 
@@ -314,6 +318,7 @@ model DrillTemplate {
   @@index([category])
   @@index([difficulty])
   @@index([visibility])
+  @@index([hiddenAt])
   @@index([createdAt])
 }
 

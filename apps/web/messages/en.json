@@ -1887,6 +1887,9 @@
       "name": "Name",
       "category": "Category",
       "visibility": "Visibility",
+      "hidden": "Hidden",
+      "hideAction": "Hide",
+      "unhideAction": "Unhide",
       "visibilityOption": {
         "private": "Private",
         "shared": "Shared",

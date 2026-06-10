@@ -62,7 +62,7 @@ export class DrillsService {
 
   async list(userId: string): Promise<DrillTemplate[]> {
     const templates = await this.prisma.drillTemplate.findMany({
-      where: visibleToUser(userId),
+      where: { hiddenAt: null, ...visibleToUser(userId) },
       include: { favoritedBy: { where: { userId }, select: { userId: true } } },
       orderBy: [{ updatedAt: 'desc' }],
     });
@@ -71,7 +71,7 @@ export class DrillsService {
 
   async get(userId: string, id: string): Promise<DrillTemplate> {
     const template = await this.prisma.drillTemplate.findFirst({
-      where: { id, ...visibleToUser(userId) },
+      where: { id, hiddenAt: null, ...visibleToUser(userId) },
       include: { favoritedBy: { where: { userId }, select: { userId: true } } },
     });
     if (!template) {
@@ -208,6 +208,7 @@ export function toDrillTemplate(
     visibility: fromPrismaVisibility(template.visibility),
     createdByUserId: template.createdByUserId,
     isFavorited: (template.favoritedBy?.length ?? 0) > 0,
+    isHidden: template.hiddenAt !== null,
     createdAt: template.createdAt.toISOString(),
     updatedAt: template.updatedAt.toISOString(),
   };

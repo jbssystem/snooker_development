@@ -29,6 +29,12 @@ export function AdminExercisesClient() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-drills', token] }),
   });
 
+  const setHidden = useMutation({
+    mutationFn: ({ id, hidden }: { id: string; hidden: boolean }) =>
+      api.admin.setDrillHidden(token ?? '', id, hidden),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-drills', token] }),
+  });
+
   const allItems = query.data ?? [];
   const totalPages = Math.max(1, Math.ceil(allItems.length / PAGE_SIZE));
   const pageItems = useMemo(
@@ -57,13 +63,16 @@ export function AdminExercisesClient() {
                 <th className="px-3 py-2">{t('exercises.name')}</th>
                 <th className="px-3 py-2">{t('exercises.category')}</th>
                 <th className="px-3 py-2">{t('exercises.visibility')}</th>
+                <th className="px-3 py-2">{t('exercises.hidden')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
               {pageItems.map((d) => (
                 <tr
                   key={d.id}
-                  className="text-text-secondary transition odd:bg-white/[0.02] hover:bg-background-elevated/50"
+                  className={`text-text-secondary transition odd:bg-white/[0.02] hover:bg-background-elevated/50 ${
+                    d.isHidden ? 'opacity-60' : ''
+                  }`}
                 >
                   <td className="px-3 py-2 text-text-primary">{d.name}</td>
                   <td className="px-3 py-2 text-xs">{d.category}</td>
@@ -82,6 +91,16 @@ export function AdminExercisesClient() {
                         </option>
                       ))}
                     </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <button
+                      type="button"
+                      disabled={setHidden.isPending}
+                      onClick={() => setHidden.mutate({ id: d.id, hidden: !d.isHidden })}
+                      className="press rounded-md border border-border-subtle px-3 py-1 text-xs disabled:opacity-50"
+                    >
+                      {d.isHidden ? t('exercises.unhideAction') : t('exercises.hideAction')}
+                    </button>
                   </td>
                 </tr>
               ))}

@@ -73,6 +73,11 @@ export const UpdateDrillVisibilitySchema = z.object({
 });
 export type UpdateDrillVisibilityInput = z.infer<typeof UpdateDrillVisibilitySchema>;
 
+export const SetDrillHiddenSchema = z.object({
+  hidden: z.boolean(),
+});
+export type SetDrillHiddenInput = z.infer<typeof SetDrillHiddenSchema>;
+
 export const AdminStatsSchema = z.object({
   totalUsers: z.number(),
   usersByStatus: z.record(z.string(), z.number()),

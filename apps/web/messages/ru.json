@@ -1887,6 +1887,9 @@
       "name": "Название",
       "category": "Категория",
       "visibility": "Видимость",
+      "hidden": "Скрытие",
+      "hideAction": "Скрыть",
+      "unhideAction": "Показать",
       "visibilityOption": {
         "private": "Личное",
         "shared": "Общее",

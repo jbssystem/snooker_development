@@ -154,6 +154,9 @@ export const DrillTemplateSchema = z.object({
   visibility: DrillVisibilitySchema,
   createdByUserId: z.string().cuid(),
   isFavorited: z.boolean().default(false),
+  // True when an admin has hidden the drill: it is excluded from the library and
+  // cannot be added to new sessions. Only surfaced in the admin moderation view.
+  isHidden: z.boolean().default(false),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

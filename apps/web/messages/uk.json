@@ -1887,6 +1887,9 @@
       "name": "Назва",
       "category": "Категорія",
       "visibility": "Видимість",
+      "hidden": "Приховування",
+      "hideAction": "Приховати",
+      "unhideAction": "Показати",
       "visibilityOption": {
         "private": "Особисте",
         "shared": "Спільне",

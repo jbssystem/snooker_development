@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import {
   ErrorCodes,
   type DrillTemplate,
+  type SetDrillHiddenInput,
   type UpdateDrillVisibilityInput,
 } from '@snooker/shared';
 import { PrismaService } from '../../prisma/prisma.module';
@@ -43,6 +44,27 @@ export class AdminDrillsService {
     });
     await this.audit.record(actorUserId, 'drill.setVisibility', { type: 'drill', id }, {
       visibility: input.visibility,
+    });
+    return toDrillTemplate(row);
+  }
+
+  /**
+   * Hide or unhide a drill. A hidden drill drops out of the library and the
+   * new-session picker, but stays referenced by existing executions.
+   */
+  async setHidden(
+    actorUserId: string,
+    id: string,
+    input: SetDrillHiddenInput,
+  ): Promise<DrillTemplate> {
+    const existing = await this.prisma.drillTemplate.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
+    const row = await this.prisma.drillTemplate.update({
+      where: { id },
+      data: { hiddenAt: input.hidden ? new Date() : null },
+    });
+    await this.audit.record(actorUserId, 'drill.setHidden', { type: 'drill', id }, {
+      hidden: input.hidden,
     });
     return toDrillTemplate(row);
   }

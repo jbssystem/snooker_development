@@ -561,6 +561,12 @@ export const api = {
         token,
         body: JSON.stringify({ visibility }),
       }),
+    setDrillHidden: (token: string, id: string, hidden: boolean) =>
+      request<DrillTemplate>(`/admin/drill-templates/${id}/hidden`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify({ hidden }),
+      }),
     getStats: (token: string) => request<AdminStats>('/admin/stats', { token }),
     getAiSettings: (token: string) => request<AiSettings>('/admin/ai-settings', { token }),
     updateAiSettings: (token: string, input: UpdateAiSettingsInput) =>
