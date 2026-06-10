@@ -4,10 +4,11 @@ import {
   ErrorCodes,
   type DrillTemplate,
   type SetDrillHiddenInput,
+  type UpdateDrillTemplateInput,
   type UpdateDrillVisibilityInput,
 } from '@snooker/shared';
 import { PrismaService } from '../../prisma/prisma.module';
-import { toDrillTemplate, toPrismaVisibility } from '../../drills/drills.service';
+import { toDrillTemplate, toPrismaVisibility, toUpdateData } from '../../drills/drills.service';
 import { AdminAuditService } from '../admin-audit.service';
 
 @Injectable()
@@ -28,6 +29,29 @@ export class AdminDrillsService {
     }
     const rows = await this.prisma.drillTemplate.findMany({ where, orderBy: { updatedAt: 'desc' } });
     return rows.map(toDrillTemplate);
+  }
+
+  /**
+   * Full content edit regardless of owner or visibility. This is how an admin
+   * corrects a SYSTEM drill, which the regular drills endpoint forbids. Note:
+   * seeded system drills render localized text from the message catalog, so
+   * text edits persist but may not show; table layout and untranslated fields
+   * apply immediately. Visibility is intentionally not changed here (use
+   * setVisibility for that).
+   */
+  async update(
+    actorUserId: string,
+    id: string,
+    input: UpdateDrillTemplateInput,
+  ): Promise<DrillTemplate> {
+    const existing = await this.prisma.drillTemplate.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });
+    const row = await this.prisma.drillTemplate.update({
+      where: { id },
+      data: toUpdateData(input),
+    });
+    await this.audit.record(actorUserId, 'drill.update', { type: 'drill', id });
+    return toDrillTemplate(row);
   }
 
   /** Change visibility regardless of owner — this is how an admin makes a drill global. */

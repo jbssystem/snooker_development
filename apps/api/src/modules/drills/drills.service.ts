@@ -164,7 +164,7 @@ function assertCanMutate(userId: string, template: PrismaDrillTemplate): void {
   }
 }
 
-function toUpdateData(input: UpdateDrillTemplateInput): Prisma.DrillTemplateUpdateInput {
+export function toUpdateData(input: UpdateDrillTemplateInput): Prisma.DrillTemplateUpdateInput {
   const data: Prisma.DrillTemplateUpdateInput = {};
   if ('name' in input && input.name !== undefined) data.name = input.name;
   if ('category' in input && input.category) data.category = toPrismaCategory(input.category);

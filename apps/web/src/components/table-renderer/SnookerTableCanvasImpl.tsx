@@ -3,7 +3,7 @@
 import type Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { ForwardedRef } from 'react';
-import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Arrow, Circle, Group, Layer, Line, Rect, Stage, Text } from 'react-konva';
 import {
   BALL_DIAMETER_MM,
@@ -36,7 +36,7 @@ const BALL_COLORS: Record<BallColor, { fill: string; stroke: string }> = {
   black: { fill: '#1A1A1A', stroke: '#050505' },
 };
 
-export function SnookerTableCanvasImpl({
+export const SnookerTableCanvasImpl = memo(function SnookerTableCanvasImpl({
   layout,
   mode = 'view',
   selectedIds = [],
@@ -75,14 +75,20 @@ export function SnookerTableCanvasImpl({
     exportImage: () => stageRef.current?.toDataURL({ pixelRatio: 2 }) ?? null,
   }));
 
-  const toCanvas = (point: Point): Point => ({
-    x: (point.x + PADDING_MM) * stageSize.scale,
-    y: (point.y + PADDING_MM) * stageSize.scale,
-  });
-  const toDomain = (point: Point): Point => ({
-    x: clamp(point.x / stageSize.scale - PADDING_MM, 0, dimensions.width),
-    y: clamp(point.y / stageSize.scale - PADDING_MM, 0, dimensions.height),
-  });
+  const toCanvas = useCallback(
+    (point: Point): Point => ({
+      x: (point.x + PADDING_MM) * stageSize.scale,
+      y: (point.y + PADDING_MM) * stageSize.scale,
+    }),
+    [stageSize.scale],
+  );
+  const toDomain = useCallback(
+    (point: Point): Point => ({
+      x: clamp(point.x / stageSize.scale - PADDING_MM, 0, dimensions.width),
+      y: clamp(point.y / stageSize.scale - PADDING_MM, 0, dimensions.height),
+    }),
+    [stageSize.scale, dimensions.width, dimensions.height],
+  );
   const tableX = PADDING_MM * stageSize.scale;
   const tableY = PADDING_MM * stageSize.scale;
   const tableWidth = dimensions.width * stageSize.scale;
@@ -174,7 +180,7 @@ export function SnookerTableCanvasImpl({
       </Stage>
     </div>
   );
-}
+});
 
 /** Grab handles for the selected element, drawn on top of every shape so they
  * are always reachable (like the selection handles on a Miro board). */

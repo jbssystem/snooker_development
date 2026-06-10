@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type {
   CreateDrillTemplateInput,
@@ -16,8 +16,10 @@ import type {
 } from '@snooker/shared';
 import { Modal } from '@/components/layout/Modal';
 import { ChevronDown } from '@/components/layout/ChevronDown';
-import { EmptyState, Field, InfoTooltip, PageHeader } from '@/components/ui';
+import { EmptyState, Field, InfoTooltip, PageHeader, ScrollToTopButton } from '@/components/ui';
+import { DrillDetailsModal } from '@/components/drills/DrillDetailsModal';
 import { useDismissable } from '@/lib/use-dismissable';
+import { useInView } from '@/lib/use-in-view';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { localizeDrillTemplate } from '@/lib/drill-localization';
@@ -90,6 +92,7 @@ export function DrillLibraryClient() {
   const tErr = useTranslations('errors.api');
   const queryClient = useQueryClient();
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
+  const isAdmin = useAuthStore((s) => Boolean(s.user?.roles.includes('SYSTEM_ADMIN')));
   const [serverError, setServerError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<MetricRow[]>([
     { key: 'attempts', label: t('defaultMetrics.attempts'), type: 'number', unit: '', required: true },
@@ -99,6 +102,10 @@ export function DrillLibraryClient() {
   const [importingPhoto, setImportingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // True when an admin is editing a SYSTEM drill — routes the save through the
+  // admin endpoint and keeps the drill's system visibility untouched.
+  const [editingIsSystem, setEditingIsSystem] = useState(false);
+  const [detailsTemplate, setDetailsTemplate] = useState<DrillTemplate | null>(null);
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<DrillCategory | 'all'>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<DrillDifficulty | 'all'>('all');
@@ -166,6 +173,7 @@ export function DrillLibraryClient() {
 
   const resetForm = () => {
     setEditingId(null);
+    setEditingIsSystem(false);
     setServerError(null);
     setPhotoError(null);
     setImportingPhoto(false);
@@ -213,6 +221,21 @@ export function DrillLibraryClient() {
     onError: (e) => setServerError(errorMessage(e, tErr)),
   });
 
+  // Admin-only path: edit a SYSTEM drill via the admin endpoint. Visibility is
+  // omitted so the drill stays a system drill.
+  const adminUpdateTemplate = useMutation({
+    mutationFn: (input: { id: string; data: CreateDrillTemplateInput }) => {
+      const { visibility: _visibility, ...rest } = input.data;
+      return api.admin.updateDrill(token ?? '', input.id, rest);
+    },
+    onSuccess: () => {
+      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['drill-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-drills'] });
+    },
+    onError: (e) => setServerError(errorMessage(e, tErr)),
+  });
+
   const deleteTemplate = useMutation({
     mutationFn: (id: string) => api.drills.deleteTemplate(token ?? '', id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['drill-templates'] }),
@@ -224,11 +247,12 @@ export function DrillLibraryClient() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['drill-templates'] }),
   });
 
-  const loadIntoForm = (template: DrillTemplate, clone: boolean) => {
+  const loadIntoForm = useCallback((template: DrillTemplate, clone: boolean) => {
     // Clone uses the localized (display) text so duplicating a system/library
     // drill produces a readable editable copy; in-place edit keeps own text.
     const source = clone ? localizeDrillTemplate(template, tSystemDrills) : template;
     setEditingId(clone ? null : template.id);
+    setEditingIsSystem(!clone && template.visibility === 'system');
     setServerError(null);
     setFormTab('details');
     form.reset({
@@ -255,7 +279,20 @@ export function DrillLibraryClient() {
     );
     setLayout(source.defaultTableLayout ?? createStandardTableLayout());
     setShowForm(true);
-  };
+  }, [t, tSystemDrills, form]);
+
+  // Stable per-card handlers so the memoized TemplateCard skips re-render when
+  // unrelated parent state (search text, filters) changes.
+  const handleEdit = useCallback((tpl: DrillTemplate) => loadIntoForm(tpl, false), [loadIntoForm]);
+  const handleClone = useCallback((tpl: DrillTemplate) => loadIntoForm(tpl, true), [loadIntoForm]);
+  const deleteMutate = deleteTemplate.mutate;
+  const toggleFavoriteMutate = toggleFavorite.mutate;
+  const handleDelete = useCallback((tpl: DrillTemplate) => deleteMutate(tpl.id), [deleteMutate]);
+  const handleToggleFavorite = useCallback(
+    (tpl: DrillTemplate) => toggleFavoriteMutate(tpl.id),
+    [toggleFavoriteMutate],
+  );
+  const handleOpenDetails = useCallback((tpl: DrillTemplate) => setDetailsTemplate(tpl), []);
 
   const handleImportFromPhoto = useCallback(
     async (file: File) => {
@@ -281,7 +318,11 @@ export function DrillLibraryClient() {
   const submitTemplate = (values: FormValues) => {
     const data = buildTemplateInput(values, metrics, layout);
     if (editingId) {
-      updateTemplate.mutate({ id: editingId, data });
+      if (editingIsSystem) {
+        adminUpdateTemplate.mutate({ id: editingId, data });
+      } else {
+        updateTemplate.mutate({ id: editingId, data });
+      }
     } else {
       createTemplate.mutate(data);
     }
@@ -376,6 +417,12 @@ export function DrillLibraryClient() {
               × {t('filter.reset')}
             </button>
           )}
+
+          {hasActiveFilters && (
+            <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-background-secondary px-3 py-1.5 text-sm font-medium text-text-secondary">
+              {t('filter.count', { count: visibleTemplates.length })}
+            </span>
+          )}
         </div>
       )}
 
@@ -389,10 +436,12 @@ export function DrillLibraryClient() {
               template={template}
               t={t}
               tSystemDrills={tSystemDrills}
-              onClone={() => loadIntoForm(template, true)}
-              onDelete={() => deleteTemplate.mutate(template.id)}
-              onEdit={() => loadIntoForm(template, false)}
-              onToggleFavorite={() => toggleFavorite.mutate(template.id)}
+              isAdmin={isAdmin}
+              onClone={handleClone}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+              onOpenDetails={handleOpenDetails}
+              onToggleFavorite={handleToggleFavorite}
             />
           ))}
         {!templatesQuery.isLoading && templates.length === 0 && (
@@ -423,6 +472,11 @@ export function DrillLibraryClient() {
       >
         <form className="grid gap-4" data-testid="drill-template-form" onSubmit={form.handleSubmit(submitTemplate, () => setFormTab('details'))}>
           {editingId && <p className="text-sm text-text-secondary">{t('form.editingSubtitle')}</p>}
+          {editingIsSystem && (
+            <p className="rounded-md border border-brand-gold/40 bg-brand-gold/10 px-3 py-2 text-sm text-brand-gold">
+              {t('form.systemEditNote')}
+            </p>
+          )}
 
           <div className="sunken flex gap-1 rounded-lg p-1" role="tablist">
             {formTabs.map((tab) => (
@@ -472,10 +526,16 @@ export function DrillLibraryClient() {
                 </select>
               </Field>
               <Field hint={t('hints.visibility')} label={t('fields.visibility')}>
-                <select className={inputClass} {...form.register('visibility')}>
-                  <option value="private">{t('visibility.private')}</option>
-                  <option value="shared">{t('visibility.shared')}</option>
-                </select>
+                {editingIsSystem ? (
+                  <select className={inputClass} disabled value="system">
+                    <option value="system">{t('visibility.system')}</option>
+                  </select>
+                ) : (
+                  <select className={inputClass} {...form.register('visibility')}>
+                    <option value="private">{t('visibility.private')}</option>
+                    <option value="shared">{t('visibility.shared')}</option>
+                  </select>
+                )}
               </Field>
             </div>
 
@@ -583,8 +643,12 @@ export function DrillLibraryClient() {
           )}
 
           <div className="flex flex-wrap gap-2">
-            <button className={`${primaryButtonClass} flex-1`} disabled={createTemplate.isPending || updateTemplate.isPending} type="submit">
-              {createTemplate.isPending || updateTemplate.isPending
+            <button
+              className={`${primaryButtonClass} flex-1`}
+              disabled={createTemplate.isPending || updateTemplate.isPending || adminUpdateTemplate.isPending}
+              type="submit"
+            >
+              {createTemplate.isPending || updateTemplate.isPending || adminUpdateTemplate.isPending
                 ? t('saving')
                 : editingId
                   ? t('form.saveEdit')
@@ -598,6 +662,14 @@ export function DrillLibraryClient() {
           </div>
         </form>
       </Modal>
+
+      <DrillDetailsModal
+        open={detailsTemplate !== null}
+        template={detailsTemplate}
+        onClose={() => setDetailsTemplate(null)}
+      />
+
+      <ScrollToTopButton label={t('scrollToTop')} />
     </main>
   );
 }
@@ -694,25 +766,32 @@ function TemplateCardSkeleton() {
   );
 }
 
-function TemplateCard({
+const TemplateCard = memo(function TemplateCard({
   template,
   t,
   tSystemDrills,
+  isAdmin,
   onClone,
   onDelete,
   onEdit,
+  onOpenDetails,
   onToggleFavorite,
 }: {
   template: DrillTemplate;
   t: (key: string) => string;
   tSystemDrills: ReturnType<typeof useTranslations>;
-  onClone: () => void;
-  onDelete: () => void;
-  onEdit: () => void;
-  onToggleFavorite: () => void;
+  isAdmin: boolean;
+  onClone: (template: DrillTemplate) => void;
+  onDelete: (template: DrillTemplate) => void;
+  onEdit: (template: DrillTemplate) => void;
+  onOpenDetails: (template: DrillTemplate) => void;
+  onToggleFavorite: (template: DrillTemplate) => void;
 }) {
   const localizedTemplate = localizeDrillTemplate(template, tSystemDrills);
   const isSystem = template.visibility === 'system';
+  // System drills are editable in place only by an admin; everyone may edit
+  // their own (non-system) drills.
+  const canEdit = isSystem ? isAdmin : true;
 
   return (
     <article
@@ -730,15 +809,22 @@ function TemplateCard({
             {t(`visibility.${template.visibility}`)}
           </span>
         </div>
-        <h2 className="mt-2 text-lg font-semibold leading-snug text-text-primary">{localizedTemplate.name}</h2>
+        <button
+          className="mt-2 block w-full text-left text-lg font-semibold leading-snug text-text-primary transition hover:text-brand-accent focus-ring"
+          onClick={() => onOpenDetails(template)}
+          title={t('openDetails')}
+          type="button"
+        >
+          {localizedTemplate.name}
+        </button>
       </header>
 
       <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{localizedTemplate.description}</p>
 
       <TablePreview
         layout={localizedTemplate.defaultTableLayout ?? EMPTY_PREVIEW_LAYOUT}
-        title={localizedTemplate.name}
-        t={t}
+        label={t('openDetails')}
+        onOpen={() => onOpenDetails(template)}
       />
 
       <dl className="mt-4 grid gap-3 text-sm">
@@ -757,26 +843,22 @@ function TemplateCard({
       )}
 
       <div className="mt-auto flex flex-wrap gap-2 border-t border-border-subtle pt-4">
-        {isSystem ? (
-          <button className={cardButtonClass} onClick={onClone} type="button">
-            {t('duplicate')}
+        {canEdit && (
+          <button className={cardButtonClass} onClick={() => onEdit(template)} type="button">
+            {t('edit')}
           </button>
-        ) : (
-          <>
-            <button className={cardButtonClass} onClick={onEdit} type="button">
-              {t('edit')}
-            </button>
-            <button className={cardButtonClass} onClick={onClone} type="button">
-              {t('duplicate')}
-            </button>
-            <button
-              className="rounded-md border border-border-subtle px-3 py-1.5 text-xs text-text-secondary transition hover:border-state-error hover:text-state-error"
-              onClick={onDelete}
-              type="button"
-            >
-              {t('delete')}
-            </button>
-          </>
+        )}
+        <button className={cardButtonClass} onClick={() => onClone(template)} type="button">
+          {t('duplicate')}
+        </button>
+        {!isSystem && (
+          <button
+            className="rounded-md border border-border-subtle px-3 py-1.5 text-xs text-text-secondary transition hover:border-state-error hover:text-state-error"
+            onClick={() => onDelete(template)}
+            type="button"
+          >
+            {t('delete')}
+          </button>
         )}
       </div>
 
@@ -788,7 +870,7 @@ function TemplateCard({
             ? 'text-brand-gold hover:text-brand-gold/70'
             : 'text-text-disabled hover:text-brand-gold'
         }`}
-        onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+        onClick={(e) => { e.stopPropagation(); onToggleFavorite(template); }}
         title={template.isFavorited ? t('favorite.remove') : t('favorite.add')}
         type="button"
       >
@@ -796,44 +878,42 @@ function TemplateCard({
       </button>
     </article>
   );
-}
+});
 
 /**
- * Drill table thumbnail that enlarges for a closer look. On pointer devices the
- * thumbnail scales up on hover; on every device (incl. touch) tapping it opens a
- * full-size preview in a modal — so the small table stays readable everywhere.
+ * Drill table thumbnail. The Konva canvas is heavy, so it is mounted lazily once
+ * the card scrolls near the viewport (a placeholder holds the space until then) —
+ * this keeps the library from freezing when many drills load at once. Clicking
+ * the thumbnail opens the full details modal.
  */
 function TablePreview({
   layout,
-  title,
-  t,
+  label,
+  onOpen,
 }: {
   layout: TableLayout;
-  title: string;
-  t: (key: string) => string;
+  label: string;
+  onOpen: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const { ref, inView } = useInView<HTMLButtonElement>();
 
   return (
-    <>
-      <button
-        aria-label={t('enlargePreview')}
-        className="group/preview sunken mt-4 block w-full overflow-hidden rounded-lg border border-border-subtle p-2 transition focus-ring hover:border-brand-accent/60"
-        onClick={() => setOpen(true)}
-        title={t('enlargePreview')}
-        type="button"
-      >
-        <span className="block origin-center transition-transform duration-200 ease-out group-hover/preview:scale-[1.06]">
+    <button
+      ref={ref}
+      aria-label={label}
+      className="group/preview sunken mt-4 block w-full overflow-hidden rounded-lg border border-border-subtle p-2 transition focus-ring hover:border-brand-accent/60"
+      onClick={onOpen}
+      title={label}
+      type="button"
+    >
+      <span className="block origin-center transition-transform duration-200 ease-out group-hover/preview:scale-[1.06]">
+        {inView ? (
           <TableLayoutPreview layout={layout} />
-        </span>
-      </button>
-
-      <Modal className="sm:max-w-3xl" closeLabel={t('close')} onClose={() => setOpen(false)} open={open} title={title}>
-        <div className="sunken rounded-lg border border-border-subtle p-2 sm:p-3">
-          <TableLayoutPreview layout={layout} />
-        </div>
-      </Modal>
-    </>
+        ) : (
+          <div className="aspect-[2/1] w-full rounded-md border border-border-subtle bg-background-elevated" />
+        )}
+      </span>
+    </button>
   );
 }
 

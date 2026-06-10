@@ -565,6 +565,12 @@ export const api = {
       request<DrillTemplate[]>(`/admin/drill-templates${search ? `?search=${encodeURIComponent(search)}` : ''}`, {
         token,
       }),
+    updateDrill: (token: string, id: string, input: UpdateDrillTemplateInput) =>
+      request<DrillTemplate>(`/admin/drill-templates/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(input),
+      }),
     setDrillVisibility: (token: string, id: string, visibility: 'private' | 'shared' | 'system') =>
       request<DrillTemplate>(`/admin/drill-templates/${id}/visibility`, {
         method: 'PATCH',

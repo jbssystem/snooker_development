@@ -13,9 +13,11 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   SetDrillHiddenSchema,
+  UpdateDrillTemplateSchema,
   UpdateDrillVisibilitySchema,
   type DrillTemplate,
   type SetDrillHiddenInput,
+  type UpdateDrillTemplateInput,
   type UpdateDrillVisibilityInput,
 } from '@snooker/shared';
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe';
@@ -37,6 +39,15 @@ export class AdminDrillsController {
   @Get()
   list(@Query('search') search?: string): Promise<DrillTemplate[]> {
     return this.drills.list(search?.trim() || undefined);
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentUserId() actorId: string,
+    @Param('id', CuidValidationPipe) id: string,
+    @Body(new ZodValidationPipe(UpdateDrillTemplateSchema)) body: UpdateDrillTemplateInput,
+  ): Promise<DrillTemplate> {
+    return this.drills.update(actorId, id, body);
   }
 
   @Patch(':id/visibility')
