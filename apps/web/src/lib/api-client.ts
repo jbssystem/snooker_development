@@ -114,7 +114,13 @@ export class ApiError extends Error {
   }
 }
 
-type FetchOptions = RequestInit & { token?: string | null };
+type FetchOptions = RequestInit & {
+  token?: string | null;
+  // Omit the X-Active-Profile header even when a cabinet is selected. Used by
+  // the cabinet-recovery endpoint so a stale/invalid selection can never make
+  // the request that would clear it fail with 403 (otherwise the UI deadlocks).
+  skipActiveProfile?: boolean;
+};
 
 async function request<T>(path: string, opts: FetchOptions = {}): Promise<T> {
   return requestWithRefresh(path, opts, true);
@@ -136,10 +142,11 @@ async function requestWithRefresh<T>(path: string, opts: FetchOptions, retryOnUn
 }
 
 async function send<T>(path: string, opts: FetchOptions = {}): Promise<T> {
-  const { token, headers, ...rest } = opts;
+  const { token, headers, skipActiveProfile, ...rest } = opts;
   // Tell the API which cabinet the request acts in. Only sent on authenticated
   // requests; the backend resolves access (owner / shared) from it.
-  const activeProfileId = token ? useAuthStore.getState().activeProfileId : null;
+  const activeProfileId =
+    token && !skipActiveProfile ? useAuthStore.getState().activeProfileId : null;
   const res = await fetch(`${BASE_URL}${path}`, {
     ...rest,
     credentials: rest.credentials ?? 'include',
@@ -210,8 +217,11 @@ export const api = {
       request<void>('/auth/change-password', { method: 'POST', token, body: JSON.stringify(input) }),
   },
   profiles: {
-    // Cabinets the user can switch between (own + shared).
-    accessible: (token: string) => request<AccessibleProfile[]>('/profiles/accessible', { token }),
+    // Cabinets the user can switch between (own + shared). Never sends the
+    // active-cabinet header: this is the recovery call that lets the client
+    // reset a stale selection, so it must succeed regardless of what's selected.
+    accessible: (token: string) =>
+      request<AccessibleProfile[]>('/profiles/accessible', { token, skipActiveProfile: true }),
     // Owner-only management of the active cabinet's access.
     listMembers: (token: string) => request<ProfileMember[]>('/profiles/me/members', { token }),
     updateMember: (token: string, userId: string, input: UpdateMemberAccessInput) =>
