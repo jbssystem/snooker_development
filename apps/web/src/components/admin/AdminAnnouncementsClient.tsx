@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { AnnouncementSeverity, AnnouncementType, CreateAnnouncementInput } from '@snooker/shared';
 import { useAuthStore } from '@/lib/auth-store';
-import { api } from '@/lib/api-client';
+import { api, ApiError } from '@/lib/api-client';
+import { useToast } from '@/lib/toast-store';
 
 const TYPES: AnnouncementType[] = ['announcement', 'release_note', 'maintenance'];
 const SEVERITIES: AnnouncementSeverity[] = ['info', 'warning', 'critical'];
@@ -21,6 +22,11 @@ const emptyForm: CreateAnnouncementInput = {
 
 export function AdminAnnouncementsClient() {
   const t = useTranslations('admin');
+  const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
+  const errText = (e: unknown) =>
+    e instanceof ApiError ? tErr(e.code as never) : tToast('error');
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CreateAnnouncementInput>(emptyForm);
@@ -37,9 +43,18 @@ export function AdminAnnouncementsClient() {
     onSuccess: () => {
       setForm(emptyForm);
       invalidate();
+      toast.success(tToast('announcementCreated'));
     },
+    onError: (e) => toast.error(errText(e)),
   });
-  const action = useMutation({ mutationFn: (fn: () => Promise<unknown>) => fn(), onSuccess: invalidate });
+  const action = useMutation({
+    mutationFn: ({ fn }: { fn: () => Promise<unknown>; message: string }) => fn(),
+    onSuccess: (_data, vars) => {
+      invalidate();
+      toast.success(vars.message);
+    },
+    onError: (e) => toast.error(errText(e)),
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -128,17 +143,36 @@ export function AdminAnnouncementsClient() {
               </div>
               <div className="flex shrink-0 flex-col gap-1.5">
                 {a.isPublished ? (
-                  <ActionBtn onClick={() => action.mutate(() => api.admin.unpublishAnnouncement(token ?? '', a.id))}>
+                  <ActionBtn
+                    onClick={() =>
+                      action.mutate({
+                        fn: () => api.admin.unpublishAnnouncement(token ?? '', a.id),
+                        message: tToast('announcementUpdated'),
+                      })
+                    }
+                  >
                     {t('announcements.unpublish')}
                   </ActionBtn>
                 ) : (
-                  <ActionBtn onClick={() => action.mutate(() => api.admin.publishAnnouncement(token ?? '', a.id))}>
+                  <ActionBtn
+                    onClick={() =>
+                      action.mutate({
+                        fn: () => api.admin.publishAnnouncement(token ?? '', a.id),
+                        message: tToast('announcementUpdated'),
+                      })
+                    }
+                  >
                     {t('announcements.publish')}
                   </ActionBtn>
                 )}
                 <ActionBtn
                   variant="danger"
-                  onClick={() => action.mutate(() => api.admin.deleteAnnouncement(token ?? '', a.id))}
+                  onClick={() =>
+                    action.mutate({
+                      fn: () => api.admin.deleteAnnouncement(token ?? '', a.id),
+                      message: tToast('announcementDeleted'),
+                    })
+                  }
                 >
                   {t('announcements.delete')}
                 </ActionBtn>

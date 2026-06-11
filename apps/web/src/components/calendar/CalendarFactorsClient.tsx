@@ -19,6 +19,7 @@ import { Link } from '@/i18n/navigation';
 import { Field, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-store';
 
 type CalendarEventFormValues = {
   eventType: CalendarEventType;
@@ -122,6 +123,8 @@ const eventTypes: CalendarEventType[] = [
 export function CalendarFactorsClient() {
   const t = useTranslations('calendar');
   const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
   const locale = useLocale();
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.tokens?.accessToken ?? null);
@@ -159,7 +162,9 @@ export function CalendarFactorsClient() {
     onSuccess: () => {
       eventForm.reset(calendarEventDefaults());
       queryClient.invalidateQueries({ queryKey: ['calendar-events', token] });
+      toast.success(tToast('eventCreated'));
     },
+    onError: (e) => toast.error(errorMessage(e, tErr)),
   });
   const saveLifestyle = useMutation({
     mutationFn: (input: CreateLifestyleFactorInput) =>
@@ -167,7 +172,9 @@ export function CalendarFactorsClient() {
     onSuccess: () => {
       lifestyleForm.reset(lifestyleDefaults());
       queryClient.invalidateQueries({ queryKey: ['lifestyle-factors', token] });
+      toast.success(tToast('factorSaved'));
     },
+    onError: (e) => toast.error(errorMessage(e, tErr)),
   });
   const createSupplement = useMutation({
     mutationFn: (input: CreateSupplementEventInput) =>
@@ -176,7 +183,9 @@ export function CalendarFactorsClient() {
       supplementForm.reset(supplementDefaults());
       queryClient.invalidateQueries({ queryKey: ['supplement-events', token] });
       queryClient.invalidateQueries({ queryKey: ['calendar-events', token] });
+      toast.success(tToast('supplementCreated'));
     },
+    onError: (e) => toast.error(errorMessage(e, tErr)),
   });
 
   const events = eventsQuery.data ?? [];

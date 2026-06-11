@@ -10,6 +10,7 @@ import { AccordionSection } from '@/components/layout/AccordionSection';
 import { CountryOptions, Field, FlagIcon, PageHeader } from '@/components/ui';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-store';
 import { isLocale, locales, type Locale } from '@/i18n/config';
 import { useActiveProfile } from '@/lib/use-active-profile';
 import { AvatarPicker } from './AvatarPicker';
@@ -77,6 +78,8 @@ const equipmentDefaults: EquipmentFormValues = {
 export function ProfileClient() {
   const t = useTranslations('profile');
   const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
   const queryClient = useQueryClient();
   const tokens = useAuthStore((s) => s.tokens);
   const token = tokens?.accessToken ?? null;
@@ -136,8 +139,13 @@ export function ProfileClient() {
       setServerError(null);
       queryClient.invalidateQueries({ queryKey: ['player-profile'] });
       queryClient.invalidateQueries({ queryKey: ['equipment-profiles'] });
+      toast.success(tToast('profileSaved'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const addEquipment = useMutation({
@@ -146,14 +154,26 @@ export function ProfileClient() {
       setServerError(null);
       equipmentForm.reset(equipmentDefaults);
       queryClient.invalidateQueries({ queryKey: ['equipment-profiles'] });
+      toast.success(tToast('equipmentAdded'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const deleteEquipment = useMutation({
     mutationFn: (id: string) => api.players.deleteEquipment(token ?? '', id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['equipment-profiles'] }),
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equipment-profiles'] });
+      toast.success(tToast('equipmentDeleted'));
+    },
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const saveAvatar = useMutation({
@@ -161,8 +181,13 @@ export function ProfileClient() {
     onSuccess: () => {
       setServerError(null);
       queryClient.invalidateQueries({ queryKey: ['player-profile'] });
+      toast.success(tToast('avatarUpdated'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const changePassword = useMutation({
@@ -172,10 +197,13 @@ export function ProfileClient() {
       setPasswordError(null);
       setPasswordSaved(true);
       passwordForm.reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      toast.success(tToast('passwordChanged'));
     },
     onError: (e) => {
       setPasswordSaved(false);
-      setPasswordError(errorMessage(e, tErr));
+      const msg = errorMessage(e, tErr);
+      setPasswordError(msg);
+      toast.error(msg);
     },
   });
 

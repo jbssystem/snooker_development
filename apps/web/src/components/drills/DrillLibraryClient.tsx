@@ -22,6 +22,7 @@ import { useDismissable } from '@/lib/use-dismissable';
 import { useInView } from '@/lib/use-in-view';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-store';
 import { localizeDrillTemplate } from '@/lib/drill-localization';
 import {
   DrillLayoutEditor,
@@ -91,6 +92,8 @@ export function DrillLibraryClient() {
   const t = useTranslations('drills');
   const tSystemDrills = useTranslations('systemDrills');
   const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
   const queryClient = useQueryClient();
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const isAdmin = useAuthStore((s) => Boolean(s.user?.roles.includes('SYSTEM_ADMIN')));
@@ -208,8 +211,13 @@ export function DrillLibraryClient() {
     onSuccess: () => {
       resetForm();
       queryClient.invalidateQueries({ queryKey: ['drill-templates'] });
+      toast.success(tToast('drillCreated'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const updateTemplate = useMutation({
@@ -218,8 +226,13 @@ export function DrillLibraryClient() {
     onSuccess: () => {
       resetForm();
       queryClient.invalidateQueries({ queryKey: ['drill-templates'] });
+      toast.success(tToast('drillSaved'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   // Admin-only path: edit a SYSTEM drill via the admin endpoint. Visibility is
@@ -233,14 +246,26 @@ export function DrillLibraryClient() {
       resetForm();
       queryClient.invalidateQueries({ queryKey: ['drill-templates'] });
       queryClient.invalidateQueries({ queryKey: ['admin-drills'] });
+      toast.success(tToast('drillSaved'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const deleteTemplate = useMutation({
     mutationFn: (id: string) => api.drills.deleteTemplate(token ?? '', id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['drill-templates'] }),
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['drill-templates'] });
+      toast.success(tToast('drillDeleted'));
+    },
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const toggleFavorite = useMutation({

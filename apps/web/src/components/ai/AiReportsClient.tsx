@@ -21,6 +21,7 @@ import { Link } from '@/i18n/navigation';
 import { AccordionSection } from '@/components/layout/AccordionSection';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-store';
 import { MarkdownLite, splitReportSections } from '@/lib/markdown-lite';
 
 const REPORT_PAGE_SIZE = 8;
@@ -89,6 +90,8 @@ type ExternalMatchNotes = {
 export function AiReportsClient() {
   const t = useTranslations('ai');
   const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
   const locale = useLocale();
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.tokens?.accessToken ?? null);
@@ -121,7 +124,9 @@ export function AiReportsClient() {
     onSuccess: (report) => {
       setActiveReportId(report.id);
       queryClient.invalidateQueries({ queryKey: ['ai-reports', token] });
+      toast.success(tToast('reportGenerated'));
     },
+    onError: (e) => toast.error(errorMessage(e, tErr)),
   });
 
   const reports = reportsQuery.data ?? [];

@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { AdminUserListItem } from '@snooker/shared';
 import { useAuthStore } from '@/lib/auth-store';
-import { api } from '@/lib/api-client';
+import { api, ApiError } from '@/lib/api-client';
+import { useToast } from '@/lib/toast-store';
 import { Modal } from '@/components/layout/Modal';
 
 type SortKey = 'user' | 'tokens';
@@ -13,6 +14,11 @@ type SortDir = 'asc' | 'desc';
 
 export function AdminUsersClient() {
   const t = useTranslations('admin');
+  const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
+  const errText = (e: unknown) =>
+    e instanceof ApiError ? tErr(e.code as never) : tToast('error');
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const currentUserId = useAuthStore((s) => s.user?.id ?? null);
   const queryClient = useQueryClient();
@@ -31,16 +37,20 @@ export function AdminUsersClient() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-users', token] });
   const mutation = useMutation({
-    mutationFn: (fn: () => Promise<unknown>) => fn(),
-    onSuccess: invalidate,
+    mutationFn: ({ fn }: { fn: () => Promise<unknown>; message: string }) => fn(),
+    onSuccess: (_data, vars) => {
+      invalidate();
+      toast.success(vars.message);
+    },
+    onError: (e) => toast.error(errText(e)),
   });
 
-  const run = (fn: () => Promise<unknown>) => mutation.mutate(fn);
+  const run = (fn: () => Promise<unknown>, message: string) => mutation.mutate({ fn, message });
 
   const confirmDelete = () => {
     if (!deleteTarget) return;
     const { id } = deleteTarget;
-    run(() => api.admin.deleteUser(token ?? '', id));
+    run(() => api.admin.deleteUser(token ?? '', id), tToast('userDeleted'));
     setDeleteTarget(null);
   };
 
@@ -122,11 +132,11 @@ export function AdminUsersClient() {
                   isSelf={u.id === currentUserId}
                   busy={mutation.isPending}
                   t={t}
-                  onBlock={() => run(() => api.admin.blockUser(token ?? '', u.id))}
-                  onUnblock={() => run(() => api.admin.unblockUser(token ?? '', u.id))}
-                  onGrant={() => run(() => api.admin.grantAdmin(token ?? '', u.id))}
-                  onRevoke={() => run(() => api.admin.revokeAdmin(token ?? '', u.id))}
-                  onVerify={() => run(() => api.admin.verifyUser(token ?? '', u.id))}
+                  onBlock={() => run(() => api.admin.blockUser(token ?? '', u.id), tToast('userUpdated'))}
+                  onUnblock={() => run(() => api.admin.unblockUser(token ?? '', u.id), tToast('userUpdated'))}
+                  onGrant={() => run(() => api.admin.grantAdmin(token ?? '', u.id), tToast('userUpdated'))}
+                  onRevoke={() => run(() => api.admin.revokeAdmin(token ?? '', u.id), tToast('userUpdated'))}
+                  onVerify={() => run(() => api.admin.verifyUser(token ?? '', u.id), tToast('userUpdated'))}
                   onDelete={() => setDeleteTarget(u)}
                 />
               ))}

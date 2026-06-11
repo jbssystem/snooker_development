@@ -20,6 +20,7 @@ import { Field } from '@/components/ui';
 import { useCanEdit } from '@/lib/use-active-profile';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-store';
 import { localizeDrillName, localizeDrillTemplate } from '@/lib/drill-localization';
 import { useHotkey } from '@/lib/use-hotkeys';
 import { TableLayoutPreview } from '@/components/table-renderer';
@@ -79,6 +80,8 @@ export function TrainingSessionClient() {
   const t = useTranslations('training');
   const tSystemDrills = useTranslations('systemDrills');
   const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
   const queryClient = useQueryClient();
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const form = useForm<SessionFormValues>({ defaultValues });
@@ -146,8 +149,13 @@ export function TrainingSessionClient() {
       setShowNewSession(false);
       setActiveSessionId(session.id);
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
+      toast.success(tToast('trainingCreated'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const addDrill = useMutation({
@@ -157,8 +165,13 @@ export function TrainingSessionClient() {
       setServerError(null);
       setActiveExecutionId(execution.id);
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
+      toast.success(tToast('drillAdded'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const removeDrill = useMutation({
@@ -168,8 +181,13 @@ export function TrainingSessionClient() {
       // Drop the active selection if the removed drill was the one in focus.
       setActiveExecutionId((current) => (current === executionId ? null : current));
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
+      toast.success(tToast('drillRemoved'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const reopenSession = useMutation({
@@ -177,8 +195,13 @@ export function TrainingSessionClient() {
     onSuccess: () => {
       setServerError(null);
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
+      toast.success(tToast('trainingReopened'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const addAttempt = useMutation({
@@ -188,7 +211,11 @@ export function TrainingSessionClient() {
       setServerError(null);
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const finishDrill = useMutation({
@@ -197,7 +224,11 @@ export function TrainingSessionClient() {
       setServerError(null);
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const removeLastAttempt = useMutation({
@@ -206,7 +237,11 @@ export function TrainingSessionClient() {
       setServerError(null);
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const finishSession = useMutation({
@@ -218,8 +253,13 @@ export function TrainingSessionClient() {
       setServerError(null);
       setFinishFatigue('');
       queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
+      toast.success(tToast('trainingFinished'));
     },
-    onError: (e) => setServerError(errorMessage(e, tErr)),
+    onError: (e) => {
+      const msg = errorMessage(e, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const openNewSession = () => {

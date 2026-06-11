@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-store';
 
 /**
  * Invitation landing page reached from the email link (?token=). Shows a
@@ -16,6 +17,9 @@ export function InviteClient() {
   const t = useTranslations('sharing.invite');
   const tRel = useTranslations('sharing.relationships');
   const tLvl = useTranslations('sharing.levels');
+  const tToast = useTranslations('toasts');
+  const tErr = useTranslations('errors.api');
+  const toast = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -36,11 +40,17 @@ export function InviteClient() {
     mutationFn: () => api.invitations.acceptToken(authToken ?? '', token),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['accessible-profiles'] });
+      toast.success(tToast('inviteAccepted'));
       router.replace('/dashboard');
     },
+    onError: (e) =>
+      toast.error(e instanceof ApiError ? tErr(e.code as never) : tToast('error')),
   });
   const declineM = useMutation({
     mutationFn: () => api.invitations.declineToken(authToken ?? '', token),
+    onSuccess: () => toast.success(tToast('inviteDeclined')),
+    onError: (e) =>
+      toast.error(e instanceof ApiError ? tErr(e.code as never) : tToast('error')),
   });
 
   const card = (children: React.ReactNode) => (

@@ -315,6 +315,15 @@ html {
   .ui-pop-in {
     animation: ui-pop-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
+
+  /* Toast enters by sliding in from the right; exits by fading back out. */
+  .ui-toast-in {
+    animation: ui-toast-in 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .ui-toast-out {
+    animation: ui-toast-out 200ms ease-in both;
+  }
 }
 
 @keyframes ui-fade-in {
@@ -350,5 +359,29 @@ html {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes ui-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes ui-toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(16px);
   }
 }

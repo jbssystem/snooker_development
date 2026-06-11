@@ -23,6 +23,7 @@ import { CountryOptions, Field, PlusIcon } from '@/components/ui';
 import { useCanEdit } from '@/lib/use-active-profile';
 import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-store';
 import { FrameScorer, type ScorerResult } from './FrameScorer';
 import { BallMap, MatchTypeBadge } from './ball-visuals';
 
@@ -99,6 +100,8 @@ const frameDefaultValues: FrameFormValues = {
 export function MatchLogClient() {
   const t = useTranslations('matches');
   const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
   const locale = useLocale();
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.tokens?.accessToken ?? null);
@@ -169,8 +172,13 @@ export function MatchLogClient() {
       matchForm.reset(matchDefaultValues);
       queryClient.invalidateQueries({ queryKey: ['matches', token] });
       queryClient.invalidateQueries({ queryKey: ['player-dashboard', token] });
+      toast.success(tToast('matchCreated'));
     },
-    onError: (error) => setServerError(errorMessage(error, tErr)),
+    onError: (error) => {
+      const msg = errorMessage(error, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const updateMatch = useMutation({
@@ -183,8 +191,13 @@ export function MatchLogClient() {
       matchForm.reset(matchDefaultValues);
       queryClient.invalidateQueries({ queryKey: ['matches', token] });
       queryClient.invalidateQueries({ queryKey: ['player-dashboard', token] });
+      toast.success(tToast('matchSaved'));
     },
-    onError: (error) => setServerError(errorMessage(error, tErr)),
+    onError: (error) => {
+      const msg = errorMessage(error, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const editFrame = useMutation({
@@ -195,8 +208,13 @@ export function MatchLogClient() {
       setEditingFrameNumber(null);
       queryClient.invalidateQueries({ queryKey: ['matches', token] });
       queryClient.invalidateQueries({ queryKey: ['player-dashboard', token] });
+      toast.success(tToast('frameSaved'));
     },
-    onError: (error) => setServerError(errorMessage(error, tErr)),
+    onError: (error) => {
+      const msg = errorMessage(error, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const removeLastFrame = useMutation({
@@ -205,8 +223,13 @@ export function MatchLogClient() {
       setServerError(null);
       queryClient.invalidateQueries({ queryKey: ['matches', token] });
       queryClient.invalidateQueries({ queryKey: ['player-dashboard', token] });
+      toast.success(tToast('frameRemoved'));
     },
-    onError: (error) => setServerError(errorMessage(error, tErr)),
+    onError: (error) => {
+      const msg = errorMessage(error, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const openFrameEdit = (frame: Match['frames'][number]) => {
@@ -254,8 +277,13 @@ export function MatchLogClient() {
       frameForm.reset(frameDefaultValues);
       queryClient.invalidateQueries({ queryKey: ['matches', token] });
       queryClient.invalidateQueries({ queryKey: ['player-dashboard', token] });
+      toast.success(tToast('frameAdded'));
     },
-    onError: (error) => setServerError(errorMessage(error, tErr)),
+    onError: (error) => {
+      const msg = errorMessage(error, tErr);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   const profileMissing = profileQuery.data === null;

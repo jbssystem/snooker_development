@@ -5,13 +5,19 @@ import { useTranslations } from 'next-intl';
 import { useState, useMemo } from 'react';
 import type { DrillVisibility } from '@snooker/shared';
 import { useAuthStore } from '@/lib/auth-store';
-import { api } from '@/lib/api-client';
+import { api, ApiError } from '@/lib/api-client';
+import { useToast } from '@/lib/toast-store';
 
 const VISIBILITIES: DrillVisibility[] = ['private', 'shared', 'system'];
 const PAGE_SIZE = 20;
 
 export function AdminExercisesClient() {
   const t = useTranslations('admin');
+  const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
+  const errText = (e: unknown) =>
+    e instanceof ApiError ? tErr(e.code as never) : tToast('error');
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -26,13 +32,21 @@ export function AdminExercisesClient() {
   const setVisibility = useMutation({
     mutationFn: ({ id, visibility }: { id: string; visibility: DrillVisibility }) =>
       api.admin.setDrillVisibility(token ?? '', id, visibility),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-drills', token] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-drills', token] });
+      toast.success(tToast('visibilityUpdated'));
+    },
+    onError: (e) => toast.error(errText(e)),
   });
 
   const setHidden = useMutation({
     mutationFn: ({ id, hidden }: { id: string; hidden: boolean }) =>
       api.admin.setDrillHidden(token ?? '', id, hidden),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-drills', token] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-drills', token] });
+      toast.success(tToast('visibilityUpdated'));
+    },
+    onError: (e) => toast.error(errText(e)),
   });
 
   const allItems = query.data ?? [];

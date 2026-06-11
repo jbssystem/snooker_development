@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { CreateAiFocusPresetInput } from '@snooker/shared';
 import { useAuthStore } from '@/lib/auth-store';
-import { api } from '@/lib/api-client';
+import { api, ApiError } from '@/lib/api-client';
+import { useToast } from '@/lib/toast-store';
 
 const emptyForm: CreateAiFocusPresetInput = {
   slug: '',
@@ -17,6 +18,11 @@ const emptyForm: CreateAiFocusPresetInput = {
 
 export function AdminAiFocusPresetsClient() {
   const t = useTranslations('admin');
+  const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
+  const errText = (e: unknown) =>
+    e instanceof ApiError ? tErr(e.code as never) : tToast('error');
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CreateAiFocusPresetInput>(emptyForm);
@@ -42,9 +48,18 @@ export function AdminAiFocusPresetsClient() {
     onSuccess: () => {
       resetForm();
       invalidate();
+      toast.success(tToast('presetSaved'));
     },
+    onError: (e) => toast.error(errText(e)),
   });
-  const action = useMutation({ mutationFn: (fn: () => Promise<unknown>) => fn(), onSuccess: invalidate });
+  const action = useMutation({
+    mutationFn: ({ fn }: { fn: () => Promise<unknown>; message: string }) => fn(),
+    onSuccess: (_data, vars) => {
+      invalidate();
+      toast.success(vars.message);
+    },
+    onError: (e) => toast.error(errText(e)),
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -160,7 +175,12 @@ export function AdminAiFocusPresetsClient() {
                 </ActionBtn>
                 <ActionBtn
                   variant="danger"
-                  onClick={() => action.mutate(() => api.admin.deleteAiFocusPreset(token ?? '', preset.id))}
+                  onClick={() =>
+                    action.mutate({
+                      fn: () => api.admin.deleteAiFocusPreset(token ?? '', preset.id),
+                      message: tToast('presetDeleted'),
+                    })
+                  }
                 >
                   {t('aiFocusPresets.delete')}
                 </ActionBtn>

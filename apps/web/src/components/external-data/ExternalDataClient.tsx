@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import { PageHeader } from '@/components/ui';
 import { api, ApiError, type ImportedMatch } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-store';
 
 type ExternalMatchNotes = {
   source?: string;
@@ -56,6 +57,11 @@ export function ExternalDataClient() {
 
 function AuthenticatedView({ token }: { token: string }) {
   const t = useTranslations('externalData');
+  const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
+  const errText = (e: unknown) =>
+    e instanceof ApiError ? tErr(e.code as never) : tToast('error');
   const locale = useLocale();
   const queryClient = useQueryClient();
   const [urlInput, setUrlInput] = useState('');
@@ -79,12 +85,18 @@ function AuthenticatedView({ token }: { token: string }) {
     onSuccess: () => {
       setUrlInput('');
       queryClient.invalidateQueries({ queryKey: ['external-links', token] });
+      toast.success(tToast('linkAdded'));
     },
+    onError: (e) => toast.error(errText(e)),
   });
 
   const deleteLink = useMutation({
     mutationFn: (id: string) => api.externalSources.deleteLink(token, id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['external-links', token] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['external-links', token] });
+      toast.success(tToast('linkDeleted'));
+    },
+    onError: (e) => toast.error(errText(e)),
   });
 
   const triggerSync = useMutation({
@@ -92,7 +104,9 @@ function AuthenticatedView({ token }: { token: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['external-links', token] });
       setTimeout(() => queryClient.invalidateQueries({ queryKey: ['imported-matches', token] }), 5000);
+      toast.success(tToast('syncStarted'));
     },
+    onError: (e) => toast.error(errText(e)),
   });
 
   const generateAnalysis = useMutation({
@@ -104,7 +118,9 @@ function AuthenticatedView({ token }: { token: string }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-reports', token] });
+      toast.success(tToast('reportGenerated'));
     },
+    onError: (e) => toast.error(errText(e)),
   });
 
   const generateExternalAnalysis = useMutation({
@@ -116,7 +132,9 @@ function AuthenticatedView({ token }: { token: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-reports', token] });
       setSelectedMatchIds(new Set());
+      toast.success(tToast('reportGenerated'));
     },
+    onError: (e) => toast.error(errText(e)),
   });
 
   const links = linksQuery.data ?? [];

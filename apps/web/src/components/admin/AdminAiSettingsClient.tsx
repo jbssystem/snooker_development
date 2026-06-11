@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import type { AiSettingsProvider, UpdateAiSettingsInput } from '@snooker/shared';
 import { useAuthStore } from '@/lib/auth-store';
-import { api } from '@/lib/api-client';
+import { api, ApiError } from '@/lib/api-client';
+import { useToast } from '@/lib/toast-store';
 
 const inputClass =
   'min-h-10 rounded-md border border-border-subtle bg-background-elevated px-3 py-2 text-sm text-text-primary outline-none focus:ring-1 focus:ring-border-active';
@@ -14,6 +15,11 @@ const PROVIDERS: AiSettingsProvider[] = ['none', 'local', 'anthropic'];
 
 export function AdminAiSettingsClient() {
   const t = useTranslations('admin');
+  const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
+  const errText = (e: unknown) =>
+    e instanceof ApiError ? tErr(e.code as never) : tToast('error');
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
   const queryClient = useQueryClient();
 
@@ -42,7 +48,9 @@ export function AdminAiSettingsClient() {
     onSuccess: () => {
       setApiKey('');
       queryClient.invalidateQueries({ queryKey: ['admin-ai-settings', token] });
+      toast.success(tToast('settingsSaved'));
     },
+    onError: (e) => toast.error(errText(e)),
   });
 
   if (query.isLoading) return <p className="text-sm text-text-secondary">{t('loading')}</p>;

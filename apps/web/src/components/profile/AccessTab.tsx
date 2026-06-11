@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { AccessLevel, CreateInvitationInput, MembershipRelationship } from '@snooker/shared';
 import { api, ApiError } from '@/lib/api-client';
+import { useToast } from '@/lib/toast-store';
 
 const RELATIONSHIPS: MembershipRelationship[] = ['COACH', 'PARENT', 'GUEST'];
 const LEVELS: AccessLevel[] = ['VIEW', 'EDIT'];
@@ -19,6 +20,8 @@ export function AccessTab({ token }: { token: string }) {
   const tRel = useTranslations('sharing.relationships');
   const tLvl = useTranslations('sharing.levels');
   const tErr = useTranslations('errors.api');
+  const tToast = useTranslations('toasts');
+  const toast = useToast();
   const queryClient = useQueryClient();
 
   const [email, setEmail] = useState('');
@@ -59,35 +62,56 @@ export function AccessTab({ token }: { token: string }) {
       setEmail('');
       setError(null);
       refresh();
+      toast.success(tToast('inviteSent'));
     },
     onError: (e) => {
       setSent(false);
-      setError(errText(e));
+      const msg = errText(e);
+      setError(msg);
+      toast.error(msg);
     },
   });
   const revokeM = useMutation({
     mutationFn: (id: string) => api.profiles.revokeInvitation(token, id),
-    onSuccess: refresh,
+    onSuccess: () => {
+      refresh();
+      toast.success(tToast('inviteRevoked'));
+    },
+    onError: (e) => toast.error(errText(e)),
   });
   const removeM = useMutation({
     mutationFn: (userId: string) => api.profiles.removeMember(token, userId),
-    onSuccess: refresh,
+    onSuccess: () => {
+      refresh();
+      toast.success(tToast('memberRemoved'));
+    },
+    onError: (e) => toast.error(errText(e)),
   });
   const updateM = useMutation({
     mutationFn: ({ userId, accessLevel: level }: { userId: string; accessLevel: AccessLevel }) =>
       api.profiles.updateMember(token, userId, { accessLevel: level }),
-    onSuccess: refresh,
+    onSuccess: () => {
+      refresh();
+      toast.success(tToast('memberUpdated'));
+    },
+    onError: (e) => toast.error(errText(e)),
   });
   const acceptM = useMutation({
     mutationFn: (id: string) => api.invitations.acceptIncoming(token, id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['incoming-invitations', token] });
       void queryClient.invalidateQueries({ queryKey: ['accessible-profiles'] });
+      toast.success(tToast('inviteAccepted'));
     },
+    onError: (e) => toast.error(errText(e)),
   });
   const declineM = useMutation({
     mutationFn: (id: string) => api.invitations.declineIncoming(token, id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['incoming-invitations', token] }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['incoming-invitations', token] });
+      toast.success(tToast('inviteDeclined'));
+    },
+    onError: (e) => toast.error(errText(e)),
   });
 
   const onInvite = (e: React.FormEvent) => {
