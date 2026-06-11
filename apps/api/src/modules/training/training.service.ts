@@ -4,6 +4,7 @@ import {
   type AddDrillExecutionInput,
   type CreateDrillAttemptInput,
   type CreateTrainingSessionInput,
+  type ListCursorQuery,
   type DrillAttempt,
   type DrillAttemptResult,
   type DrillExecution,
@@ -48,12 +49,15 @@ type AttemptEntity = Prisma.DrillAttemptGetPayload<Record<string, never>>;
 export class TrainingService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async listSessions(profileId: string): Promise<TrainingSession[]> {
+  async listSessions(profileId: string, query?: ListCursorQuery): Promise<TrainingSession[]> {
     const sessions = await this.prisma.trainingSession.findMany({
       where: { playerProfileId: profileId },
       include: sessionInclude,
-      orderBy: { startedAt: 'desc' },
-      take: 50,
+      // `id` keeps the order total so cursor pagination never skips or
+      // duplicates rows that share the same startedAt.
+      orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+      take: query?.limit ?? 50,
+      ...(query?.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     });
 
     return sessions.map(mapTrainingSession);

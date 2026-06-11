@@ -4,6 +4,7 @@ export * from './schemas/profile-sharing';
 export * from './schemas/dashboard';
 export * from './schemas/drill';
 export * from './schemas/match';
+export * from './schemas/pagination';
 export * from './schemas/training';
 export * from './schemas/calendar';
 export * from './schemas/ai';

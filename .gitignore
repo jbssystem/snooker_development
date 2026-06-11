@@ -12,6 +12,8 @@ coverage/
 .env.deploy
 .DS_Store
 *.log
+# Логи one-off скриптов могут содержать учётные данные
+*-create-log.txt
 .vscode/
 !.vscode/extensions.json
 !.vscode/settings.json

@@ -7,6 +7,11 @@ import { PrismaService } from '../prisma/prisma.module';
 
 const ACCESS_TTL_SECONDS = 15 * 60; // 15 min
 const REFRESH_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
+// Reuse of a token revoked longer ago than this is treated as theft (a stolen
+// cookie being replayed) and revokes the whole session family. Inside the
+// window it is more likely a benign race (two tabs refreshing at once), so we
+// only reject the single request.
+const REUSE_GRACE_MS = 30 * 1000;
 
 export type IssuedTokens = Tokens & { refreshToken: string };
 
@@ -47,7 +52,19 @@ export class TokensService {
   async rotate(refreshToken: string, meta: { userAgent?: string; ip?: string }): Promise<IssuedTokens> {
     const tokenHash = this.hash(refreshToken);
     const stored = await this.prisma.refreshToken.findUnique({ where: { tokenHash } });
-    if (!stored || stored.revokedAt) {
+    if (!stored) {
+      throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.RefreshTokenInvalid } });
+    }
+    if (stored.revokedAt) {
+      // Reuse detection: rotation already revoked this token, so someone is
+      // replaying it. Outside the benign-race grace window, assume the cookie
+      // was stolen and revoke every active token for the user.
+      if (Date.now() - stored.revokedAt.getTime() > REUSE_GRACE_MS) {
+        await this.prisma.refreshToken.updateMany({
+          where: { userId: stored.userId, revokedAt: null },
+          data: { revokedAt: new Date() },
+        });
+      }
       throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.RefreshTokenInvalid } });
     }
     if (stored.expiresAt.getTime() < Date.now()) {

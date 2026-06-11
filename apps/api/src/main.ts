@@ -2,20 +2,29 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { HttpErrorFilter } from './common/filters/http-error.filter';
 
 // Photo → ball-map sends a base64-encoded JPEG, which easily exceeds Express's
-// default 100 KB JSON body limit. Disable the default parser and re-register it
-// with a larger cap aligned to RecognizeLayoutInputSchema's ~12 MB image bound.
-const BODY_LIMIT = '15mb';
+// default 100 KB JSON body limit. The large cap (aligned to
+// RecognizeLayoutInputSchema's ~12 MB image bound) applies ONLY to that route;
+// every other endpoint keeps a small limit so oversized payloads are rejected
+// before they allocate memory.
+const DEFAULT_BODY_LIMIT = '256kb';
+const RECOGNIZE_BODY_LIMIT = '15mb';
+const RECOGNIZE_LAYOUT_PATH = '/drill-templates/recognize-layout';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
-  app.useBodyParser('json', { limit: BODY_LIMIT });
-  app.useBodyParser('urlencoded', { extended: true, limit: BODY_LIMIT });
+  // Express keeps the first parsed body (req.body) and the later parser skips
+  // an already-parsed request, so the route-scoped parser must come first.
+  app.use(RECOGNIZE_LAYOUT_PATH, json({ limit: RECOGNIZE_BODY_LIMIT }));
+  app.use(json({ limit: DEFAULT_BODY_LIMIT }));
+  app.use(urlencoded({ extended: true, limit: DEFAULT_BODY_LIMIT }));
   const configService = app.get(ConfigService);
-  if (configService.get<string>('NODE_ENV') === 'production') {
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+  if (isProduction) {
     const express = app.getHttpAdapter().getInstance() as { set?: (name: string, value: unknown) => void };
     express.set?.('trust proxy', 1);
   }
@@ -23,6 +32,23 @@ async function bootstrap() {
   app.enableCors({ origin: corsOrigins(configService), credentials: true });
   app.useGlobalFilters(new HttpErrorFilter());
 
+  // Swagger is a development aid: in production it would hand an attacker the
+  // full API surface, so it is only mounted outside production.
+  if (!isProduction) {
+    const config = new DocumentBuilder()
+      .setTitle('Snooker Player OS API')
+      .setDescription('REST API for the Snooker Player Development OS')
+      .setVersion('0.1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document);
+  }
+
+  const port = Number(process.env.API_PORT ?? 4000);
+  await app.listen(port);
+  console.log(`[api] listening on :${port}`);
+}
 
 function securityHeaders(configService: ConfigService) {
   return (_req: unknown, res: { setHeader: (name: string, value: string) => void }, next: () => void) => {
@@ -40,22 +66,6 @@ function securityHeaders(configService: ConfigService) {
     next();
   };
 }
-  const config = new DocumentBuilder()
-    .setTitle('Snooker Player OS API')
-    .setDescription('REST API for the Snooker Player Development OS')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
-
-  const port = Number(process.env.API_PORT ?? 4000);
-  await app.listen(port);
-  // eslint-disable-next-line no-console
-  console.log(`[api] listening on :${port}`);
-}
-
-void bootstrap();
 
 function corsOrigins(configService: ConfigService): string[] | false {
   const configured = configService.get<string>('CORS_ORIGINS');
@@ -69,3 +79,5 @@ function corsOrigins(configService: ConfigService): string[] | false {
     ? false
     : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 }
+
+void bootstrap();

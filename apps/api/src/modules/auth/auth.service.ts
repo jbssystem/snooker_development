@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import {
   ErrorCodes,
@@ -25,6 +26,13 @@ export type AuthSessionIssue = { session: AuthSession; refreshToken: string };
 
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
+// Hash of a random throwaway secret, computed once at startup. Verified
+// against on login for unknown emails so the request costs the same as a real
+// password check (otherwise response time reveals whether the email exists).
+const dummyPasswordHash: Promise<string> = argon2.hash(randomBytes(32).toString('hex'), {
+  type: argon2.argon2id,
+});
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -41,15 +49,25 @@ export class AuthService {
       throw new ConflictException({ error: { code: ErrorCodes.Auth.EmailAlreadyUsed } });
     }
     const passwordHash = await argon2.hash(input.password, { type: argon2.argon2id });
-    const user = await this.prisma.user.create({
-      data: {
-        email: input.email,
-        passwordHash,
-        displayName: input.displayName,
-        status: 'PENDING_VERIFICATION',
-        roles: { create: { roleType: 'PLAYER' } },
-      },
-    });
+    let user;
+    try {
+      user = await this.prisma.user.create({
+        data: {
+          email: input.email,
+          passwordHash,
+          displayName: input.displayName,
+          status: 'PENDING_VERIFICATION',
+          roles: { create: { roleType: 'PLAYER' } },
+        },
+      });
+    } catch (error) {
+      // Two concurrent registrations for the same email can both pass the
+      // check above; the unique constraint then fires for the loser.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException({ error: { code: ErrorCodes.Auth.EmailAlreadyUsed } });
+      }
+      throw error;
+    }
     await this.issueVerification(user.id, user.email, user.displayName);
     return { status: 'pending_verification', email: user.email };
   }
@@ -60,6 +78,9 @@ export class AuthService {
       include: { roles: true },
     });
     if (!user) {
+      // Burn the same argon2 cost as a real verification so the response time
+      // does not reveal whether the email exists.
+      await argon2.verify(await dummyPasswordHash, input.password).catch(() => false);
       throw new UnauthorizedException({ error: { code: ErrorCodes.Auth.InvalidCredentials } });
     }
     // Verify the password BEFORE revealing account state to avoid email enumeration.

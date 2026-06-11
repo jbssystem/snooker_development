@@ -1,7 +1,7 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type {
@@ -18,7 +18,7 @@ import { Modal } from '@/components/layout/Modal';
 import { DrillDetailsModal } from '@/components/drills/DrillDetailsModal';
 import { Field } from '@/components/ui';
 import { useCanEdit } from '@/lib/use-active-profile';
-import { api, ApiError } from '@/lib/api-client';
+import { api, ApiError, LIST_PAGE_SIZE } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-store';
 import { localizeDrillName, localizeDrillTemplate } from '@/lib/drill-localization';
@@ -81,6 +81,7 @@ export function TrainingSessionClient() {
   const tSystemDrills = useTranslations('systemDrills');
   const tErr = useTranslations('errors.api');
   const tToast = useTranslations('toasts');
+  const locale = useLocale();
   const toast = useToast();
   const queryClient = useQueryClient();
   const token = useAuthStore((s) => s.tokens?.accessToken ?? null);
@@ -95,9 +96,15 @@ export function TrainingSessionClient() {
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const sessionsQuery = useQuery({
+  // Cursor-paged on the server: each page holds LIST_PAGE_SIZE sessions and a
+  // full page means more may exist. Older sessions load via "show more".
+  const sessionsQuery = useInfiniteQuery({
     queryKey: ['training-sessions'],
-    queryFn: () => api.training.listSessions(token ?? ''),
+    queryFn: ({ pageParam }) =>
+      api.training.listSessions(token ?? '', pageParam ? { cursor: pageParam } : undefined),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage: TrainingSession[]) =>
+      lastPage.length === LIST_PAGE_SIZE ? (lastPage.at(-1)?.id ?? null) : null,
     enabled: Boolean(token),
   });
 
@@ -107,7 +114,7 @@ export function TrainingSessionClient() {
     enabled: Boolean(token),
   });
 
-  const sessions = sessionsQuery.data ?? [];
+  const sessions = useMemo(() => sessionsQuery.data?.pages.flat() ?? [], [sessionsQuery.data]);
   const activeSession = useMemo(
     () => sessions.find((session) => session.id === activeSessionId) ?? sessions.find((session) => !session.endedAt) ?? sessions[0],
     [activeSessionId, sessions],
@@ -120,6 +127,22 @@ export function TrainingSessionClient() {
   const pageCount = Math.max(1, Math.ceil(sessions.length / SESSION_PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pagedSessions = sessions.slice(safePage * SESSION_PAGE_SIZE, safePage * SESSION_PAGE_SIZE + SESSION_PAGE_SIZE);
+
+  // Month headers give the flat history a scannable rhythm on long lists.
+  const groupedSessions = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
+    const groups: { label: string; items: TrainingSession[] }[] = [];
+    for (const session of pagedSessions) {
+      const label = formatter.format(new Date(session.startedAt));
+      const last = groups.at(-1);
+      if (last && last.label === label) {
+        last.items.push(session);
+      } else {
+        groups.push({ label, items: [session] });
+      }
+    }
+    return groups;
+  }, [locale, pagedSessions]);
 
   useEffect(() => {
     if (!activeSessionId && activeSession) {
@@ -291,25 +314,32 @@ export function TrainingSessionClient() {
             </button>
           )}
           <div className="mt-4 grid gap-2">
-            {pagedSessions.map((session) => (
-              <button
-                key={session.id}
-                className={`press rounded-lg border px-3 py-2 text-left transition ${
-                  session.id === activeSession?.id
-                    ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-1'
-                    : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
-                }`}
-                onClick={() => {
-                  setActiveSessionId(session.id);
-                  setActiveExecutionId(null);
-                }}
-                type="button"
-              >
-                <span className="block truncate text-sm font-medium">{session.title}</span>
-                <span className="mt-1 block text-xs text-text-disabled">
-                  {formatDate(session.startedAt)} · {session.endedAt ? t('status.finished') : t('status.active')}
-                </span>
-              </button>
+            {groupedSessions.map((group) => (
+              <div key={group.label} className="grid gap-2">
+                <p className="mt-1 text-xs font-medium uppercase tracking-wide text-text-disabled first:mt-0">
+                  {group.label}
+                </p>
+                {group.items.map((session) => (
+                  <button
+                    key={session.id}
+                    className={`press rounded-lg border px-3 py-2 text-left transition ${
+                      session.id === activeSession?.id
+                        ? 'border-brand-accent bg-background-elevated text-text-primary shadow-elev-1'
+                        : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                    }`}
+                    onClick={() => {
+                      setActiveSessionId(session.id);
+                      setActiveExecutionId(null);
+                    }}
+                    type="button"
+                  >
+                    <span className="block truncate text-sm font-medium">{session.title}</span>
+                    <span className="mt-1 block text-xs text-text-disabled">
+                      {formatDate(session.startedAt)} · {session.endedAt ? t('status.finished') : t('status.active')}
+                    </span>
+                  </button>
+                ))}
+              </div>
             ))}
             {sessions.length === 0 && (
               <p className="rounded-md border border-border-subtle bg-background-primary p-4 text-sm text-text-secondary">
@@ -343,6 +373,16 @@ export function TrainingSessionClient() {
                 {t('pagination.next')}
               </button>
             </div>
+          )}
+          {sessionsQuery.hasNextPage && (
+            <button
+              className="mt-3 min-h-9 w-full rounded-md border border-border-subtle px-3 py-1.5 text-xs text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+              disabled={sessionsQuery.isFetchingNextPage}
+              onClick={() => void sessionsQuery.fetchNextPage()}
+              type="button"
+            >
+              {sessionsQuery.isFetchingNextPage ? t('pagination.loadingMore') : t('pagination.loadMore')}
+            </button>
           )}
         </div>
       </aside>

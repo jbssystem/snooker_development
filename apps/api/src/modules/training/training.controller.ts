@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -16,6 +17,7 @@ import {
   CreateTrainingSessionSchema,
   FinishDrillExecutionSchema,
   FinishTrainingSessionSchema,
+  ListCursorQuerySchema,
   UpdateTrainingSessionSchema,
   type AddDrillExecutionInput,
   type CreateDrillAttemptInput,
@@ -24,6 +26,7 @@ import {
   type DrillExecution,
   type FinishDrillExecutionInput,
   type FinishTrainingSessionInput,
+  type ListCursorQuery,
   type TrainingSession,
   type UpdateTrainingSessionInput,
 } from '@snooker/shared';
@@ -48,8 +51,11 @@ export class TrainingController {
   constructor(private readonly training: TrainingService) {}
 
   @Get('training-sessions')
-  list(@ActiveProfile() ctx: ProfileContext | null): Promise<TrainingSession[]> {
-    return ctx ? this.training.listSessions(ctx.profileId) : Promise.resolve([]);
+  list(
+    @ActiveProfile() ctx: ProfileContext | null,
+    @Query(new ZodValidationPipe(ListCursorQuerySchema)) query: ListCursorQuery,
+  ): Promise<TrainingSession[]> {
+    return ctx ? this.training.listSessions(ctx.profileId, query) : Promise.resolve([]);
   }
 
   @Get('training-sessions/:id')

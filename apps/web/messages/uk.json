@@ -1314,7 +1314,9 @@
     "pagination": {
       "prev": "Назад",
       "next": "Вперёд",
-      "status": "{from}–{to} з {total}"
+      "status": "{from}–{to} з {total}",
+      "loadMore": "Показати давніші сесії",
+      "loadingMore": "Завантаження…"
     },
     "startTitle": "Почніть тренування",
     "startSubtitle": "Створіть сесію, додайте вправи та відмічайте спроби в один тап.",
@@ -1523,7 +1525,9 @@
     "pagination": {
       "prev": "Назад",
       "next": "Вперед",
-      "status": "{from}–{to} з {total}"
+      "status": "{from}–{to} з {total}",
+      "loadMore": "Показати давніші матчі",
+      "loadingMore": "Завантаження…"
     },
     "required": "Обов'язкове поле",
     "saving": "Збереження…",

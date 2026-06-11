@@ -388,7 +388,7 @@ function ExternalReportVisuals({ sourceData }: { sourceData: ExternalReportSourc
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label={t('visuals.matches')} value={String(matches.length)} />
         <Stat label={t('visuals.winRate')} value={`${totals.winRate}%`} />
-        <Stat label={t('visuals.frames')} value={`${totals.framesWon}:${totals.framesLost}`} />
+        <Stat label={t('visuals.frames')} value={`${totals.framesWon}–${totals.framesLost}`} />
         <Stat label={t('visuals.highBreak')} value={String(totals.highBreak || '—')} />
       </div>
 

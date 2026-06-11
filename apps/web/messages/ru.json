@@ -1314,7 +1314,9 @@
     "pagination": {
       "prev": "Назад",
       "next": "Вперёд",
-      "status": "{from}–{to} из {total}"
+      "status": "{from}–{to} из {total}",
+      "loadMore": "Показать более ранние сессии",
+      "loadingMore": "Загрузка…"
     },
     "startTitle": "Начните тренировку",
     "startSubtitle": "Создайте сессию, добавьте упражнения и отмечайте попытки в один тап.",
@@ -1523,7 +1525,9 @@
     "pagination": {
       "prev": "Назад",
       "next": "Вперёд",
-      "status": "{from}–{to} из {total}"
+      "status": "{from}–{to} из {total}",
+      "loadMore": "Показать более ранние матчи",
+      "loadingMore": "Загрузка…"
     },
     "required": "Обязательное поле",
     "saving": "Сохранение…",

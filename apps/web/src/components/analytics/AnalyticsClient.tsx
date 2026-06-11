@@ -131,7 +131,7 @@ function AnalyticsContent({ dashboard }: { dashboard: PlayerDashboard }) {
           <div className="grid grid-cols-2 gap-3">
             <MiniStat label={t('matches.played')} value={dashboard.matchSummary.matches} />
             <MiniStat label={t('matches.winRate')} value={`${dashboard.matchSummary.winRate}%`} />
-            <MiniStat label={t('matches.frames')} value={`${dashboard.matchSummary.framesWon}:${dashboard.matchSummary.framesLost}`} />
+            <MiniStat label={t('matches.frames')} value={`${dashboard.matchSummary.framesWon}–${dashboard.matchSummary.framesLost}`} />
             <MiniStat label={t('matches.highBreak')} value={dashboard.matchSummary.highBreak ?? 0} />
           </div>
         </SectionCard>

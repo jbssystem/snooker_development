@@ -23,6 +23,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    mem_limit: 1g
     restart: unless-stopped
 
   api:
@@ -74,6 +75,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    mem_limit: 1g
     restart: unless-stopped
 
   worker:
@@ -95,6 +97,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    mem_limit: 768m
     restart: unless-stopped
 
   migrate:
@@ -123,6 +126,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+    mem_limit: 1g
     restart: unless-stopped
 
   redis:
@@ -136,9 +140,12 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+    mem_limit: 256m
     restart: unless-stopped
 
   minio:
+    # TODO: pin to a specific RELEASE.* tag on the next deploy window —
+    # "latest" can silently jump major versions between pulls.
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
@@ -146,6 +153,13 @@ services:
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
     volumes:
       - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:9000/minio/health/live || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    mem_limit: 512m
     restart: unless-stopped
 
   nginx:
@@ -165,6 +179,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    mem_limit: 128m
     restart: unless-stopped
 
 volumes:

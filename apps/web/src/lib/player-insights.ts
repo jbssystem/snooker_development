@@ -293,7 +293,7 @@ function buildMatchTransferInsight(dashboard: PlayerDashboard): DashboardInsight
     href: '/matches',
     id: 'match-lens',
     metricKey: 'frames',
-    metricValue: `${matchSummary.framesWon}:${matchSummary.framesLost}`,
+    metricValue: `${matchSummary.framesWon}–${matchSummary.framesLost}`,
     titleKey: 'matchLens',
     tone: 'info',
     values: { framesWon: matchSummary.framesWon, framesLost: matchSummary.framesLost },

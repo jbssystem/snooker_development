@@ -569,10 +569,9 @@ async function processExternalImport(data: SyncPlayerExternalDataJob): Promise<v
 
     let matchesImported = 0;
     let matchesUpdated = 0;
-    // Import currently upserts every external match (update or create), so no
-    // match is ever skipped. Kept for the import-summary contract until a
-    // change-detection skip path is added.
-    const matchesSkipped = 0;
+    // Hand-edited matches (manuallyEditedAt set) are skipped so a re-sync can
+    // never overwrite the user's manual corrections.
+    let matchesSkipped = 0;
 
     for (const match of importResult.matches) {
       const existing = await prisma.match.findFirst({
@@ -612,10 +611,14 @@ async function processExternalImport(data: SyncPlayerExternalDataJob): Promise<v
         source: 'EXTERNAL' as const,
         sourceUrl: match.sourceUrl,
         externalImportJobId: importJobId,
-        notes: serializeExternalMatchNotes(match),
+        notes: serializeExternalMatchNotes(source, match),
       };
 
       if (existing) {
+        if (existing.manuallyEditedAt) {
+          matchesSkipped++;
+          continue;
+        }
         await prisma.match.update({ where: { id: existing.id }, data: matchData });
         await prisma.matchFrame.deleteMany({ where: { matchId: existing.id } });
         const frameData = buildExternalFrameData(existing.id, match);
@@ -705,14 +708,25 @@ function getDecidingFrameResult(
   frameDetails: ExternalFrameDetail[] | undefined,
 ): 'PLAYER' | 'OPPONENT' | 'UNKNOWN' | null {
   if (!format || !frameDetails?.length) return null;
-  const bestOf = parseInt(format.replace(/\D/g, ''), 10);
-  if (!Number.isFinite(bestOf) || frameDetails.length !== bestOf) return null;
+  const totalFrames = maxFramesFromFormat(format);
+  if (totalFrames === null || frameDetails.length !== totalFrames) return null;
   return frameDetails[frameDetails.length - 1]?.winner ?? null;
 }
 
-function serializeExternalMatchNotes(match: ExternalMatchResult): string {
+/**
+ * Maximum number of frames a match format allows; the match went to a decider
+ * exactly when every frame was played. "Best of 7" → 7; "race to 4" (first to
+ * 4 wins) → 2*4-1 = 7.
+ */
+function maxFramesFromFormat(format: string): number | null {
+  const n = parseInt(format.replace(/\D/g, ''), 10);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return /race\s*to|до\s*\d/i.test(format) ? n * 2 - 1 : n;
+}
+
+function serializeExternalMatchNotes(source: string, match: ExternalMatchResult): string {
   return JSON.stringify({
-    source: 'cuetracker',
+    source,
     referee: match.referee ?? null,
     headToHeadUrl: match.headToHeadUrl ?? null,
     playerIsFirst: match.playerIsFirst ?? null,

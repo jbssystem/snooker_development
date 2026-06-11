@@ -1,12 +1,25 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   AddMatchFrameSchema,
   CreateMatchSchema,
+  ListCursorQuerySchema,
   UpdateMatchFrameSchema,
   UpdateMatchSchema,
   type AddMatchFrameInput,
   type CreateMatchInput,
+  type ListCursorQuery,
   type Match,
   type MatchFrame,
   type UpdateMatchFrameInput,
@@ -33,8 +46,11 @@ export class MatchesController {
   constructor(private readonly matches: MatchesService) {}
 
   @Get()
-  list(@ActiveProfile() ctx: ProfileContext | null): Promise<Match[]> {
-    return ctx ? this.matches.list(ctx.profileId) : Promise.resolve([]);
+  list(
+    @ActiveProfile() ctx: ProfileContext | null,
+    @Query(new ZodValidationPipe(ListCursorQuerySchema)) query: ListCursorQuery,
+  ): Promise<Match[]> {
+    return ctx ? this.matches.list(ctx.profileId, query) : Promise.resolve([]);
   }
 
   @Get(':id')

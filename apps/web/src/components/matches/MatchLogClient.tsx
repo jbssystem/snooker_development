@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -21,7 +21,7 @@ import { ChevronDown } from '@/components/layout/ChevronDown';
 import { Modal } from '@/components/layout/Modal';
 import { CountryOptions, Field, PlusIcon } from '@/components/ui';
 import { useCanEdit } from '@/lib/use-active-profile';
-import { api, ApiError } from '@/lib/api-client';
+import { api, ApiError, LIST_PAGE_SIZE } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-store';
 import { FrameScorer, type ScorerResult } from './FrameScorer';
@@ -126,13 +126,19 @@ export function MatchLogClient() {
     enabled: Boolean(token),
   });
 
-  const matchesQuery = useQuery({
+  // Cursor-paged on the server: each page holds LIST_PAGE_SIZE matches and a
+  // full page means more may exist. Older matches load via "show more".
+  const matchesQuery = useInfiniteQuery({
     queryKey: ['matches', token],
-    queryFn: () => api.matches.list(token ?? ''),
+    queryFn: ({ pageParam }) =>
+      api.matches.list(token ?? '', pageParam ? { cursor: pageParam } : undefined),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage: Match[]) =>
+      lastPage.length === LIST_PAGE_SIZE ? (lastPage.at(-1)?.id ?? null) : null,
     enabled: Boolean(token),
   });
 
-  const matches = matchesQuery.data ?? [];
+  const matches = useMemo(() => matchesQuery.data?.pages.flat() ?? [], [matchesQuery.data]);
   const activeMatch = useMemo(
     () => matches.find((match) => match.id === activeMatchId) ?? matches[0],
     [activeMatchId, matches],
@@ -364,7 +370,7 @@ export function MatchLogClient() {
                 </span>
                 <span className="block truncate text-sm font-medium">{match.opponentName}</span>
                 <span className="mt-1 block text-xs text-text-disabled">
-                  {formatDate(match.matchDate, locale)} · {match.framesWon}:{match.framesLost}
+                  {formatDate(match.matchDate, locale)} · {match.framesWon}–{match.framesLost}
                 </span>
               </button>
             ))}
@@ -405,6 +411,16 @@ export function MatchLogClient() {
                 {t('pagination.next')}
               </button>
             </div>
+          )}
+          {matchesQuery.hasNextPage && (
+            <button
+              className="mt-3 min-h-9 w-full rounded-md border border-border-subtle px-3 py-1.5 text-xs text-text-secondary transition hover:border-brand-accent hover:text-text-primary disabled:opacity-40"
+              disabled={matchesQuery.isFetchingNextPage}
+              onClick={() => void matchesQuery.fetchNextPage()}
+              type="button"
+            >
+              {matchesQuery.isFetchingNextPage ? t('pagination.loadingMore') : t('pagination.loadMore')}
+            </button>
           )}
         </div>
       </aside>
@@ -538,7 +554,9 @@ export function MatchLogClient() {
           </FormSection>
 
           {!formIsLive && (
-          <FormSection title={t('newMatch.sections.stats')}>
+          // Collapsed by default: score, opponent and date are enough for a
+          // quick entry; the detailed stats stay one tap away.
+          <AccordionSection compact contentClassName="grid gap-3" title={t('newMatch.sections.stats')}>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Field hint={t('hints.count')} label={t('fields.highBreak')}>
                 <input className={inputClass} min={0} type="number" {...matchForm.register('highBreak')} />
@@ -567,7 +585,7 @@ export function MatchLogClient() {
                 <input className={inputClass} min={0} type="number" {...matchForm.register('tacticalErrors')} />
               </Field>
             </div>
-          </FormSection>
+          </AccordionSection>
           )}
 
           <FormSection title={t('newMatch.sections.links')}>
@@ -920,7 +938,7 @@ function MatchDetail({
               <StatStrip
                 items={[
                   { label: t('opponent.matches'), value: String(opponentHistory.matches) },
-                  { label: t('opponent.frames'), value: `${opponentHistory.framesWon}:${opponentHistory.framesLost}` },
+                  { label: t('opponent.frames'), value: `${opponentHistory.framesWon}–${opponentHistory.framesLost}` },
                 ]}
               />
             </div>
@@ -1289,7 +1307,8 @@ function formatPercent(value: number | undefined): string {
 
 function formatFrameScore(playerScore: number | undefined, opponentScore: number | undefined): string {
   if (playerScore === undefined && opponentScore === undefined) return '—';
-  return `${playerScore ?? 0}:${opponentScore ?? 0}`;
+  // En dash, not a colon — "77:27" reads as a time of day.
+  return `${playerScore ?? 0}–${opponentScore ?? 0}`;
 }
 
 function errorMessage(error: unknown, t: (key: string) => string): string {

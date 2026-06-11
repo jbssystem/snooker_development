@@ -1314,7 +1314,9 @@
     "pagination": {
       "prev": "Previous",
       "next": "Next",
-      "status": "{from}–{to} of {total}"
+      "status": "{from}–{to} of {total}",
+      "loadMore": "Show older sessions",
+      "loadingMore": "Loading…"
     },
     "startTitle": "Start a session",
     "startSubtitle": "Create a session, add drills and log attempts with one tap.",
@@ -1523,7 +1525,9 @@
     "pagination": {
       "prev": "Prev",
       "next": "Next",
-      "status": "{from}–{to} of {total}"
+      "status": "{from}–{to} of {total}",
+      "loadMore": "Show older matches",
+      "loadingMore": "Loading…"
     },
     "required": "Required",
     "saving": "Saving…",

@@ -90,10 +90,16 @@ export class ExternalSourcesService implements OnModuleDestroy {
     });
 
     const queue = await this.getQueue();
-    await queue.add(SYNC_PLAYER_EXTERNAL_DATA_JOB, {
-      externalPlayerLinkId: link.id,
-      importJobId: job.id,
-    });
+    await queue.add(
+      SYNC_PLAYER_EXTERNAL_DATA_JOB,
+      {
+        externalPlayerLinkId: link.id,
+        importJobId: job.id,
+      },
+      // Job state lives in ExternalImportJob rows; cap what stays in Redis so
+      // completed/failed jobs do not accumulate forever.
+      { removeOnComplete: true, removeOnFail: { count: 500 } },
+    );
 
     return toJob(job);
   }

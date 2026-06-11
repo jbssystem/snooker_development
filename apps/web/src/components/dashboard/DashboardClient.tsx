@@ -157,7 +157,7 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
           <MiniStat label={t('matches.played')} value={dashboard.matchSummary.matches} />
           <MiniStat label={t('matches.wins')} value={dashboard.matchSummary.wins} />
           <MiniStat label={t('matches.winRate')} value={`${dashboard.matchSummary.winRate}%`} />
-          <MiniStat label={t('matches.frames')} value={`${dashboard.matchSummary.framesWon}:${dashboard.matchSummary.framesLost}`} />
+          <MiniStat label={t('matches.frames')} value={`${dashboard.matchSummary.framesWon}–${dashboard.matchSummary.framesLost}`} />
           <MiniStat label={t('matches.highBreak')} value={dashboard.matchSummary.highBreak ?? 0} />
           <MiniStat label={t('matches.centuries')} value={dashboard.matchSummary.breaks100} />
         </div>

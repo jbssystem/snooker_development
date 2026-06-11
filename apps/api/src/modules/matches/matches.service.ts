@@ -11,6 +11,7 @@ import {
   type AddMatchFrameInput,
   type CreateMatchInput,
   type FrameWinner,
+  type ListCursorQuery,
   type Match,
   type MatchFrame,
   type MatchResult,
@@ -31,12 +32,15 @@ type MatchFrameEntity = Prisma.MatchFrameGetPayload<Record<string, never>>;
 export class MatchesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(profileId: string): Promise<Match[]> {
+  async list(profileId: string, query?: ListCursorQuery): Promise<Match[]> {
     const matches = await this.prisma.match.findMany({
       where: { playerProfileId: profileId },
       include: matchInclude,
-      orderBy: [{ matchDate: 'desc' }, { createdAt: 'desc' }],
-      take: 50,
+      // `id` keeps the order total so cursor pagination never skips or
+      // duplicates rows that share the same dates.
+      orderBy: [{ matchDate: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+      take: query?.limit ?? 50,
+      ...(query?.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     });
 
     return matches.map(toMatch);
@@ -128,6 +132,11 @@ export class MatchesService {
       );
     }
 
+    // A hand-edited imported match must survive the next external sync.
+    if (existing.source === 'EXTERNAL') {
+      data.manuallyEditedAt = new Date();
+    }
+
     const match = await this.prisma.match.update({ where: { id: existing.id }, data, include: matchInclude });
     return toMatch(match);
   }
@@ -169,6 +178,7 @@ export class MatchesService {
           framesWon: summary.framesWon,
           framesLost: summary.framesLost,
           result: toPrismaMatchResult(resultFromScore(summary.framesWon, summary.framesLost)),
+          ...(match.source === 'EXTERNAL' ? { manuallyEditedAt: new Date() } : {}),
         },
       });
       return toMatchFrame(frame);
@@ -205,6 +215,9 @@ export class MatchesService {
         },
       });
       await recalcMatchFromFrames(tx, match.id);
+      if (match.source === 'EXTERNAL') {
+        await tx.match.update({ where: { id: match.id }, data: { manuallyEditedAt: new Date() } });
+      }
     });
 
     return toMatch(await this.findMatchOrThrow(profileId, id));
@@ -217,6 +230,9 @@ export class MatchesService {
       await withSerializableRetry(this.prisma, async (tx) => {
         await tx.matchFrame.delete({ where: { id: last.id } });
         await recalcMatchFromFrames(tx, match.id);
+        if (match.source === 'EXTERNAL') {
+          await tx.match.update({ where: { id: match.id }, data: { manuallyEditedAt: new Date() } });
+        }
       });
     }
     return toMatch(await this.findMatchOrThrow(profileId, id));

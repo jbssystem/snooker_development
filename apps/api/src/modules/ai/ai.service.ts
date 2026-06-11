@@ -135,7 +135,7 @@ export class AiService implements OnModuleDestroy {
           backoff: { type: 'exponential', delay: 5_000 },
           jobId: report.id,
           removeOnComplete: true,
-          removeOnFail: false,
+          removeOnFail: { count: 500 },
         },
       );
     } catch (error) {
@@ -274,7 +274,7 @@ export class AiService implements OnModuleDestroy {
           backoff: { type: 'exponential', delay: 5_000 },
           jobId: report.id,
           removeOnComplete: true,
-          removeOnFail: false,
+          removeOnFail: { count: 500 },
         },
       );
     } catch (error) {

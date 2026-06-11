@@ -178,18 +178,50 @@ async function send<T>(path: string, opts: FetchOptions = {}): Promise<T> {
  * it in memory. Returns the tokens, or `null` if the refresh failed (no/expired
  * cookie). Used both by the 401→refresh→retry path below and by `AuthGuard` on
  * app load to restore an in-memory session without persisting the token.
+ *
+ * Single-flight: the API rotates the refresh token on every call, so two
+ * concurrent refreshes would race — the second one would send the
+ * already-revoked cookie, get a 401 and log the user out. All concurrent
+ * callers therefore share one in-flight request.
  */
-export async function refreshAccessToken(): Promise<Tokens | null> {
-  try {
-    const tokens = await send<Tokens>('/auth/refresh', {
-      method: 'POST',
-      body: JSON.stringify({}),
-    });
-    useAuthStore.getState().setTokens(tokens);
-    return tokens;
-  } catch {
-    return null;
-  }
+let refreshInFlight: Promise<Tokens | null> | null = null;
+
+export function refreshAccessToken(): Promise<Tokens | null> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    try {
+      const tokens = await send<Tokens>('/auth/refresh', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      useAuthStore.getState().setTokens(tokens);
+      return tokens;
+    } catch {
+      return null;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+  return refreshInFlight;
+}
+
+/**
+ * Cursor pagination for list endpoints: pass the last item's id as `cursor`
+ * to fetch the next page. A full page (length === limit) means there may be
+ * more. Matches `ListCursorQuerySchema` on the API.
+ */
+export type PageOpts = { cursor?: string; limit?: number };
+
+/** Server-side page size for paginated lists (API default). */
+export const LIST_PAGE_SIZE = 50;
+
+function pageQuery(page?: PageOpts): string {
+  if (!page) return '';
+  const params = new URLSearchParams();
+  if (page.cursor) params.set('cursor', page.cursor);
+  if (page.limit) params.set('limit', String(page.limit));
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
 }
 
 export const api = {
@@ -326,7 +358,8 @@ export const api = {
       }),
   },
   training: {
-    listSessions: (token: string) => request<TrainingSession[]>('/training-sessions', { token }),
+    listSessions: (token: string, page?: PageOpts) =>
+      request<TrainingSession[]>(`/training-sessions${pageQuery(page)}`, { token }),
     getSession: (token: string, id: string) =>
       request<TrainingSession>(`/training-sessions/${id}`, { token }),
     createSession: (token: string, input: CreateTrainingSessionInput) =>
@@ -386,7 +419,7 @@ export const api = {
       request<PlayerDashboard>('/players/me/dashboard', { token }),
   },
   matches: {
-    list: (token: string) => request<Match[]>('/matches', { token }),
+    list: (token: string, page?: PageOpts) => request<Match[]>(`/matches${pageQuery(page)}`, { token }),
     get: (token: string, id: string) => request<Match>(`/matches/${id}`, { token }),
     create: (token: string, input: CreateMatchInput) =>
       request<Match>('/matches', {
