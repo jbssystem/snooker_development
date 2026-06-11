@@ -1708,7 +1708,8 @@
       },
       "admin": {
         "lastAdmin": "Не можна видалити останнього адміністратора",
-        "cannotBlockSelf": "Не можна заблокувати самого себе"
+        "cannotBlockSelf": "Не можна заблокувати самого себе",
+        "cannotDeleteSelf": "Не можна видалити самого себе"
       },
       "sharing": {
         "profileAccessDenied": "Немає доступу до цього кабінету",
@@ -1861,7 +1862,12 @@
       "unblock": "Розблокувати",
       "grantAdmin": "Зробити адміном",
       "revokeAdmin": "Зняти адміна",
-      "verify": "Підтвердити"
+      "verify": "Підтвердити",
+      "delete": "Видалити",
+      "deleteConfirmTitle": "Видалити користувача?",
+      "deleteConfirmBody": "Користувач {name} та всі його дані будуть безповоротно видалені.",
+      "deleteConfirmAction": "Видалити",
+      "cancel": "Скасувати"
     },
     "announcements": {
       "createTitle": "Нове повідомлення",

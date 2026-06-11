@@ -538,6 +538,8 @@ export const api = {
         token,
         body: JSON.stringify({}),
       }),
+    deleteUser: (token: string, id: string) =>
+      request<void>(`/admin/users/${id}`, { method: 'DELETE', token }),
     listAnnouncements: (token: string) => request<Announcement[]>('/admin/announcements', { token }),
     createAnnouncement: (token: string, input: CreateAnnouncementInput) =>
       request<Announcement>('/admin/announcements', { method: 'POST', token, body: JSON.stringify(input) }),

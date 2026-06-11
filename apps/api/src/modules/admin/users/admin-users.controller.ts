@@ -98,4 +98,13 @@ export class AdminUsersController {
     const user = await this.users.get(id);
     await this.auth.resendVerification(user.email);
   }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(
+    @CurrentUserId() actorId: string,
+    @Param('id', CuidValidationPipe) id: string,
+  ): Promise<void> {
+    await this.users.delete(actorId, id);
+  }
 }

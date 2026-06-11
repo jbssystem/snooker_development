@@ -1708,7 +1708,8 @@
       },
       "admin": {
         "lastAdmin": "Нельзя удалить последнего администратора",
-        "cannotBlockSelf": "Нельзя заблокировать самого себя"
+        "cannotBlockSelf": "Нельзя заблокировать самого себя",
+        "cannotDeleteSelf": "Нельзя удалить самого себя"
       },
       "sharing": {
         "profileAccessDenied": "Нет доступа к этому кабинету",
@@ -1861,7 +1862,12 @@
       "unblock": "Разблокировать",
       "grantAdmin": "Сделать админом",
       "revokeAdmin": "Снять админа",
-      "verify": "Подтвердить"
+      "verify": "Подтвердить",
+      "delete": "Удалить",
+      "deleteConfirmTitle": "Удалить пользователя?",
+      "deleteConfirmBody": "Пользователь {name} и все его данные будут безвозвратно удалены.",
+      "deleteConfirmAction": "Удалить",
+      "cancel": "Отмена"
     },
     "announcements": {
       "createTitle": "Новое сообщение",

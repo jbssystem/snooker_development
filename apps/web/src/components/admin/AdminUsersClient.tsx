@@ -6,6 +6,7 @@ import { useState } from 'react';
 import type { AdminUserListItem } from '@snooker/shared';
 import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api-client';
+import { Modal } from '@/components/layout/Modal';
 
 type SortKey = 'user' | 'tokens';
 type SortDir = 'asc' | 'desc';
@@ -19,6 +20,7 @@ export function AdminUsersClient() {
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>('user');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [deleteTarget, setDeleteTarget] = useState<AdminUserListItem | null>(null);
   const pageSize = 20;
 
   const query = useQuery({
@@ -34,6 +36,13 @@ export function AdminUsersClient() {
   });
 
   const run = (fn: () => Promise<unknown>) => mutation.mutate(fn);
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    const { id } = deleteTarget;
+    run(() => api.admin.deleteUser(token ?? '', id));
+    setDeleteTarget(null);
+  };
 
   const data = query.data;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1;
@@ -118,6 +127,7 @@ export function AdminUsersClient() {
                   onGrant={() => run(() => api.admin.grantAdmin(token ?? '', u.id))}
                   onRevoke={() => run(() => api.admin.revokeAdmin(token ?? '', u.id))}
                   onVerify={() => run(() => api.admin.verifyUser(token ?? '', u.id))}
+                  onDelete={() => setDeleteTarget(u)}
                 />
               ))}
             </tbody>
@@ -149,6 +159,36 @@ export function AdminUsersClient() {
           </button>
         </div>
       </div>
+
+      <Modal
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        closeLabel={t('users.cancel')}
+        title={t('users.deleteConfirmTitle')}
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-text-secondary">
+            {t('users.deleteConfirmBody', { name: deleteTarget?.displayName ?? deleteTarget?.email ?? '' })}
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(null)}
+              className="press rounded-md border border-border-subtle px-3 py-1.5 text-sm text-text-secondary hover:border-brand-accent hover:text-text-primary"
+            >
+              {t('users.cancel')}
+            </button>
+            <button
+              type="button"
+              disabled={mutation.isPending}
+              onClick={confirmDelete}
+              className="press rounded-md border border-state-error/40 bg-state-error/10 px-3 py-1.5 text-sm text-state-error transition hover:bg-state-error/20 disabled:opacity-50"
+            >
+              {t('users.deleteConfirmAction')}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -163,6 +203,7 @@ function UserRow({
   onGrant,
   onRevoke,
   onVerify,
+  onDelete,
 }: {
   user: AdminUserListItem;
   isSelf: boolean;
@@ -173,6 +214,7 @@ function UserRow({
   onGrant: () => void;
   onRevoke: () => void;
   onVerify: () => void;
+  onDelete: () => void;
 }) {
   const isAdmin = user.roles.includes('SYSTEM_ADMIN');
   const isBlocked = user.status === 'BLOCKED';
@@ -207,6 +249,9 @@ function UserRow({
             <ActionBtn onClick={onGrant} disabled={busy}>{t('users.grantAdmin')}</ActionBtn>
           )}
           {isPending && <ActionBtn onClick={onVerify} disabled={busy}>{t('users.verify')}</ActionBtn>}
+          <ActionBtn onClick={onDelete} disabled={busy || isSelf} variant="danger">
+            {t('users.delete')}
+          </ActionBtn>
         </div>
       </td>
     </tr>

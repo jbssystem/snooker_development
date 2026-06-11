@@ -18,6 +18,7 @@ export const ErrorCodes = {
   Admin: {
     LastAdmin: 'admin.lastAdmin',
     CannotBlockSelf: 'admin.cannotBlockSelf',
+    CannotDeleteSelf: 'admin.cannotDeleteSelf',
   },
   Sharing: {
     ProfileAccessDenied: 'sharing.profileAccessDenied',

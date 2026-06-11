@@ -142,6 +142,20 @@ export class AdminUsersService {
     return this.get(id);
   }
 
+  /**
+   * Hard-delete a user and everything they own. Every User relation in the
+   * schema is onDelete: Cascade, so this removes their profiles, drills,
+   * sessions, reports and tokens in one shot. An admin cannot delete themselves.
+   */
+  async delete(actorUserId: string, id: string): Promise<void> {
+    if (actorUserId === id) {
+      throw new BadRequestException({ error: { code: ErrorCodes.Admin.CannotDeleteSelf } });
+    }
+    await this.ensureExists(id);
+    await this.prisma.user.delete({ where: { id } });
+    await this.audit.record(actorUserId, 'user.delete', { type: 'user', id });
+  }
+
   private async ensureExists(id: string): Promise<void> {
     const found = await this.prisma.user.findUnique({ where: { id }, select: { id: true } });
     if (!found) throw new NotFoundException({ error: { code: ErrorCodes.Generic.NotFound } });

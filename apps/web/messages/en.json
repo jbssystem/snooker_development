@@ -1708,7 +1708,8 @@
       },
       "admin": {
         "lastAdmin": "Cannot remove the last administrator",
-        "cannotBlockSelf": "You cannot block yourself"
+        "cannotBlockSelf": "You cannot block yourself",
+        "cannotDeleteSelf": "You cannot delete yourself"
       },
       "sharing": {
         "profileAccessDenied": "No access to this cabinet",
@@ -1861,7 +1862,12 @@
       "unblock": "Unblock",
       "grantAdmin": "Make admin",
       "revokeAdmin": "Revoke admin",
-      "verify": "Verify"
+      "verify": "Verify",
+      "delete": "Delete",
+      "deleteConfirmTitle": "Delete user?",
+      "deleteConfirmBody": "{name} and all of their data will be permanently deleted.",
+      "deleteConfirmAction": "Delete",
+      "cancel": "Cancel"
     },
     "announcements": {
       "createTitle": "New announcement",
