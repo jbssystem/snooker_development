@@ -42,22 +42,21 @@ function ToastItem({ toast }: { toast: Toast }) {
     return () => clearTimeout(exitTimer);
   }, [leaving, dismiss, toast.id]);
 
-  // The accent (left) border is applied via inline style because the `.glass`
-  // class sets an unlayered `border` shorthand that would otherwise override
-  // Tailwind's layered `border-l-*` utilities.
-  const accentColor =
-    toast.kind === 'success' ? 'var(--color-state-success)' : 'var(--color-state-error)';
+  // Solid, saturated background so the toast clearly reads as success (green)
+  // or error (red) at a glance — white text/icon on top for contrast. Colors
+  // are set inline to avoid the unlayered `.glass` border overriding utilities.
+  const background = toast.kind === 'success' ? '#12915a' : '#c0392b';
 
   return (
     <div
       role="status"
       onClick={() => setLeaving(true)}
-      style={{ borderLeftWidth: '4px', borderLeftColor: accentColor }}
-      className={`glass elev-2 pointer-events-auto cursor-pointer rounded-lg border px-4 py-3 text-sm text-text-primary ${
+      style={{ backgroundColor: background, color: '#ffffff' }}
+      className={`elev-3 pointer-events-auto cursor-pointer rounded-lg px-4 py-3 text-sm font-semibold shadow-lg ${
         leaving ? 'ui-toast-out' : 'ui-toast-in'
       }`}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-2.5">
         <ToastIcon kind={toast.kind} />
         <span className="leading-snug">{toast.message}</span>
       </div>
@@ -66,10 +65,9 @@ function ToastItem({ toast }: { toast: Toast }) {
 }
 
 function ToastIcon({ kind }: { kind: Toast['kind'] }) {
-  const color = kind === 'success' ? 'text-state-success' : 'text-state-error';
   return (
     <svg
-      className={`mt-0.5 h-4 w-4 shrink-0 ${color}`}
+      className="mt-0.5 h-5 w-5 shrink-0 text-white"
       viewBox="0 0 20 20"
       fill="currentColor"
       aria-hidden="true"
