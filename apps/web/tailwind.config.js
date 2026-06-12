@@ -9,31 +9,31 @@ module.exports = {
     extend: {
       colors: {
         background: {
-          sunken: '#090C10',
-          primary: '#0D1014',
-          secondary: '#161B22',
-          elevated: '#1F2630',
-          raised: '#28303C',
+          sunken: '#111821',
+          primary: '#18212C',
+          secondary: '#222D3A',
+          elevated: '#2D3A49',
+          raised: '#394858',
         },
         brand: {
-          primary: '#0E6B4D',
-          accent: '#19A974',
-          gold: '#C8A45D',
+          primary: '#12815C',
+          accent: '#1FBE8A',
+          gold: '#D3B16C',
         },
         text: {
-          primary: '#ECE9E2',
-          secondary: '#B2BAC3',
-          disabled: '#76818D',
+          primary: '#F1EFE9',
+          secondary: '#BDC6D0',
+          disabled: '#8694A2',
         },
         state: {
-          success: '#3FB36B',
-          error: '#D65A5A',
-          warning: '#D89A3A',
-          info: '#4A90E2',
+          success: '#43C078',
+          error: '#E16969',
+          warning: '#E3A84F',
+          info: '#59A7F0',
         },
         border: {
-          subtle: '#2A323D',
-          active: '#19A974',
+          subtle: '#3D4A59',
+          active: '#1FBE8A',
         },
         // Snooker ball semantic colors — table renderer and match data only.
         ball: {
@@ -51,10 +51,10 @@ module.exports = {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        glow: '0 0 24px rgba(25, 169, 116, 0.18)',
-        'elev-1': 'inset 0 1px 0 0 rgba(255,255,255,0.04), 0 1px 2px -1px rgba(0,0,0,0.6), 0 8px 24px -16px rgba(0,0,0,0.7)',
-        'elev-2': 'inset 0 1px 0 0 rgba(255,255,255,0.05), 0 2px 6px -2px rgba(0,0,0,0.6), 0 16px 40px -22px rgba(0,0,0,0.85)',
-        'elev-3': 'inset 0 1px 0 0 rgba(255,255,255,0.06), 0 8px 16px -8px rgba(0,0,0,0.6), 0 28px 64px -28px rgba(0,0,0,0.9)',
+        glow: '0 0 24px rgba(31, 190, 138, 0.2)',
+        'elev-1': 'inset 0 1px 0 0 rgba(255,255,255,0.05), 0 1px 2px -1px rgba(0,0,0,0.45), 0 8px 24px -16px rgba(0,0,0,0.55)',
+        'elev-2': 'inset 0 1px 0 0 rgba(255,255,255,0.06), 0 2px 6px -2px rgba(0,0,0,0.45), 0 16px 40px -22px rgba(0,0,0,0.65)',
+        'elev-3': 'inset 0 1px 0 0 rgba(255,255,255,0.07), 0 8px 16px -8px rgba(0,0,0,0.45), 0 28px 64px -28px rgba(0,0,0,0.7)',
       },
     },
   },

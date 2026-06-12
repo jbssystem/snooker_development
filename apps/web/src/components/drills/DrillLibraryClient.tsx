@@ -728,7 +728,7 @@ function FilterSelect({
         aria-label={label}
         className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
           active
-            ? 'border-brand-accent bg-brand-accent/15 text-brand-accent shadow-[0_0_0_1px_rgba(25,169,116,0.25)]'
+            ? 'border-brand-accent bg-brand-accent/15 text-brand-accent shadow-[0_0_0_1px_rgba(31,190,138,0.25)]'
             : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent/60 hover:text-text-primary'
         }`}
         onClick={() => setOpen((current) => !current)}

@@ -24,7 +24,7 @@ type Props = SnookerTableCanvasProps & {
 
 const PADDING_MM = TABLE_VIEW_PADDING_MM;
 const D_RADIUS_MM = 292;
-const HANDLE = '#C8A45D';
+const HANDLE = '#D3B16C';
 const BALL_COLORS: Record<BallColor, { fill: string; stroke: string }> = {
   white: { fill: '#F5F1E6', stroke: '#D8D2C4' },
   red: { fill: '#C1121F', stroke: '#7D0E16' },
@@ -129,8 +129,8 @@ export const SnookerTableCanvasImpl = memo(function SnookerTableCanvasImpl({
         }}
       >
         <Layer pixelRatio={pixelRatio}>
-          <Rect cornerRadius={18} fill="#1F2630" height={stageSize.height} shadowBlur={8} shadowColor="rgba(0,0,0,0.35)" width={stageSize.width} x={0} y={0} />
-          <Rect cornerRadius={10} fill="#0E6B4D" height={tableHeight} stroke="#2A323D" strokeWidth={Math.max(2, 8 * stageSize.scale)} width={tableWidth} x={tableX} y={tableY} />
+          <Rect cornerRadius={18} fill="#2D3A49" height={stageSize.height} shadowBlur={8} shadowColor="rgba(0,0,0,0.35)" width={stageSize.width} x={0} y={0} />
+          <Rect cornerRadius={10} fill="#12815C" height={tableHeight} stroke="#3D4A59" strokeWidth={Math.max(2, 8 * stageSize.scale)} width={tableWidth} x={tableX} y={tableY} />
           <TableGuides dimensions={dimensions} scale={stageSize.scale} toCanvas={toCanvas} />
           <Pockets dimensions={dimensions} scale={stageSize.scale} toCanvas={toCanvas} />
 
@@ -383,7 +383,7 @@ function TargetZoneShape({
   onChange: (next: TargetZone) => void;
   onSelect: () => void;
 }) {
-  const stroke = selected ? HANDLE : '#19A974';
+  const stroke = selected ? HANDLE : '#1FBE8A';
   const strokeWidth = selected ? 3 : 2;
 
   if (zone.type === 'circle') {
@@ -394,7 +394,7 @@ function TargetZoneShape({
       <>
         <Circle
           draggable={editable}
-          fill="rgba(25,169,116,0.16)"
+          fill="rgba(31,190,138,0.16)"
           radius={radius}
           stroke={stroke}
           strokeWidth={strokeWidth}
@@ -419,7 +419,7 @@ function TargetZoneShape({
       <>
         <Rect
           draggable={editable}
-          fill="rgba(25,169,116,0.14)"
+          fill="rgba(31,190,138,0.14)"
           height={end.y - topLeft.y}
           stroke={stroke}
           strokeWidth={strokeWidth}
@@ -442,7 +442,7 @@ function TargetZoneShape({
     <Line
       closed
       draggable={editable}
-      fill="rgba(25,169,116,0.14)"
+      fill="rgba(31,190,138,0.14)"
       points={zone.points.flatMap((point) => toCanvasPair(toCanvas(point)))}
       stroke={stroke}
       strokeWidth={strokeWidth}
@@ -525,7 +525,7 @@ function AnnotationShape({
       onDragMove={(event) => onChange({ ...annotation, at: toDomain({ x: event.target.x(), y: event.target.y() }) })}
     >
       {selected && (
-        <Rect cornerRadius={4} fill="rgba(200,164,93,0.14)" height={fontSize + 8} stroke={HANDLE} strokeWidth={1} width={annotation.text.length * fontSize * 0.62 + 12} x={-6} y={-4} />
+        <Rect cornerRadius={4} fill="rgba(211,177,108,0.14)" height={fontSize + 8} stroke={HANDLE} strokeWidth={1} width={annotation.text.length * fontSize * 0.62 + 12} x={-6} y={-4} />
       )}
       <Text fill="#E9E6DF" fontSize={fontSize} fontStyle="600" text={annotation.text} />
     </Group>
@@ -567,7 +567,7 @@ function BallShape({
       onDragEnd={(event: KonvaEventObject<DragEvent>) => onDragEnd(toDomain({ x: event.target.x(), y: event.target.y() }))}
       onTap={onSelect}
     >
-      {selected && <Circle fill="rgba(200,164,93,0.18)" radius={radius + 7} stroke={HANDLE} strokeWidth={2} />}
+      {selected && <Circle fill="rgba(211,177,108,0.18)" radius={radius + 7} stroke={HANDLE} strokeWidth={2} />}
       {/* Soft cast shadow on the cloth gives the ball a sense of volume. */}
       <Circle
         fill={color.fill}

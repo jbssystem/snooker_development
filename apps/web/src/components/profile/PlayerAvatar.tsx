@@ -2,9 +2,9 @@
 // person glyph, or initials as a final fallback.
 
 export const AVATAR_PRESETS: Record<string, [string, string]> = {
-  emerald: ['#0E6B4D', '#19A974'],
-  sky: ['#1E5FB3', '#4A90E2'],
-  gold: ['#9D7E16', '#C8A45D'],
+  emerald: ['#12815C', '#1FBE8A'],
+  sky: ['#1E5FB3', '#59A7F0'],
+  gold: ['#9D7E16', '#D3B16C'],
   rose: ['#9E4E6A', '#F08FB0'],
   violet: ['#5B3FB3', '#8B6DF0'],
   slate: ['#3A4452', '#7A8694'],

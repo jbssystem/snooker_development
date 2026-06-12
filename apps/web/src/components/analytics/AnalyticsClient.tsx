@@ -93,11 +93,11 @@ function AnalyticsContent({ dashboard }: { dashboard: PlayerDashboard }) {
         <SectionCard eyebrow={t('eyebrow')} title={t('charts.volume')}>
           <ResponsiveContainer height={240} width="100%">
             <BarChart data={dashboard.weeklyVolume} margin={{ bottom: 0, left: -20, right: 8, top: 8 }}>
-              <CartesianGrid stroke="#2A323D" strokeDasharray="4 4" />
-              <XAxis dataKey="label" stroke="#A8B0B8" tickLine={false} />
-              <YAxis stroke="#A8B0B8" tickLine={false} />
-              <Tooltip content={<AnalyticsTooltip />} cursor={{ fill: 'rgba(25,169,116,0.08)' }} />
-              <Bar dataKey="trainingMinutes" fill="#19A974" name={t('tooltip.trainingMinutes')} radius={[4, 4, 0, 0]} />
+              <CartesianGrid stroke="#3D4A59" strokeDasharray="4 4" />
+              <XAxis dataKey="label" stroke="#BDC6D0" tickLine={false} />
+              <YAxis stroke="#BDC6D0" tickLine={false} />
+              <Tooltip content={<AnalyticsTooltip />} cursor={{ fill: 'rgba(31,190,138,0.08)' }} />
+              <Bar dataKey="trainingMinutes" fill="#1FBE8A" name={t('tooltip.trainingMinutes')} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </SectionCard>
@@ -105,11 +105,11 @@ function AnalyticsContent({ dashboard }: { dashboard: PlayerDashboard }) {
         <SectionCard eyebrow={t('eyebrow')} title={t('charts.successTrend')}>
           <ResponsiveContainer height={240} width="100%">
             <LineChart data={dashboard.weeklyVolume} margin={{ bottom: 0, left: -20, right: 16, top: 8 }}>
-              <CartesianGrid stroke="#2A323D" strokeDasharray="4 4" />
-              <XAxis dataKey="label" stroke="#A8B0B8" tickLine={false} />
-              <YAxis domain={[0, 100]} stroke="#A8B0B8" tickLine={false} />
+              <CartesianGrid stroke="#3D4A59" strokeDasharray="4 4" />
+              <XAxis dataKey="label" stroke="#BDC6D0" tickLine={false} />
+              <YAxis domain={[0, 100]} stroke="#BDC6D0" tickLine={false} />
               <Tooltip content={<AnalyticsTooltip />} />
-              <Line dataKey="successRate" dot={{ fill: '#C8A45D', r: 4 }} name={t('tooltip.successRate')} stroke="#C8A45D" strokeWidth={3} type="monotone" />
+              <Line dataKey="successRate" dot={{ fill: '#D3B16C', r: 4 }} name={t('tooltip.successRate')} stroke="#D3B16C" strokeWidth={3} type="monotone" />
             </LineChart>
           </ResponsiveContainer>
         </SectionCard>

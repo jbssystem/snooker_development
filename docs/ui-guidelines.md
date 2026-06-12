@@ -24,20 +24,20 @@ Full spec: [docs/brand.md](brand.md). Quick reference:
 
 | Token                               | Use                                           |
 | ----------------------------------- | --------------------------------------------- |
-| `bg-background-primary` (#0E1116)   | App background                                |
-| `bg-background-secondary` (#161B22) | Card surface                                  |
-| `bg-background-elevated` (#1F2630)  | Hover / nested blocks                         |
-| `border-border-subtle` (#2A323D)    | Default card border                           |
-| `border-border-active` (#19A974)    | Active / selected border                      |
-| `text-text-primary` (#E9E6DF)       | Primary text                                  |
-| `text-text-secondary` (#A8B0B8)     | Secondary text                                |
-| `text-text-disabled` (#6F7A86)      | Disabled / metadata                           |
-| `bg-brand-primary` (#0E6B4D)        | Primary buttons, active nav, table outline    |
-| `bg-brand-accent` (#19A974)         | Success, AI recommendations, progress         |
-| `text-brand-gold` (#C8A45D)         | Personal bests, achievements, premium markers |
-| `text-state-error` (#D65A5A)        | Errors, injury risk                           |
-| `text-state-warning` (#D89A3A)      | Soft warnings, low-confidence AI              |
-| `text-state-info` (#4A90E2)         | Info, neutral AI                              |
+| `bg-background-primary` (#18212C)   | App background                                |
+| `bg-background-secondary` (#222D3A) | Card surface                                  |
+| `bg-background-elevated` (#2D3A49)  | Hover / nested blocks                         |
+| `border-border-subtle` (#3D4A59)    | Default card border                           |
+| `border-border-active` (#1FBE8A)    | Active / selected border                      |
+| `text-text-primary` (#F1EFE9)       | Primary text                                  |
+| `text-text-secondary` (#BDC6D0)     | Secondary text                                |
+| `text-text-disabled` (#8694A2)      | Disabled / metadata                           |
+| `bg-brand-primary` (#12815C)        | Primary buttons, active nav, table outline    |
+| `bg-brand-accent` (#1FBE8A)         | Success, AI recommendations, progress         |
+| `text-brand-gold` (#D3B16C)         | Personal bests, achievements, premium markers |
+| `text-state-error` (#E16969)        | Errors, injury risk                           |
+| `text-state-warning` (#E3A84F)      | Soft warnings, low-confidence AI              |
+| `text-state-info` (#59A7F0)         | Info, neutral AI                              |
 | `ball-*`                            | Snooker ball semantic colors only             |
 
 ## Typography

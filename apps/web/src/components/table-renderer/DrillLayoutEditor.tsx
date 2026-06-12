@@ -405,7 +405,7 @@ function PhotoSpinner() {
     <span aria-hidden className="relative inline-flex h-16 w-16 items-center justify-center">
       <span className="absolute inset-0 animate-spin rounded-full border-[3px] border-transparent border-l-brand-accent border-t-brand-accent [animation-duration:0.9s]" />
       <span className="absolute inset-2 animate-spin rounded-full border-[3px] border-transparent border-b-brand-gold border-r-brand-gold [animation-direction:reverse] [animation-duration:1.5s]" />
-      <span className="h-3 w-3 rounded-full bg-brand-accent shadow-[0_0_14px_3px_rgba(25,169,116,0.65)]" />
+      <span className="h-3 w-3 rounded-full bg-brand-accent shadow-[0_0_14px_3px_rgba(31,190,138,0.65)]" />
     </span>
   );
 }

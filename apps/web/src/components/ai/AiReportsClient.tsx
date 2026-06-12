@@ -395,11 +395,11 @@ function ExternalReportVisuals({ sourceData }: { sourceData: ExternalReportSourc
       <ChartPanel title={t('visuals.pointsTrend')}>
         <ResponsiveContainer height={260} width="100%">
           <LineChart data={chartRows} margin={{ bottom: 0, left: -20, right: 16, top: 8 }}>
-            <CartesianGrid stroke="#2A323D" strokeDasharray="4 4" />
-            <XAxis dataKey="label" stroke="#A8B0B8" tickLine={false} />
-            <YAxis stroke="#A8B0B8" tickLine={false} />
+            <CartesianGrid stroke="#3D4A59" strokeDasharray="4 4" />
+            <XAxis dataKey="label" stroke="#BDC6D0" tickLine={false} />
+            <YAxis stroke="#BDC6D0" tickLine={false} />
             <Tooltip content={<ExternalTooltip />} />
-            <Line dataKey="avgFor" dot={{ fill: '#19A974', r: 4 }} name={t('visuals.playerAvg')} stroke="#19A974" strokeWidth={3} type="monotone" />
+            <Line dataKey="avgFor" dot={{ fill: '#1FBE8A', r: 4 }} name={t('visuals.playerAvg')} stroke="#1FBE8A" strokeWidth={3} type="monotone" />
             <Line dataKey="avgAgainst" dot={{ fill: '#D86F5A', r: 4 }} name={t('visuals.opponentAvg')} stroke="#D86F5A" strokeWidth={3} type="monotone" />
           </LineChart>
         </ResponsiveContainer>
@@ -409,11 +409,11 @@ function ExternalReportVisuals({ sourceData }: { sourceData: ExternalReportSourc
         <ChartPanel title={t('visuals.scoreTrend')}>
           <ResponsiveContainer height={280} width="100%">
             <BarChart data={chartRows} margin={{ bottom: 0, left: -20, right: 8, top: 8 }}>
-              <CartesianGrid stroke="#2A323D" strokeDasharray="4 4" />
-              <XAxis dataKey="label" stroke="#A8B0B8" tickLine={false} />
-              <YAxis stroke="#A8B0B8" tickLine={false} />
-              <Tooltip content={<ExternalTooltip />} cursor={{ fill: 'rgba(25,169,116,0.08)' }} />
-              <Bar dataKey="framesWon" fill="#19A974" name={t('visuals.framesWon')} radius={[4, 4, 0, 0]} />
+              <CartesianGrid stroke="#3D4A59" strokeDasharray="4 4" />
+              <XAxis dataKey="label" stroke="#BDC6D0" tickLine={false} />
+              <YAxis stroke="#BDC6D0" tickLine={false} />
+              <Tooltip content={<ExternalTooltip />} cursor={{ fill: 'rgba(31,190,138,0.08)' }} />
+              <Bar dataKey="framesWon" fill="#1FBE8A" name={t('visuals.framesWon')} radius={[4, 4, 0, 0]} />
               <Bar dataKey="framesLost" fill="#D86F5A" name={t('visuals.framesLost')} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -422,12 +422,12 @@ function ExternalReportVisuals({ sourceData }: { sourceData: ExternalReportSourc
         <ChartPanel title={t('visuals.breaksTrend')}>
           <ResponsiveContainer height={280} width="100%">
             <BarChart data={chartRows} margin={{ bottom: 0, left: -20, right: 8, top: 8 }}>
-              <CartesianGrid stroke="#2A323D" strokeDasharray="4 4" />
-              <XAxis dataKey="label" stroke="#A8B0B8" tickLine={false} />
-              <YAxis stroke="#A8B0B8" tickLine={false} />
-              <Tooltip content={<ExternalTooltip />} cursor={{ fill: 'rgba(200,164,93,0.08)' }} />
-              <Bar dataKey="breaks50" fill="#C8A45D" name="50+" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="breaks70" fill="#19A974" name="70+" radius={[4, 4, 0, 0]} />
+              <CartesianGrid stroke="#3D4A59" strokeDasharray="4 4" />
+              <XAxis dataKey="label" stroke="#BDC6D0" tickLine={false} />
+              <YAxis stroke="#BDC6D0" tickLine={false} />
+              <Tooltip content={<ExternalTooltip />} cursor={{ fill: 'rgba(211,177,108,0.08)' }} />
+              <Bar dataKey="breaks50" fill="#D3B16C" name="50+" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="breaks70" fill="#1FBE8A" name="70+" radius={[4, 4, 0, 0]} />
               <Bar dataKey="breaks100" fill="#6EA8FE" name="100+" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
