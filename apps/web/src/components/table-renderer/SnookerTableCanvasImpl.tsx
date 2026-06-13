@@ -25,6 +25,10 @@ type Props = SnookerTableCanvasProps & {
 const PADDING_MM = TABLE_VIEW_PADDING_MM;
 const D_RADIUS_MM = 292;
 const HANDLE = '#D3B16C';
+// Snooker tables have stained hardwood rails, not grey frames — warm mahogany
+// reads as natural wood while staying dark enough for the balls to pop.
+const RAIL_WOOD = '#5A3A21';
+const RAIL_WOOD_EDGE = '#3E2817';
 const BALL_COLORS: Record<BallColor, { fill: string; stroke: string }> = {
   white: { fill: '#F5F1E6', stroke: '#D8D2C4' },
   red: { fill: '#C1121F', stroke: '#7D0E16' },
@@ -129,8 +133,8 @@ export const SnookerTableCanvasImpl = memo(function SnookerTableCanvasImpl({
         }}
       >
         <Layer pixelRatio={pixelRatio}>
-          <Rect cornerRadius={18} fill="#2D3A49" height={stageSize.height} shadowBlur={8} shadowColor="rgba(0,0,0,0.35)" width={stageSize.width} x={0} y={0} />
-          <Rect cornerRadius={10} fill="#12815C" height={tableHeight} stroke="#3D4A59" strokeWidth={Math.max(2, 8 * stageSize.scale)} width={tableWidth} x={tableX} y={tableY} />
+          <Rect cornerRadius={18} fill={RAIL_WOOD} height={stageSize.height} shadowBlur={8} shadowColor="rgba(0,0,0,0.35)" width={stageSize.width} x={0} y={0} />
+          <Rect cornerRadius={10} fill="#12815C" height={tableHeight} stroke={RAIL_WOOD_EDGE} strokeWidth={Math.max(2, 8 * stageSize.scale)} width={tableWidth} x={tableX} y={tableY} />
           <TableGuides dimensions={dimensions} scale={stageSize.scale} toCanvas={toCanvas} />
           <Pockets dimensions={dimensions} scale={stageSize.scale} toCanvas={toCanvas} />
 

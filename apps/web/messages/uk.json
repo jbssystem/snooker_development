@@ -1374,7 +1374,9 @@
       "removeDrill": "Видалити",
       "details": "Деталі вправи",
       "cancel": "Скасувати",
-      "close": "Закрити"
+      "close": "Закрити",
+      "fullscreen": "На весь екран",
+      "exitFullscreen": "Згорнути"
     },
     "execution": {
       "empty": "Вправи ще не додано.",

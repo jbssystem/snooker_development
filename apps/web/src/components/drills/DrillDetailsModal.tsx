@@ -27,7 +27,15 @@ export function DrillDetailsModal({
   const view = template ? localizeDrillTemplate(template, tSystemDrills) : null;
 
   return (
-    <Modal closeLabel={tActions('close')} onClose={onClose} open={open && view !== null} title={view?.name ?? ''}>
+    <Modal
+      closeLabel={tActions('close')}
+      enableFullscreen
+      exitFullscreenLabel={tActions('exitFullscreen')}
+      fullscreenLabel={tActions('fullscreen')}
+      onClose={onClose}
+      open={open && view !== null}
+      title={view?.name ?? ''}
+    >
       {view && <DrillDetailsBody template={view} tDrills={tDrills} />}
     </Modal>
   );
@@ -49,7 +57,7 @@ function DrillDetailsBody({
   return (
     <div className="grid gap-3">
       {template.defaultTableLayout && (
-        <div className="overflow-hidden rounded-lg border border-border-subtle">
+        <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-lg border border-border-subtle">
           <TableLayoutPreview layout={template.defaultTableLayout} />
         </div>
       )}

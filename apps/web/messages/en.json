@@ -1374,7 +1374,9 @@
       "removeDrill": "Remove",
       "details": "Drill details",
       "cancel": "Cancel",
-      "close": "Close"
+      "close": "Close",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit fullscreen"
     },
     "execution": {
       "empty": "No drills have been added yet.",

@@ -1374,7 +1374,9 @@
       "removeDrill": "Удалить",
       "details": "Детали упражнения",
       "cancel": "Отмена",
-      "close": "Закрыть"
+      "close": "Закрыть",
+      "fullscreen": "На весь экран",
+      "exitFullscreen": "Свернуть"
     },
     "execution": {
       "empty": "Упражнения ещё не добавлены.",
