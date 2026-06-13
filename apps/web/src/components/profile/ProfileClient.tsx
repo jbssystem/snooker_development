@@ -12,6 +12,7 @@ import { api, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-store';
 import { isLocale, locales, type Locale } from '@/i18n/config';
+import { useThemeStore, type Theme } from '@/lib/theme-store';
 import { useActiveProfile } from '@/lib/use-active-profile';
 import { AvatarPicker } from './AvatarPicker';
 import { PlayerAvatar } from './PlayerAvatar';
@@ -92,6 +93,10 @@ export function ProfileClient() {
   // Access management is only for the owner of the active cabinet.
   const activeProfile = useActiveProfile();
   const isOwner = Boolean(activeProfile?.isOwner);
+
+  // Theme switching — persisted client-side; default is the dark theme.
+  const theme = useThemeStore((s) => s.theme);
+  const setTheme = useThemeStore((s) => s.setTheme);
 
   // Language switching (relocated here from the header / user menu).
   const tCommon = useTranslations('common');
@@ -498,8 +503,35 @@ export function ProfileClient() {
           <h2 className="text-lg font-semibold text-text-primary">{t('settings.title')}</h2>
           <p className="mt-1 text-sm text-text-secondary">{t('settings.subtitle')}</p>
 
-          {/* Language */}
+          {/* Theme */}
           <div className="mt-5">
+            <p className="text-sm font-medium text-text-secondary">{t('settings.theme')}</p>
+            <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={t('settings.theme')}>
+              {(['dark', 'light'] as Theme[]).map((value) => {
+                const active = value === theme;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setTheme(value)}
+                    className={`press flex min-h-11 items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition ${
+                      active
+                        ? 'border-brand-accent bg-brand-accent/10 text-text-primary'
+                        : 'border-border-subtle text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                    }`}
+                  >
+                    {value === 'dark' ? <MoonIcon /> : <SunIcon />}
+                    <span>{t(`settings.themes.${value}`)}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1.5 text-xs text-text-disabled">{t('settings.themeHint')}</p>
+          </div>
+
+          {/* Language */}
+          <div className="mt-6">
             <p className="text-sm font-medium text-text-secondary">{t('settings.language')}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {locales.map((l) => (
@@ -648,6 +680,27 @@ function EquipmentCard({
       </dl>
       {item.notes && <p className="mt-3 text-sm text-text-secondary">{item.notes}</p>}
     </article>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4" />
+      <path
+        d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 

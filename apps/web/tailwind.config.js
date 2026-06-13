@@ -8,32 +8,36 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Semantic tokens are CSS-variable backed (space-separated RGB
+        // triplets) so they swap with the `html.dark` / `html.light` theme
+        // class while still honouring Tailwind opacity modifiers (e.g.
+        // `bg-background-secondary/90`). Source of truth: globals.css.
         background: {
-          sunken: '#111821',
-          primary: '#18212C',
-          secondary: '#222D3A',
-          elevated: '#2D3A49',
-          raised: '#394858',
+          sunken: 'rgb(var(--color-bg-sunken) / <alpha-value>)',
+          primary: 'rgb(var(--color-bg-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--color-bg-secondary) / <alpha-value>)',
+          elevated: 'rgb(var(--color-bg-elevated) / <alpha-value>)',
+          raised: 'rgb(var(--color-bg-raised) / <alpha-value>)',
         },
         brand: {
-          primary: '#12815C',
-          accent: '#1FBE8A',
-          gold: '#D3B16C',
+          primary: 'rgb(var(--color-brand-primary) / <alpha-value>)',
+          accent: 'rgb(var(--color-brand-accent) / <alpha-value>)',
+          gold: 'rgb(var(--color-brand-gold) / <alpha-value>)',
         },
         text: {
-          primary: '#F1EFE9',
-          secondary: '#BDC6D0',
-          disabled: '#8694A2',
+          primary: 'rgb(var(--color-text-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--color-text-secondary) / <alpha-value>)',
+          disabled: 'rgb(var(--color-text-disabled) / <alpha-value>)',
         },
         state: {
-          success: '#43C078',
-          error: '#E16969',
-          warning: '#E3A84F',
-          info: '#59A7F0',
+          success: 'rgb(var(--color-state-success) / <alpha-value>)',
+          error: 'rgb(var(--color-state-error) / <alpha-value>)',
+          warning: 'rgb(var(--color-state-warning) / <alpha-value>)',
+          info: 'rgb(var(--color-state-info) / <alpha-value>)',
         },
         border: {
-          subtle: '#3D4A59',
-          active: '#1FBE8A',
+          subtle: 'rgb(var(--color-border-subtle) / <alpha-value>)',
+          active: 'rgb(var(--color-border-active) / <alpha-value>)',
         },
         // Snooker ball semantic colors — table renderer and match data only.
         ball: {

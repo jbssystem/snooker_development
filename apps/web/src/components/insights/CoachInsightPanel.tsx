@@ -38,7 +38,7 @@ export function CoachInsightPanel({ insights }: CoachInsightPanelProps) {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase text-text-disabled transition-colors duration-200 group-hover:text-text-secondary">{t(`metrics.${insight.metricKey}`)}</p>
-                    <p className="mt-1 text-3xl font-semibold text-text-primary transition-colors duration-200 group-hover:text-white">{insight.metricValue}</p>
+                    <p className="mt-1 text-3xl font-semibold text-text-primary transition-colors duration-200 group-hover:text-text-primary">{insight.metricValue}</p>
                   </div>
                   <span className="rounded-md bg-background-primary px-2 py-1 text-xs text-text-secondary">
                     {t('confidence', { confidence: insight.confidence })}

@@ -9,8 +9,13 @@ Update on every new component, pattern or interaction rule.
    a snooker table. Large hit areas (≥44px), no fiddly inputs.
 2. **Minimal typing during a session.** Capture attempts with single taps;
    defer notes until between drills.
-3. **Dark by default.** Baize-green accents on near-black neutrals.
-   Light theme is a Phase 2 toggle.
+3. **Dark by default, light theme shipped.** Baize-green accents on
+   slate-graphite neutrals are the primary identity and the default. A
+   first-class light theme also ships — a soft cool off-white page with crisp
+   white floating cards — toggled in **Profile → Settings → Appearance** (next
+   to the language switch) and persisted per browser. See the **Theming**
+   section below: components must use semantic tokens so both themes work for
+   free.
 4. **i18n-first.** All strings via next-intl. No literals. See
    [docs/i18n.md](i18n.md).
 5. **Dynamic but quiet.** Animations are short (≤200ms) and serve feedback,
@@ -18,9 +23,47 @@ Update on every new component, pattern or interaction rule.
 6. **Offline-aware.** Surface an offline badge when the local mutation
    queue has unsynced items.
 
+## Theming (dark + light)
+
+**Both themes are driven entirely by CSS variables — there is no per-component
+theme logic.** Read this before adding any color.
+
+- Every semantic color is a space-separated RGB triplet stored as a CSS
+  variable in `apps/web/src/app/globals.css`. The dark values live in
+  `:root` / `html.dark`; `html.light` overrides the same variables.
+- Tailwind tokens resolve to `rgb(var(--color-x) / <alpha-value>)`
+  (`apps/web/tailwind.config.js`), so opacity modifiers like
+  `bg-background-secondary/90` keep working in both themes.
+- The active theme is the `dark` / `light` class on `<html>`, set pre-paint by
+  a tiny inline script in `app/layout.tsx` (no flash) and managed at runtime by
+  `useThemeStore` (`src/lib/theme-store.ts`, persisted under `snooker.theme`,
+  default **dark**).
+- Elevation primitives (`--elev-1..3`, `--surface-sheen`, `--glass-bg`,
+  `--sunken-shadow`, `--tile-*`, `--ambient-glow`, `--gradient-hero`) are *also*
+  theme variables, because dark-tuned shadows/sheens look wrong on a light page.
+  Use the `.surface`, `.glass`, `.sunken`, `.stat-tile`, `.btn-primary` classes
+  rather than re-deriving shadows inline.
+
+**Rules for new components:**
+
+1. Never hardcode a neutral/text/border hex. Use semantic Tailwind tokens
+   (`bg-background-*`, `text-text-*`, `border-border-*`, `brand-*`, `state-*`).
+   A hardcoded `#222D3A` will not switch to light.
+2. Never use `text-white` / `bg-white` / `text-black` for UI chrome. They don't
+   theme. For a "brighten on hover" use `group-hover:text-text-primary`; for a
+   zebra stripe use `bg-text-primary/[0.03]` (works on both because the text
+   color inverts between themes).
+3. Exceptions that stay theme-independent **by design**: the snooker table
+   renderer, `ball-*` colors, chart *data series* colors, national flag colors,
+   avatar gradients and colored toast/badge fills (white text on a saturated
+   fill is correct in both themes). Chart **grid and axis** colors, however,
+   must use `rgb(var(--color-border-subtle))` / `rgb(var(--color-text-secondary))`.
+4. Verify any new screen in **both** themes before shipping.
+
 ## Color palette (Tailwind tokens)
 
-Full spec: [docs/brand.md](brand.md). Quick reference:
+Full spec: [docs/brand.md](brand.md). Quick reference (dark values shown; each
+swaps to the light-theme value via the CSS variable):
 
 | Token                               | Use                                           |
 | ----------------------------------- | --------------------------------------------- |

@@ -231,7 +231,7 @@ function UserRow({
   const isPending = user.status === 'PENDING_VERIFICATION';
 
   return (
-    <tr className="text-text-secondary transition odd:bg-white/[0.02] hover:bg-background-elevated/50">
+    <tr className="text-text-secondary transition odd:bg-text-primary/[0.03] hover:bg-background-elevated/50">
       <td className="px-3 py-2">
         <div className="text-text-primary">{user.displayName}</div>
         <div className="text-xs text-text-disabled">{user.email}</div>

@@ -41,7 +41,7 @@ export function StatTile({
           </span>
         )}
       </div>
-      <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary transition-colors duration-200 group-hover:text-white sm:text-4xl">
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary transition-colors duration-200 group-hover:text-text-primary sm:text-4xl">
         {value}
         {unit && <span className="ml-1 text-base font-normal text-text-secondary">{unit}</span>}
       </p>

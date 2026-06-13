@@ -45,7 +45,7 @@ export function AdminStatsClient() {
         <h2 className="mb-3 text-sm font-semibold text-text-primary">{t('stats.recentSignups')}</h2>
         <ul className="flex flex-col divide-y divide-border-subtle">
           {s.recentSignups.map((u) => (
-            <li key={u.id} className="flex items-center justify-between px-2 py-2 text-sm transition odd:bg-white/[0.02] hover:bg-background-elevated/50">
+            <li key={u.id} className="flex items-center justify-between px-2 py-2 text-sm transition odd:bg-text-primary/[0.03] hover:bg-background-elevated/50">
               <span className="min-w-0 truncate">
                 <span className="text-text-primary">{u.displayName}</span>{' '}
                 <span className="text-text-disabled">{u.email}</span>

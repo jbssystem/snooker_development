@@ -2,36 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/*
+  THEMING MODEL
+  -------------
+  Every semantic color is a *space-separated RGB triplet* stored in a CSS
+  variable, so Tailwind tokens resolve to `rgb(var(--color-x) / <alpha-value>)`
+  and opacity modifiers (e.g. `bg-background-secondary/90`) keep working.
+
+  The dark theme is the default and lives in `:root` (also mirrored on
+  `html.dark`). The light theme overrides the same variables on `html.light`.
+  Both themes redefine the *elevation* primitives (shadows, sheens, glass,
+  ambient glow) because a dark-tuned shadow ladder looks wrong on a light page
+  and vice-versa.
+
+  RULE FOR NEW COMPONENTS: never hardcode a hex neutral/text/border color.
+  Use the semantic Tailwind tokens (bg-background-*, text-text-*, border-*,
+  brand-*, state-*) so the component themes automatically. Only the snooker
+  `ball-*` colors and the table renderer are intentionally theme-independent.
+*/
+
+:root,
+html.dark {
   color-scheme: dark;
 
   /* Backgrounds — a layered ladder from sunken to raised so surfaces read as
-     stacked planes rather than a single flat sheet. Slate-graphite neutrals
-     (lifted from the original near-black ladder) keep the app dark but airy. */
-  --color-bg-sunken: #111821;
-  --color-bg-primary: #18212c;
-  --color-bg-secondary: #222d3a;
-  --color-bg-elevated: #2d3a49;
-  --color-bg-raised: #394858;
+     stacked planes. Slate-graphite neutrals keep the app dark but airy. */
+  --color-bg-sunken: 17 24 33;
+  --color-bg-primary: 24 33 44;
+  --color-bg-secondary: 34 45 58;
+  --color-bg-elevated: 45 58 73;
+  --color-bg-raised: 57 72 88;
 
-  --color-brand-primary: #12815c;
-  --color-brand-accent: #1fbe8a;
-  --color-brand-gold: #d3b16c;
+  --color-brand-primary: 18 129 92;
+  --color-brand-accent: 31 190 138;
+  --color-brand-gold: 211 177 108;
 
-  --color-text-primary: #f1efe9;
-  --color-text-secondary: #bdc6d0;
-  --color-text-disabled: #8694a2;
+  --color-text-primary: 241 239 233;
+  --color-text-secondary: 189 198 208;
+  --color-text-disabled: 134 148 162;
 
-  --color-state-success: #43c078;
-  --color-state-error: #e16969;
-  --color-state-warning: #e3a84f;
-  --color-state-info: #59a7f0;
+  --color-state-success: 67 192 120;
+  --color-state-error: 225 105 105;
+  --color-state-warning: 227 168 79;
+  --color-state-info: 89 167 240;
 
-  --color-border-subtle: #3d4a59;
-  --color-border-active: #1fbe8a;
+  --color-border-subtle: 61 74 89;
+  --color-border-active: 31 190 138;
 
   /* Shared focus ring — applied consistently across interactive elements. */
-  --focus-ring: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px rgba(31, 190, 138, 0.7);
+  --focus-ring: 0 0 0 2px rgb(var(--color-bg-primary)), 0 0 0 4px rgba(31, 190, 138, 0.7);
 
   /* Elevation ladder. Each step pairs a soft ambient shadow with a tighter key
      shadow (Material-style) plus a light top sheen line for a sense of depth. */
@@ -47,13 +66,146 @@
     inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
     0 8px 16px -8px rgba(0, 0, 0, 0.45),
     0 28px 64px -28px rgba(0, 0, 0, 0.7);
+
+  /* Surface decoration — subtle brand tint + top sheen layered over the card
+     background-color. Theme-swapped so the white sheen does not wash out on a
+     light page. */
+  --surface-tint: radial-gradient(120% 80% at 100% 0%, rgba(31, 190, 138, 0.05), transparent 60%);
+  --surface-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 42%);
+
+  /* Sunken well (inputs, tab strips). */
+  --sunken-shadow:
+    inset 0 1px 2px 0 rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+
+  /* Frosted glass (header, modals, popovers). */
+  --glass-bg: rgba(34, 45, 58, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.07);
+
+  /* KPI stat tile — deeper, sculpted surface. */
+  --tile-tint: radial-gradient(135% 90% at 100% 0%, rgba(31, 190, 138, 0.1), transparent 58%);
+  --tile-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 46%);
+  --tile-inset:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
+    inset 0 -10px 22px -14px rgba(0, 0, 0, 0.7);
+  --tile-hover:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    inset 0 -10px 22px -14px rgba(0, 0, 0, 0.75),
+    var(--elev-3),
+    0 0 0 1px rgba(31, 190, 138, 0.24),
+    0 32px 60px -24px rgba(0, 0, 0, 0.85),
+    0 22px 50px -22px rgba(31, 190, 138, 0.5);
+  --tile-hover-gold:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    inset 0 -10px 22px -14px rgba(0, 0, 0, 0.75),
+    var(--elev-3),
+    0 0 0 1px rgba(211, 177, 108, 0.26),
+    0 32px 60px -24px rgba(0, 0, 0, 0.85),
+    0 22px 50px -22px rgba(211, 177, 108, 0.5);
+
+  /* Ambient backdrop glow painted behind all content. */
+  --ambient-glow:
+    radial-gradient(1000px 520px at 15% -10%, rgba(31, 190, 138, 0.18), transparent 60%),
+    radial-gradient(760px 440px at 100% -4%, rgba(211, 177, 108, 0.11), transparent 55%),
+    radial-gradient(680px 520px at 92% 108%, rgba(89, 167, 240, 0.08), transparent 60%);
+
+  /* Hero gradient text. */
+  --gradient-hero: linear-gradient(120deg, #f1efe9 0%, #1fbe8a 55%, #d3b16c 100%);
+}
+
+/*
+  LIGHT THEME
+  -----------
+  A modern, premium light surface: a soft cool off-white page with crisp white
+  cards floating above it (research-backed — pure white pages feel harsh, so the
+  page sits a step below the cards). Brand greens stay, but the accent, gold and
+  state colors are deepened so they pass ~4.5:1 contrast as text on white.
+*/
+html.light {
+  color-scheme: light;
+
+  --color-bg-sunken: 235 238 243;
+  --color-bg-primary: 245 247 250;
+  --color-bg-secondary: 255 255 255;
+  --color-bg-elevated: 238 242 247;
+  --color-bg-raised: 228 234 241;
+
+  --color-brand-primary: 16 122 86;
+  --color-brand-accent: 11 148 102;
+  --color-brand-gold: 165 122 41;
+
+  --color-text-primary: 22 32 43;
+  --color-text-secondary: 71 86 106;
+  --color-text-disabled: 124 138 155;
+
+  --color-state-success: 18 138 77;
+  --color-state-error: 203 58 58;
+  --color-state-warning: 166 106 18;
+  --color-state-info: 37 117 201;
+
+  --color-border-subtle: 220 226 234;
+  --color-border-active: 11 148 102;
+
+  --focus-ring: 0 0 0 2px rgb(var(--color-bg-secondary)), 0 0 0 4px rgba(11, 148, 102, 0.55);
+
+  /* Softer, cooler shadows — no harsh blacks. Slate-tinted (16 24 40). */
+  --elev-1:
+    0 1px 2px -1px rgba(16, 24, 40, 0.08),
+    0 8px 24px -18px rgba(16, 24, 40, 0.12);
+  --elev-2:
+    0 2px 6px -2px rgba(16, 24, 40, 0.08),
+    0 16px 40px -24px rgba(16, 24, 40, 0.16);
+  --elev-3:
+    0 10px 18px -10px rgba(16, 24, 40, 0.1),
+    0 28px 64px -30px rgba(16, 24, 40, 0.22);
+
+  --surface-tint: radial-gradient(120% 80% at 100% 0%, rgba(16, 122, 86, 0.05), transparent 60%);
+  --surface-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 60%);
+
+  --sunken-shadow:
+    inset 0 1px 2px 0 rgba(16, 24, 40, 0.06),
+    inset 0 0 0 1px rgba(16, 24, 40, 0.04);
+
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(16, 24, 40, 0.08);
+
+  --tile-tint: radial-gradient(135% 90% at 100% 0%, rgba(16, 122, 86, 0.07), transparent 58%);
+  --tile-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 50%);
+  --tile-inset:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+    inset 0 -10px 22px -16px rgba(16, 24, 40, 0.06);
+  --tile-hover:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    var(--elev-3),
+    0 0 0 1px rgba(11, 148, 102, 0.3),
+    0 32px 60px -26px rgba(16, 24, 40, 0.18),
+    0 22px 50px -24px rgba(16, 122, 86, 0.28);
+  --tile-hover-gold:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    var(--elev-3),
+    0 0 0 1px rgba(165, 122, 41, 0.34),
+    0 32px 60px -26px rgba(16, 24, 40, 0.18),
+    0 22px 50px -24px rgba(165, 122, 41, 0.28);
+
+  --ambient-glow:
+    radial-gradient(1100px 540px at 12% -12%, rgba(31, 190, 138, 0.12), transparent 62%),
+    radial-gradient(820px 460px at 100% -6%, rgba(211, 177, 108, 0.1), transparent 58%),
+    radial-gradient(720px 540px at 94% 110%, rgba(89, 167, 240, 0.07), transparent 62%);
+
+  --gradient-hero: linear-gradient(120deg, #16202b 0%, #0b9466 52%, #a57a29 100%);
 }
 
 html,
 body {
   height: 100%;
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  background: rgb(var(--color-bg-primary));
+  color: rgb(var(--color-text-primary));
+}
+
+/* Smooth the change between themes (background + text only — borders and
+   shadows snapping is fine and avoids janky multi-layer animation). */
+body {
+  transition: background-color 280ms ease, color 280ms ease;
 }
 
 /* Ambient depth: a soft brand glow anchored to the top of the viewport. */
@@ -63,10 +215,7 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(1000px 520px at 15% -10%, rgba(31, 190, 138, 0.18), transparent 60%),
-    radial-gradient(760px 440px at 100% -4%, rgba(211, 177, 108, 0.11), transparent 55%),
-    radial-gradient(680px 520px at 92% 108%, rgba(89, 167, 240, 0.08), transparent 60%);
+  background: var(--ambient-glow);
 }
 
 body > * {
@@ -78,11 +227,9 @@ body > * {
    corner highlight and a layered drop shadow give depth without heavy borders.
    The bottom inset line reads as the card's thickness. */
 .surface {
-  background-image:
-    radial-gradient(120% 80% at 100% 0%, rgba(31, 190, 138, 0.05), transparent 60%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 42%);
-  background-color: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-subtle);
+  background-image: var(--surface-tint), var(--surface-sheen);
+  background-color: rgb(var(--color-bg-secondary));
+  border: 1px solid rgb(var(--color-border-subtle));
   box-shadow: var(--elev-1);
 }
 
@@ -98,19 +245,17 @@ body > * {
 /* Frosted-glass panel for the header, modals and popovers — translucent so the
    ambient backdrop shows through, with a light top edge. */
 .glass {
-  background-color: rgba(34, 45, 58, 0.74);
+  background-color: var(--glass-bg);
   -webkit-backdrop-filter: saturate(160%) blur(14px);
   backdrop-filter: saturate(160%) blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--glass-border);
   box-shadow: var(--elev-3);
 }
 
 /* Sunken well — for inputs, stepper tracks and tab strips. Reads as recessed. */
 .sunken {
-  background-color: var(--color-bg-sunken);
-  box-shadow:
-    inset 0 1px 2px 0 rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  background-color: rgb(var(--color-bg-sunken));
+  box-shadow: var(--sunken-shadow);
 }
 
 .surface-hover {
@@ -133,13 +278,14 @@ body > * {
 
 /* Brand gradient text for hero numbers / titles. */
 .text-gradient {
-  background: linear-gradient(120deg, #f1efe9 0%, #1fbe8a 55%, #d3b16c 100%);
+  background: var(--gradient-hero);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* Premium primary action: gradient fill + brand glow. */
+/* Premium primary action: gradient fill + brand glow. Works on both themes —
+   a saturated green pill with near-black ink. */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -199,25 +345,25 @@ body > * {
   .input-field {
     width: 100%;
     border-radius: 0.5rem;
-    border: 1px solid var(--color-border-subtle);
-    background-color: var(--color-bg-sunken);
-    box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.45);
+    border: 1px solid rgb(var(--color-border-subtle));
+    background-color: rgb(var(--color-bg-sunken));
+    box-shadow: var(--sunken-shadow);
     padding: 0.5rem 0.75rem;
-    color: var(--color-text-primary);
+    color: rgb(var(--color-text-primary));
     transition: border-color 140ms ease, box-shadow 140ms ease;
   }
 
   .input-field::placeholder {
-    color: var(--color-text-secondary);
+    color: rgb(var(--color-text-secondary));
     opacity: 0.75;
   }
 
   .input-field:focus,
   .input-field:focus-visible {
     outline: none;
-    border-color: var(--color-border-active);
+    border-color: rgb(var(--color-border-active));
     box-shadow:
-      inset 0 1px 2px 0 rgba(0, 0, 0, 0.45),
+      var(--sunken-shadow),
       0 0 0 3px rgba(31, 190, 138, 0.25);
   }
 }
@@ -227,13 +373,10 @@ body > * {
    thickness, and the layered drop shadow lifts it off the page. */
 .stat-tile {
   position: relative;
-  background-image:
-    radial-gradient(135% 90% at 100% 0%, rgba(31, 190, 138, 0.1), transparent 58%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 46%);
-  background-color: var(--color-bg-elevated);
+  background-image: var(--tile-tint), var(--tile-sheen);
+  background-color: rgb(var(--color-bg-elevated));
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
-    inset 0 -10px 22px -14px rgba(0, 0, 0, 0.7),
+    var(--tile-inset),
     var(--elev-2);
   transition:
     transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -247,27 +390,15 @@ body > * {
 .stat-tile:hover {
   transform: translateY(-4px) scale(1.012);
   z-index: 2;
-  background-color: var(--color-bg-raised);
+  background-color: rgb(var(--color-bg-raised));
   border-color: rgba(31, 190, 138, 0.6);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
-    inset 0 -10px 22px -14px rgba(0, 0, 0, 0.75),
-    var(--elev-3),
-    0 0 0 1px rgba(31, 190, 138, 0.24),
-    0 32px 60px -24px rgba(0, 0, 0, 0.85),
-    0 22px 50px -22px rgba(31, 190, 138, 0.5);
+  box-shadow: var(--tile-hover);
 }
 
 /* Gold-toned variant of the hover glow for accent tiles. */
 .stat-tile.stat-tile-gold:hover {
   border-color: rgba(211, 177, 108, 0.6);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
-    inset 0 -10px 22px -14px rgba(0, 0, 0, 0.75),
-    var(--elev-3),
-    0 0 0 1px rgba(211, 177, 108, 0.26),
-    0 32px 60px -24px rgba(0, 0, 0, 0.85),
-    0 22px 50px -22px rgba(211, 177, 108, 0.5);
+  box-shadow: var(--tile-hover-gold);
 }
 
 /* For reduced-motion users, keep the lift but make it instant (no animated
@@ -298,7 +429,7 @@ html {
 
 ::selection {
   background: rgba(31, 190, 138, 0.35);
-  color: var(--color-text-primary);
+  color: rgb(var(--color-text-primary));
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -130,9 +130,9 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
         <SectionCard eyebrow={t('eyebrow')} title={t('charts.volume')}>
           <ResponsiveContainer height={240} width="100%">
             <BarChart data={dashboard.weeklyVolume} margin={{ bottom: 0, left: -20, right: 8, top: 8 }}>
-              <CartesianGrid stroke="#3D4A59" strokeDasharray="4 4" />
-              <XAxis dataKey="label" stroke="#BDC6D0" tickLine={false} />
-              <YAxis stroke="#BDC6D0" tickLine={false} />
+              <CartesianGrid stroke="rgb(var(--color-border-subtle))" strokeDasharray="4 4" />
+              <XAxis dataKey="label" stroke="rgb(var(--color-text-secondary))" tickLine={false} />
+              <YAxis stroke="rgb(var(--color-text-secondary))" tickLine={false} />
               <Tooltip content={<DashboardTooltip />} cursor={{ fill: 'rgba(31,190,138,0.08)' }} />
               <Bar dataKey="trainingMinutes" fill="#1FBE8A" name={t('tooltip.trainingMinutes')} radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -142,9 +142,9 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
         <SectionCard eyebrow={t('eyebrow')} title={t('charts.successTrend')}>
           <ResponsiveContainer height={240} width="100%">
             <LineChart data={dashboard.weeklyVolume} margin={{ bottom: 0, left: -20, right: 16, top: 8 }}>
-              <CartesianGrid stroke="#3D4A59" strokeDasharray="4 4" />
-              <XAxis dataKey="label" stroke="#BDC6D0" tickLine={false} />
-              <YAxis domain={[0, 100]} stroke="#BDC6D0" tickLine={false} />
+              <CartesianGrid stroke="rgb(var(--color-border-subtle))" strokeDasharray="4 4" />
+              <XAxis dataKey="label" stroke="rgb(var(--color-text-secondary))" tickLine={false} />
+              <YAxis domain={[0, 100]} stroke="rgb(var(--color-text-secondary))" tickLine={false} />
               <Tooltip content={<DashboardTooltip />} />
               <Line dataKey="successRate" dot={{ fill: '#D3B16C', r: 4 }} name={t('tooltip.successRate')} stroke="#D3B16C" strokeWidth={3} type="monotone" />
             </LineChart>
@@ -186,7 +186,7 @@ function DashboardContent({ dashboard }: { dashboard: PlayerDashboard }) {
               <article key={session.id} className="stat-tile group rounded-lg border border-border-subtle p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-medium text-text-primary transition-colors duration-200 group-hover:text-white">{session.title}</h3>
+                    <h3 className="truncate font-medium text-text-primary transition-colors duration-200 group-hover:text-text-primary">{session.title}</h3>
                     <p className="mt-1 text-xs text-text-disabled">{formatDate(session.startedAt, locale)}</p>
                   </div>
                   <span className="shrink-0 rounded-md bg-background-elevated px-2 py-1 text-xs text-brand-gold shadow-elev-1">
@@ -227,7 +227,7 @@ function MiniStat({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="stat-tile group rounded-lg border border-border-subtle px-3 py-3">
       <p className="text-xs uppercase tracking-wide text-text-disabled transition-colors duration-200 group-hover:text-text-secondary">{label}</p>
-      <p className="mt-1.5 text-xl font-semibold text-text-primary transition-colors duration-200 group-hover:text-white">{displayValue}</p>
+      <p className="mt-1.5 text-xl font-semibold text-text-primary transition-colors duration-200 group-hover:text-text-primary">{displayValue}</p>
     </div>
   );
 }
@@ -246,7 +246,7 @@ function DrillProgressRow({ drill, onOpen }: { drill: DashboardDrillProgress; on
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-medium text-text-primary transition-colors duration-200 group-hover:text-white">{drillName}</h3>
+          <h3 className="font-medium text-text-primary transition-colors duration-200 group-hover:text-text-primary">{drillName}</h3>
           <p className="mt-1 text-xs text-text-disabled">{formatDate(drill.lastPracticedAt, locale)}</p>
         </div>
         <span className="rounded-md bg-background-elevated px-2 py-1 text-sm text-brand-gold">{drill.successRate}%</span>

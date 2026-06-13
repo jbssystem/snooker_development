@@ -1158,7 +1158,13 @@
     },
     "settings": {
       "title": "Settings",
-      "subtitle": "Language, notifications and security.",
+      "subtitle": "Theme, language, notifications and security.",
+      "theme": "Appearance",
+      "themeHint": "Dark theme is on by default. Your choice is saved in this browser.",
+      "themes": {
+        "dark": "Dark",
+        "light": "Light"
+      },
       "language": "Interface language",
       "notificationsEmail": "Notification email",
       "notificationsEmailHint": "Notifications will be sent to this address.",

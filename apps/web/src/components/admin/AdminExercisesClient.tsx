@@ -84,7 +84,7 @@ export function AdminExercisesClient() {
               {pageItems.map((d) => (
                 <tr
                   key={d.id}
-                  className={`text-text-secondary transition odd:bg-white/[0.02] hover:bg-background-elevated/50 ${
+                  className={`text-text-secondary transition odd:bg-text-primary/[0.03] hover:bg-background-elevated/50 ${
                     d.isHidden ? 'opacity-60' : ''
                   }`}
                 >
