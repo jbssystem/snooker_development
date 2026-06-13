@@ -594,40 +594,72 @@ function ActiveSessionPanel({
 
       {session.drillExecutions.length > 0 && (
         <section>
-          <h3 className="mb-2 text-xs uppercase tracking-wide text-text-disabled">{t('execution.sessionDrills')}</h3>
-          <div className="flex flex-wrap gap-2">
-            {session.drillExecutions.map((execution) => (
-              <div key={execution.id} className="relative">
-                <button
-                  className={`rounded-md border px-3 py-2 pr-8 text-left text-sm transition ${
-                    activeExecution?.id === execution.id
-                      ? 'border-brand-accent bg-background-elevated text-text-primary'
-                      : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent hover:text-text-primary'
-                  }`}
-                  onClick={() => setActiveExecutionId(execution.id)}
-                  type="button"
-                >
-                  <span className="block max-w-[200px] truncate font-medium">
-                    {localizeDrillName(execution.drillTemplateId, execution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-text-disabled">
-                    {execution.successes}/{execution.attempts} · {execution.endedAt ? t('status.finished') : t('status.active')}
-                  </span>
-                </button>
-                {!execution.endedAt && (
+          <h3 className="mb-2 text-xs uppercase tracking-wide text-text-disabled">
+            {t('execution.sessionDrills')}
+            <span className="ml-1.5 text-text-disabled/70">({session.drillExecutions.length})</span>
+          </h3>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {session.drillExecutions.map((execution, index) => {
+              const isActive = activeExecution?.id === execution.id;
+              const finished = Boolean(execution.endedAt);
+              return (
+                <div key={execution.id} className="relative">
                   <button
-                    aria-label={t('actions.removeDrill')}
-                    className="press absolute right-1.5 top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-text-disabled transition hover:bg-state-error/15 hover:text-state-error disabled:opacity-50"
-                    disabled={removeDrillPending}
-                    onClick={() => setExecutionToDelete(execution)}
-                    title={t('actions.removeDrill')}
+                    aria-current={isActive ? 'true' : undefined}
+                    className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 pr-9 text-left text-sm transition ${
+                      isActive
+                        ? 'border-brand-accent bg-brand-accent/10 text-text-primary shadow-glow ring-1 ring-brand-accent/40'
+                        : finished
+                          ? 'border-state-success/30 bg-background-secondary text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                          : 'border-border-subtle bg-background-secondary text-text-secondary hover:border-brand-accent hover:text-text-primary'
+                    }`}
+                    onClick={() => setActiveExecutionId(execution.id)}
                     type="button"
                   >
-                    ✕
+                    <span
+                      className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                        isActive
+                          ? 'bg-brand-accent text-background-primary'
+                          : finished
+                            ? 'bg-state-success/15 text-state-success'
+                            : 'bg-background-elevated text-text-disabled'
+                      }`}
+                    >
+                      {finished ? '✓' : index + 1}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">
+                        {localizeDrillName(execution.drillTemplateId, execution.drillTemplateName, tSystemDrills) ?? t('execution.unnamed')}
+                      </span>
+                      <span className="mt-0.5 flex items-center gap-1.5 text-xs text-text-disabled">
+                        <span>{execution.successes}/{execution.attempts}</span>
+                        <span aria-hidden="true">·</span>
+                        <span
+                          className={`inline-flex items-center gap-1 font-medium ${
+                            isActive ? 'text-brand-accent' : finished ? 'text-state-success' : 'text-text-disabled'
+                          }`}
+                        >
+                          {isActive && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-accent" />}
+                          {finished ? t('status.finished') : t('status.active')}
+                        </span>
+                      </span>
+                    </span>
                   </button>
-                )}
-              </div>
-            ))}
+                  {!finished && (
+                    <button
+                      aria-label={t('actions.removeDrill')}
+                      className="press absolute right-1.5 top-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-disabled transition hover:bg-state-error/15 hover:text-state-error disabled:opacity-50"
+                      disabled={removeDrillPending}
+                      onClick={() => setExecutionToDelete(execution)}
+                      title={t('actions.removeDrill')}
+                      type="button"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
