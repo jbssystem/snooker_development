@@ -7,7 +7,7 @@ import { SnookerTableCanvas } from './SnookerTableCanvas';
 export const TableLayoutPreview = memo(function TableLayoutPreview({ layout }: { layout: TableLayout }) {
   return (
     <SnookerTableCanvas
-      className="overflow-hidden rounded-md border border-border-subtle"
+      className="overflow-hidden rounded-md"
       layout={layout}
       mode="view"
     />

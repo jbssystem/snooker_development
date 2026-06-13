@@ -57,7 +57,7 @@ function DrillDetailsBody({
   return (
     <div className="grid gap-3">
       {template.defaultTableLayout && (
-        <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-lg border border-border-subtle">
+        <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-lg">
           <TableLayoutPreview layout={template.defaultTableLayout} />
         </div>
       )}
