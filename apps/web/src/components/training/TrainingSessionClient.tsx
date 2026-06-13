@@ -506,6 +506,7 @@ function ActiveSessionPanel({
 }) {
   const tDrills = useTranslations('drills');
   const [showDetails, setShowDetails] = useState(false);
+  const [showAttemptsLayout, setShowAttemptsLayout] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [executionToDelete, setExecutionToDelete] = useState<DrillExecution | null>(null);
   const open = !session.endedAt;
@@ -703,36 +704,29 @@ function ActiveSessionPanel({
 
           <div className="mt-5">
             <AccordionSection compact title={t('attempts.title')}>
-              {activeExecution.tableLayoutSnapshot && (
-                <div className="mb-4">
-                  <TableLayoutPreview layout={activeExecution.tableLayoutSnapshot} />
+              {activeExecution.tableLayoutSnapshot ? (
+                // Side-by-side on wide screens: attempts table on the left, a
+                // small table preview on the right with an "expand" button that
+                // opens the full-size layout. Stacks on narrow screens.
+                <div className="grid items-start gap-4 lg:grid-cols-[1fr_minmax(300px,40%)]">
+                  <AttemptsTable attemptsLog={activeExecution.attemptsLog} t={t} />
+                  <div className="flex flex-col gap-2">
+                    <TableLayoutPreview layout={activeExecution.tableLayoutSnapshot} />
+                    <button
+                      className="press inline-flex items-center justify-center gap-1.5 self-start rounded-md border border-border-subtle bg-background-secondary px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:border-brand-accent hover:text-text-primary"
+                      onClick={() => setShowAttemptsLayout(true)}
+                      type="button"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M3 9V5a2 2 0 0 1 2-2h4M21 9V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4m12-6v4a2 2 0 0 1-2 2h-4" />
+                      </svg>
+                      {t('attempts.expand')}
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                <AttemptsTable attemptsLog={activeExecution.attemptsLog} t={t} />
               )}
-              <div className="overflow-x-auto rounded-md border border-border-subtle">
-                <table className="w-full min-w-[360px] text-left text-sm">
-                  <thead className="bg-background-primary text-text-disabled">
-                    <tr>
-                      <th className="px-3 py-2">{t('attempts.number')}</th>
-                      <th className="px-3 py-2">{t('attempts.result')}</th>
-                      <th className="px-3 py-2">{t('attempts.time')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...activeExecution.attemptsLog].reverse().map((attempt) => (
-                      <tr key={attempt.id} className="border-t border-border-subtle text-text-secondary">
-                        <td className="px-3 py-2">{attempt.attemptNumber}</td>
-                        <td className="px-3 py-2">{t(`attemptResults.${attempt.result}`)}</td>
-                        <td className="px-3 py-2">{formatDate(attempt.createdAt)}</td>
-                      </tr>
-                    ))}
-                    {activeExecution.attemptsLog.length === 0 && (
-                      <tr>
-                        <td className="px-3 py-4 text-text-secondary" colSpan={3}>{t('attempts.empty')}</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
             </AccordionSection>
           </div>
         </section>
@@ -747,6 +741,26 @@ function ActiveSessionPanel({
       <LiveSessionInsight insight={buildLiveTrainingInsight(session, activeExecution)} t={t} />
 
       <DrillDetailsModal template={activeTemplate} open={showDetails} onClose={() => setShowDetails(false)} />
+
+      <Modal
+        closeLabel={t('actions.close')}
+        enableFullscreen
+        exitFullscreenLabel={t('actions.exitFullscreen')}
+        fullscreenLabel={t('actions.fullscreen')}
+        onClose={() => setShowAttemptsLayout(false)}
+        open={showAttemptsLayout && activeExecution?.tableLayoutSnapshot != null}
+        title={t('attempts.title')}
+        className="sm:max-w-3xl"
+      >
+        {activeExecution?.tableLayoutSnapshot && (
+          <div className="grid gap-4">
+            <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-lg">
+              <TableLayoutPreview layout={activeExecution.tableLayoutSnapshot} />
+            </div>
+            <AttemptsTable attemptsLog={activeExecution.attemptsLog} t={t} />
+          </div>
+        )}
+      </Modal>
 
       <Modal
         closeLabel={t('actions.close')}
@@ -1234,6 +1248,42 @@ function parseOptionalInt(value: string): number | undefined {
   if (!value.trim()) return undefined;
   const parsed = Number.parseInt(value, 10);
   return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+function AttemptsTable({
+  attemptsLog,
+  t,
+}: {
+  attemptsLog: DrillExecution['attemptsLog'];
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <div className="overflow-x-auto rounded-md border border-border-subtle">
+      <table className="w-full min-w-[360px] text-left text-sm">
+        <thead className="bg-background-primary text-text-disabled">
+          <tr>
+            <th className="px-3 py-2">{t('attempts.number')}</th>
+            <th className="px-3 py-2">{t('attempts.result')}</th>
+            <th className="px-3 py-2">{t('attempts.time')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...attemptsLog].reverse().map((attempt) => (
+            <tr key={attempt.id} className="border-t border-border-subtle text-text-secondary">
+              <td className="px-3 py-2">{attempt.attemptNumber}</td>
+              <td className="px-3 py-2">{t(`attemptResults.${attempt.result}`)}</td>
+              <td className="px-3 py-2">{formatDate(attempt.createdAt)}</td>
+            </tr>
+          ))}
+          {attemptsLog.length === 0 && (
+            <tr>
+              <td className="px-3 py-4 text-text-secondary" colSpan={3}>{t('attempts.empty')}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function formatDate(value: string): string {

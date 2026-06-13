@@ -1400,7 +1400,8 @@
       "number": "#",
       "result": "Result",
       "time": "Time",
-      "empty": "No attempts yet."
+      "empty": "No attempts yet.",
+      "expand": "Expand"
     },
     "tableLayout": {
       "title": "Table layout"
