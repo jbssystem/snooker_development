@@ -735,7 +735,7 @@ function ActiveSessionPanel({
           )}
 
           <div className="mt-5">
-            <AccordionSection compact title={t('attempts.title')}>
+            <AccordionSection compact defaultOpen title={t('attempts.title')}>
               {activeExecution.tableLayoutSnapshot ? (
                 // Side-by-side on wide screens: attempts table on the left, a
                 // small table preview on the right with an "expand" button that
